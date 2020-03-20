@@ -1,0 +1,9 @@
+kind: pipeline
+type: kubernetes
+name: build-for-arm
+
+steps:
+- name: build
+  image: stronglytyped/arm-none-eabi-gcc
+  commands:
+  - make
