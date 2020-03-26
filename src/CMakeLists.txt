@@ -25,9 +25,10 @@ SET(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32G474RETx_FLASH.ld)
 
 SET(COMMON_FLAGS
     "-mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections \
-    -g -fno-common -fmessage-length=0 -specs=nosys.specs -specs=nano.specs")
+    -g -fno-common -fmessage-length=0 -specs=nosys.specs -specs=nano.specs \
+    -Wdouble-promotion -fstack-protector-strong -Wall -Wextra -Wpedantic -Wshadow")
 
-SET(CMAKE_CXX_FLAGS_INIT "${COMMON_FLAGS} -std=c++17 -Wall -Wextra -Wpedantic")
+SET(CMAKE_CXX_FLAGS_INIT "${COMMON_FLAGS} -std=c++17")
 SET(CMAKE_C_FLAGS_INIT "${COMMON_FLAGS} -std=gnu11")
 SET(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,-gc-sections,--print-memory-usage -T ${LINKER_SCRIPT}")
 
