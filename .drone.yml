@@ -3,7 +3,7 @@ type: kubernetes
 name: build-for-arm
 
 steps:
-- name: build
-  image: stronglytyped/arm-none-eabi-gcc
+- name: cmake-build
+  image: unstabletypes/arm-none-eabi-gcc-cmake:v0.1
   commands:
-  - make
+  - /bin/sh build.sh

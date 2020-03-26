@@ -52,7 +52,7 @@ volatile uint32_t &memory(const uint32_t loc) {
     return *reinterpret_cast<volatile uint32_t*>(loc);
 }
 
-volatile void delay_ms(uint32_t n) {
+void delay_ms(uint32_t n) {
     for(; n > 0; n--)
         for(uint32_t i = 0; i < 3195; i++);
 }
@@ -62,7 +62,7 @@ volatile void delay_ms(uint32_t n) {
   * @brief  The application entry point.
   * @retval int
   */
-int main(void) {
+int main() {
 
     //SystemClock_Config();
     memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
