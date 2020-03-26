@@ -527,3 +527,8 @@ MigrationBackup/
 
 .idea/
 src/build/
+src/.cproject
+
+src/.mxproject
+
+src/.project
