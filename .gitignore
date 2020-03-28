@@ -8,3 +8,8 @@
 !Dockerfile
 !README.md
 !LICENSE
+!.gitignore
+!.drone.yml
+
+src/cmake-build-debug
+src/.idea
