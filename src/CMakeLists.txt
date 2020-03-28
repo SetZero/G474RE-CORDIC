@@ -14,7 +14,6 @@ set(CMAKE_OBJDUMP arm-none-eabi-objdump)
 set(CMAKE_LINKER arm-none-eabi-ld)
 set(SIZE arm-none-eabi-size)
 
-set(LINKER_SCRIPT ./STM32G474RETx_FLASH.ld)
 
 #Uncomment for hardware floating point
 #SET(FPU_FLAGS "-mfloat-abi=hard -mfpu=fpv4-sp-d16")
@@ -23,16 +22,7 @@ set(LINKER_SCRIPT ./STM32G474RETx_FLASH.ld)
 #Uncomment for software floating point
 #SET(FPU_FLAGS "-mfloat-abi=soft")
 
-set(COMMON_FLAGS
-    "-mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections \
-    -g -fno-common -fmessage-length=0 -nostartfiles -specs=nosys.specs -specs=nano.specs \
-    -Wdouble-promotion -fstack-protector-strong -Wall -Wextra -Wpedantic -Wshadow")
-
-set(CMAKE_CXX_FLAGS_INIT "${COMMON_FLAGS} -std=c++17")
-set(CMAKE_C_FLAGS_INIT "${COMMON_FLAGS} -std=gnu11")
-set(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,-gc-sections,--print-memory-usage -T ${LINKER_SCRIPT}")
-
-
+set(LINKER_SCRIPT STM32G474RETx_FLASH.ld)
 set(SOURCES
     startup/startup_stm32g474xx.s
     src/main.cpp)
@@ -42,10 +32,20 @@ set(SOURCES
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
 target_compile_definitions(${PROJECT_NAME}.elf PUBLIC USE_HAL_DRIVER)
 target_compile_definitions(${PROJECT_NAME}.elf PUBLIC STM32G474xx)
+target_compile_options(${PROJECT_NAME}.elf PUBLIC 
+    -mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections
+    -g -fno-common -fmessage-length=0 -specs=nosys.specs
+    -Wdouble-promotion -fstack-protector-strong -Werror -Wall -Wextra -Wpedantic -Wshadow)
+set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CMAKE_CXX_STANDARD 17)
+set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CMAKE_C_STANDARD 11)
+target_link_options(${PROJECT_NAME}.elf PUBLIC
+    -Wl,-gc-sections,--print-memory-usage -T ${CMAKE_CURRENT_SOURCE_DIR}/${LINKER_SCRIPT})
+target_link_options(${PROJECT_NAME}.elf PUBLIC
+    -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map)
 #add_definitions(-DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -D__FPU_PRESENT=1)
 
-set(CMAKE_EXE_LINKER_FLAGS
-    "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map")
+# set(CMAKE_EXE_LINKER_FLAGS
+#     "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map")
 
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
 set(BIN_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin)
