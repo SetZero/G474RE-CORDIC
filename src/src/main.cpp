@@ -11,7 +11,7 @@
   */
 
 /* Includes */
-#include <cstdint>
+#include "stdint.h"
 #include "main.h"
 
 /* REGISTER BASE ADDRESSES */
@@ -40,7 +40,7 @@ static constexpr inline auto GPIO_X_BSRR = 0x18;
 
 /* Utils */
 
-volatile uint32_t &memory(const uint32_t loc) {
+[[nodiscard]] volatile uint32_t &memory(const uint32_t loc) {
     return *reinterpret_cast<volatile uint32_t*>(loc);
 }
 

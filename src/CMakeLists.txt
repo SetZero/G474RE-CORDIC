@@ -1,4 +1,3 @@
-#THIS FILE IS AUTO GENERATED FROM THE TEMPLATE! DO NOT CHANGE!
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION 1)
 
@@ -14,38 +13,50 @@ set(CMAKE_OBJDUMP arm-none-eabi-objdump)
 set(CMAKE_LINKER arm-none-eabi-ld)
 set(SIZE arm-none-eabi-size)
 
-
-#Uncomment for hardware floating point
-#SET(FPU_FLAGS "-mfloat-abi=hard -mfpu=fpv4-sp-d16")
-#add_definitions(-DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -D__FPU_PRESENT=1)
-
-#Uncomment for software floating point
-#SET(FPU_FLAGS "-mfloat-abi=soft")
+option(USE_HAL_DRIVER "Enable the use of the hal driver" on)
+option(USE_HARDWARE_FLOAT "Enable the use of hardware floating point operations" off)
 
 set(LINKER_SCRIPT STM32G474RETx_FLASH.ld)
 set(SOURCES
     startup/startup_stm32g474xx.s
     src/main.cpp)
 
-#include_directories(Inc Drivers/STM32G4xx_HAL_Driver/Inc Drivers/STM32G4xx_HAL_Driver/Inc/Legacy Drivers/CMSIS/Device/ST/STM32G4xx/Include Drivers/CMSIS/Include)
-
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
-target_compile_definitions(${PROJECT_NAME}.elf PUBLIC USE_HAL_DRIVER)
+
 target_compile_definitions(${PROJECT_NAME}.elf PUBLIC STM32G474xx)
-target_compile_options(${PROJECT_NAME}.elf PUBLIC 
+
+if (USE_HAL_DRIVER)
+    target_compile_definitions(${PROJECT_NAME}.elf PUBLIC USE_HAL_DRIVER)
+endif()
+
+if (USE_HARDWARE_FLOAT)
+    #Uncomment for software floating point
+    #SET(FPU_FLAGS "-mfloat-abi=soft")
+else()
+    #Uncomment for hardware floating point
+    #SET(FPU_FLAGS "-mfloat-abi=hard -mfpu=fpv4-sp-d16")
+    #add_definitions(-DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -D__FPU_PRESENT=1)
+endif()
+
+target_compile_options(${PROJECT_NAME}.elf PUBLIC
     -mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections
-    -g -fno-common -fmessage-length=0 -specs=nosys.specs
-    -Wdouble-promotion -fstack-protector-strong -Werror -Wall -Wextra -Wpedantic -Wshadow)
+    -fno-common -fmessage-length=0 -specs=nosys.specs -specs=nano.specs
+    -Wdouble-promotion -fstack-protector-strong)
+
+if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+    target_compile_options(${PROJECT_NAME}.elf PUBLIC -g)
+endif()
+
+target_compile_options(${PROJECT_NAME}.elf PUBLIC -fno-exceptions)
+target_compile_options(${PROJECT_NAME}.elf PUBLIC
+    -Werror -Wall -Wextra -Wpedantic -Wshadow)
 set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CMAKE_CXX_STANDARD 17)
 set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CMAKE_C_STANDARD 11)
 target_link_options(${PROJECT_NAME}.elf PUBLIC
     -Wl,-gc-sections,--print-memory-usage -T ${CMAKE_CURRENT_SOURCE_DIR}/${LINKER_SCRIPT})
 target_link_options(${PROJECT_NAME}.elf PUBLIC
     -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map)
-#add_definitions(-DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -D__FPU_PRESENT=1)
-
-# set(CMAKE_EXE_LINKER_FLAGS
-#     "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map")
+target_link_options(${PROJECT_NAME}.elf PUBLIC -static -static-libgcc -static-libstdc++)
 
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
 set(BIN_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin)
