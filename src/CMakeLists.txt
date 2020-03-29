@@ -14,28 +14,26 @@ if (USE_HAL_DRIVER)
     target_compile_definitions(${PROJECT_NAME}.elf PUBLIC USE_HAL_DRIVER)
 endif()
 
-if (USE_HARDWARE_FLOAT)
-    #Uncomment for software floating point
-    #SET(FPU_FLAGS "-mfloat-abi=soft")
-else()
-    #Uncomment for hardware floating point
-    #SET(FPU_FLAGS "-mfloat-abi=hard -mfpu=fpv4-sp-d16")
-    #add_definitions(-DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -D__FPU_PRESENT=1)
-endif()
-
 target_compile_options(${PROJECT_NAME}.elf PUBLIC
     -mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections
     -fno-common -fmessage-length=0 -Wdouble-promotion -fstack-protector-strong)
-
-if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
-    target_compile_options(${PROJECT_NAME}.elf PUBLIC -g)
-endif()
 
 target_compile_options(${PROJECT_NAME}.elf PUBLIC -fno-exceptions)
 target_compile_options(${PROJECT_NAME}.elf PUBLIC
     -Werror -Wall -Wextra -Wpedantic -Wshadow)
 set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CXX_STANDARD 17)
 set_property(TARGET ${PROJECT_NAME}.elf PROPERTY C_STANDARD 11)
+
+if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+    target_compile_options(${PROJECT_NAME}.elf PUBLIC -g)
+endif()
+
+if (USE_HARDWARE_FLOAT)
+    target_compile_options(${PROJECT_NAME}.elf PUBLIC -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+    target_compile_definitions(${PROJECT_NAME}.elf PUBLIC ARM_MATH_CM4 ARM_MATH_MATRIX_CHECK ARM_MATH_ROUNDING __FPU_PRESENT=1)
+else()
+    target_compile_options(${PROJECT_NAME}.elf PUBLIC -mfloat-abi=soft)
+endif()
 
 set_target_properties(
   ${PROJECT_NAME}.elf
