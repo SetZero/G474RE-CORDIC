@@ -43,7 +43,7 @@ set_target_properties(
   "-T ${CMAKE_CURRENT_SOURCE_DIR}/${LINKER_SCRIPT} \
    -mthumb \
    -mcpu=cortex-m4 \
-   -Wl,--gc-sections \
+   -Wl,--gc-sections,--print-memory-usage \
    -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map")
 
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
