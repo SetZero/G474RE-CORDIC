@@ -1,5 +1,6 @@
-cmake_minimum_required(VERSION 3.17)
-project(G474RE-CORDIC C CXX ASM)
-set(CMAKE_CXX_STANDARD 17)
+include(toolchain/stm32f4.txt)
+
+cmake_minimum_required(VERSION 3.7)
+project(G474RE-CORDIC ASM C CXX)
 
 add_subdirectory(src)
