@@ -1,4 +1,4 @@
-include(toolchain/stm32f4.txt)
+include(toolchains/stm32f4.txt)
 
 cmake_minimum_required(VERSION 3.7)
 project(G474RE-CORDIC ASM C CXX)

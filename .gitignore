@@ -2,7 +2,10 @@
 /*
 
 # Explicitly add everything which is really needed
+!.drone.yml
+!.gitignore
 !src
+!toolchains
 !CMakeLists.txt
 !build.sh
 !Dockerfile
