@@ -1,5 +1,4 @@
-# specify cross compilers and tools
-option(USE_HAL_DRIVER "Enable the use of the hal driver" on)
+option(USE_HAL_DRIVER "Enable the use of the hal driver" off)
 option(USE_HARDWARE_FLOAT "Enable the use of hardware floating point operations" off)
 
 set(LINKER_SCRIPT STM32G474RETx_FLASH.ld)
@@ -15,35 +14,37 @@ if (USE_HAL_DRIVER)
     target_compile_definitions(${PROJECT_NAME}.elf PUBLIC USE_HAL_DRIVER)
 endif()
 
-if (USE_HARDWARE_FLOAT)
-    #Uncomment for software floating point
-    #SET(FPU_FLAGS "-mfloat-abi=soft")
-else()
-    #Uncomment for hardware floating point
-    #SET(FPU_FLAGS "-mfloat-abi=hard -mfpu=fpv4-sp-d16")
-    #add_definitions(-DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -D__FPU_PRESENT=1)
-endif()
-
 target_compile_options(${PROJECT_NAME}.elf PUBLIC
     -mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections
-    -fno-common -fmessage-length=0 -specs=nosys.specs -specs=nano.specs
-    -Wdouble-promotion -fstack-protector-strong)
+    -fno-common -fmessage-length=0 -Wdouble-promotion -fstack-protector-strong)
+
+target_compile_options(${PROJECT_NAME}.elf PUBLIC -fno-exceptions)
+target_compile_options(${PROJECT_NAME}.elf PUBLIC
+    -Werror -Wall -Wextra -Wpedantic -Wshadow)
+set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${PROJECT_NAME}.elf PROPERTY C_STANDARD 11)
 
 if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
     target_compile_options(${PROJECT_NAME}.elf PUBLIC -g)
     message("Build Debug")
 endif()
 
-target_compile_options(${PROJECT_NAME}.elf PUBLIC -fno-exceptions)
-target_compile_options(${PROJECT_NAME}.elf PUBLIC
-    -Werror -Wall -Wextra -Wpedantic -Wshadow)
-set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CMAKE_CXX_STANDARD 17)
-set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CMAKE_C_STANDARD 11)
-target_link_options(${PROJECT_NAME}.elf PUBLIC
-    -Wl,-gc-sections,--print-memory-usage -T ${CMAKE_CURRENT_SOURCE_DIR}/${LINKER_SCRIPT})
-target_link_options(${PROJECT_NAME}.elf PUBLIC
-    -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map)
-# target_link_options(${PROJECT_NAME}.elf PUBLIC -static -static-libgcc -static-libstdc++)
+if (USE_HARDWARE_FLOAT)
+    target_compile_options(${PROJECT_NAME}.elf PUBLIC -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+    target_compile_definitions(${PROJECT_NAME}.elf PUBLIC ARM_MATH_CM4 ARM_MATH_MATRIX_CHECK ARM_MATH_ROUNDING __FPU_PRESENT=1)
+else()
+    target_compile_options(${PROJECT_NAME}.elf PUBLIC -mfloat-abi=soft)
+endif()
+
+set_target_properties(
+  ${PROJECT_NAME}.elf
+  PROPERTIES
+  LINK_FLAGS
+  "-T ${CMAKE_CURRENT_SOURCE_DIR}/${LINKER_SCRIPT} \
+   -mthumb \
+   -mcpu=cortex-m4 \
+   -Wl,--gc-sections \
+   -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map")
 
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
 set(BIN_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin)

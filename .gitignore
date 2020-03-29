@@ -2,7 +2,11 @@
 /*
 
 # Explicitly add everything which is really needed
+!.drone.yml
+!.gitignore
+!.clang-format
 !src
+!toolchains
 !CMakeLists.txt
 !build.sh
 !Dockerfile

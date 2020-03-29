@@ -18,24 +18,24 @@
 
 static constexpr auto RCC_BASE = 0x40021000;
 
-static constexpr inline auto GPIO_A_BASE = 0x48000000;
-static constexpr inline auto GPIO_B_BASE = 0x48000400;
-static constexpr inline auto GPIO_C_BASE = 0x48000800;
-static constexpr inline auto GPIO_D_BASE = 0x48000C00;
-static constexpr inline auto GPIO_E_BASE = 0x48001000;
-static constexpr inline auto GPIO_F_BASE = 0x48001400;
-static constexpr inline auto GPIO_G_BASE = 0x48001800;
+static constexpr inline auto GPIO_A_BASE [[gnu::unused]] = 0x48000000;
+static constexpr inline auto GPIO_B_BASE [[gnu::unused]] = 0x48000400;
+static constexpr inline auto GPIO_C_BASE [[gnu::unused]] = 0x48000800;
+static constexpr inline auto GPIO_D_BASE [[gnu::unused]] = 0x48000C00;
+static constexpr inline auto GPIO_E_BASE [[gnu::unused]] = 0x48001000;
+static constexpr inline auto GPIO_F_BASE [[gnu::unused]] = 0x48001400;
+static constexpr inline auto GPIO_G_BASE [[gnu::unused]] = 0x48001800;
 
 /* RCC */
-static constexpr auto RCC_AHB1ENR = 0x48;
-static constexpr auto RCC_AHB2ENR = 0x4C;
-static constexpr auto RCC_APB2ENR = 0x60;
+static constexpr inline auto RCC_AHB1ENR [[gnu::unused]] = 0x48;
+static constexpr inline auto RCC_AHB2ENR = 0x4C;
+static constexpr inline auto RCC_APB2ENR [[gnu::unused]] = 0x60;
 
 /* GPIO */
 
 static constexpr inline auto GPIO_X_MODER = 0x00;
-static constexpr inline auto GPIO_X_OTYPER = 0x04;
-static constexpr inline auto GPIO_X_ODER = 0x14;
+static constexpr inline auto GPIO_X_OTYPER [[gnu::unused]] = 0x04;
+static constexpr inline auto GPIO_X_ODER [[gnu::unused]] = 0x14;
 static constexpr inline auto GPIO_X_BSRR = 0x18;
 
 /* Utils */
