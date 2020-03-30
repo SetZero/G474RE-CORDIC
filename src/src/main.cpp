@@ -11,7 +11,8 @@
   */
 
 /* Includes */
-#include "stdint.h"
+#include <cstdint>
+#include "hal/stm32/stm32g4.h"
 #include "main.h"
 
 /* REGISTER BASE ADDRESSES */
@@ -38,9 +39,10 @@ static constexpr inline auto GPIO_X_OTYPER [[gnu::unused]] = 0x04;
 static constexpr inline auto GPIO_X_ODER [[gnu::unused]] = 0x14;
 static constexpr inline auto GPIO_X_BSRR = 0x18;
 
+
 /* Utils */
 
-[[nodiscard]] volatile uint32_t &memory(const uint32_t loc) {
+[[nodiscard]] volatile inline uint32_t &memory(const uint32_t loc) {
     return *reinterpret_cast<volatile uint32_t*>(loc);
 }
 
@@ -55,11 +57,11 @@ void delay_ms(uint32_t n) {
   * @retval int
   */
 int main() {
-
     //SystemClock_Config();
-    memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
-    memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << 10u);
-    memory(GPIO_A_BASE + GPIO_X_MODER) |= (1u << 10u);
+    //memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
+    HAL::address<HAL::STM::RCC::AHBENR>().ahb2.add<HAL::STM::RCC::AHBENR::AHB2ENR::GPIOA>();
+    memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
+    memory(GPIO_A_BASE + GPIO_X_MODER) |= (1u << (5 * 2u));
 
     while (true) {
         memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
