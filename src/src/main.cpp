@@ -43,12 +43,12 @@ static constexpr inline auto GPIO_X_BSRR = 0x18;
 /* Utils */
 
 [[nodiscard]] volatile inline uint32_t &memory(const uint32_t loc) {
-    return *reinterpret_cast<volatile uint32_t*>(loc);
+    return *reinterpret_cast<uint32_t*>(loc);
 }
 
 void delay_ms(uint32_t n) {
     for(; n > 0; n--)
-        for(uint32_t i = 0; i < 3195; i++);
+        for(volatile uint32_t i = 0; i < 3195; i++);
 }
 
 
