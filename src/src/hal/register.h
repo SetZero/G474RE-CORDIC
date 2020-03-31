@@ -34,8 +34,8 @@ namespace HAL {
         volatile value_type hw_register;
     };
 
-    template<typename Component>
+    template<typename Component, auto N>
     [[nodiscard]] constexpr inline auto& address() {
-        return *reinterpret_cast<Component*>(Component::address::value);
+        return *reinterpret_cast<Component*>(Component::template address<N>::value);
     }
 }

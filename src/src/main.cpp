@@ -61,8 +61,11 @@ void delay_ms(uint32_t n) {
 int main() {
     //SystemClock_Config();
     //memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
-    HAL::address<HAL::STM::peripherals::AHBENR>().ahb1.add<HAL::STM::peripherals::AHBENR::AHB1ENR::CORDIC>();
-    HAL::address<HAL::STM::peripherals::AHBENR>().ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
+    HAL::address<HAL::STM::peripherals::AHBENR, 0>().ahb1.add<HAL::STM::peripherals::AHBENR::AHB1ENR::CORDIC>();
+    HAL::address<HAL::STM::peripherals::AHBENR, 0>().ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
+
+    bool rdy [[gnu::unused]] = HAL::address<HAL::STM::peripherals::CORDIC, 0>().csr.is_ready();
+
     memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
     memory(GPIO_A_BASE + GPIO_X_MODER) |= (1u << (5 * 2u));
 

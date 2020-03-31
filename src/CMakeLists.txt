@@ -4,7 +4,7 @@ option(USE_HARDWARE_FLOAT "Enable the use of hardware floating point operations"
 set(LINKER_SCRIPT STM32G474RETx_FLASH.ld)
 set(SOURCES
     startup/startup_stm32g474xx.s
-    src/main.cpp src/hal/stm32/stm32g4.h src/hal/register.h)
+    src/main.cpp src/hal/stm32/stm32g4.h src/hal/register.h src/hal/stm32/register/cordic.h)
 
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
 

@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include "../register.h"
+#include "register/cordic.h"
 
 namespace HAL::STM {
     struct A {};
@@ -34,6 +35,13 @@ namespace HAL::STM {
             GPIO() = delete;
             control_register<GPIO, MODER> moder;
             template<typename L> struct address;
+        };
+
+        struct CORDIC {
+            CORDIC() = delete;
+
+            Cordic::cordic_register<CORDIC, Cordic::register_types::CSR> csr;
+            template<auto N> struct address;
         };
 
         struct AHBENR {
@@ -76,15 +84,22 @@ namespace HAL::STM {
             control_register<AHBENR, AHB2ENR> ahb2;
             control_register<AHBENR, AHB3ENR> ahb3;
 
-            struct address {
-                static constexpr inline uintptr_t value = peripherals::base_address::value + 0x48;
-            };
+            template<auto N> struct address;
         };
     } __attribute__((packed)); /* TODO: Use [[attribute]] Keyword */
 
+    template<>
+    struct peripherals::AHBENR::address<0> {
+        static constexpr inline uintptr_t value = peripherals::base_address::value + 0x48;
+    };
 
     template<>
     struct peripherals::GPIO::address<A> {
-        static constexpr inline uint32_t value = 0x48000000;
+        static constexpr inline uintptr_t value = 0x48000000;
+    };
+
+    template<>
+    struct peripherals::CORDIC::address<0> {
+        static constexpr inline uintptr_t value = 0x40020C00;
     };
 }
