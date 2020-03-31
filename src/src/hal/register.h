@@ -6,32 +6,32 @@
 #include <type_traits>
 
 namespace HAL {
-    template<typename Component, typename BitType, typename ValueType = uint32_t>
-    struct ControlRegister final {
+    template<typename Component, typename byte_type, typename ValueType = uint32_t>
+    struct control_register final {
         using component_type = Component;
         using value_type = ValueType;
-        using bit_type = BitType;
+        using bit_type = byte_type;
 
-        ControlRegister() = delete;
-        ControlRegister(const ControlRegister&) = delete;
-        ControlRegister(ControlRegister&&) = delete;
-        ControlRegister& operator=(const ControlRegister&) = delete;
-        ControlRegister& operator=(ControlRegister&&) = delete;
+        control_register() = delete;
+        control_register(const control_register&) = delete;
+        control_register(control_register&&) = delete;
+        control_register& operator=(const control_register&) = delete;
+        control_register& operator=(control_register&&) = delete;
 
         template<typename... T>
         void inline set(T... v) {
-            static_assert((std::is_same<T, BitType>::value& ...));
-            hwRegister = (static_cast<value_type>(v) | ...);
+            static_assert((std::is_same<T, byte_type>::value& ...));
+            hw_register = (static_cast<value_type>(v) | ...);
         }
 
-        template<BitType F>
+        template<byte_type F>
         void inline add()
         {
-            hwRegister |= static_cast<value_type>(F);
+            hw_register |= static_cast<value_type>(F);
         }
 
        private:
-        volatile value_type hwRegister;
+        volatile value_type hw_register;
     };
 
     template<typename Component>

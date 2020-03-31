@@ -27,7 +27,7 @@ static constexpr inline auto GPIO_E_BASE [[gnu::unused]] = 0x48001000;
 static constexpr inline auto GPIO_F_BASE [[gnu::unused]] = 0x48001400;
 static constexpr inline auto GPIO_G_BASE [[gnu::unused]] = 0x48001800;
 
-/* RCC */
+/* peripherals */
 static constexpr inline auto RCC_AHB1ENR [[gnu::unused]] = 0x48;
 static constexpr inline auto RCC_AHB2ENR = 0x4C;
 static constexpr inline auto RCC_APB2ENR [[gnu::unused]] = 0x60;
@@ -39,6 +39,8 @@ static constexpr inline auto GPIO_X_OTYPER [[gnu::unused]] = 0x04;
 static constexpr inline auto GPIO_X_ODER [[gnu::unused]] = 0x14;
 static constexpr inline auto GPIO_X_BSRR = 0x18;
 
+/* CORDIC */
+static constexpr inline auto CORDIC_BASE = 0x40020C00;
 
 /* Utils */
 
@@ -59,7 +61,8 @@ void delay_ms(uint32_t n) {
 int main() {
     //SystemClock_Config();
     //memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
-    HAL::address<HAL::STM::RCC::AHBENR>().ahb2.add<HAL::STM::RCC::AHBENR::AHB2ENR::GPIOA>();
+    HAL::address<HAL::STM::peripherals::AHBENR>().ahb1.add<HAL::STM::peripherals::AHBENR::AHB1ENR::CORDIC>();
+    HAL::address<HAL::STM::peripherals::AHBENR>().ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
     memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
     memory(GPIO_A_BASE + GPIO_X_MODER) |= (1u << (5 * 2u));
 

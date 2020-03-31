@@ -9,12 +9,36 @@
 #include "../register.h"
 
 namespace HAL::STM {
-    struct RCC {
+    struct A {};
+    struct B {};
+    struct C {};
+    struct D {};
+    struct E {};
+    struct F {};
+    struct G {};
+
+    struct peripherals {
         struct base_address {
             static constexpr inline uintptr_t value = 0x40021000;
         };
 
+        struct GPIO final
+        {
+            enum class MODER {
+                INPUT = 0,
+                GP_OUT = 1,
+                ALTERNATIVE_FUNCTION = 2,
+                ANALOG = 3
+            };
+
+            GPIO() = delete;
+            control_register<GPIO, MODER> moder;
+            template<typename L> struct address;
+        };
+
         struct AHBENR {
+            AHBENR() = delete;
+
             enum class AHB1ENR : uint32_t {
                 DMA1 = (1u << 0u),
                 DM2 = (1u << 1u),
@@ -48,13 +72,19 @@ namespace HAL::STM {
                 QSPI = (1u << 8u),
             };
 
-            ControlRegister<AHBENR, AHB1ENR> adb1;
-            ControlRegister<AHBENR, AHB2ENR> ahb2;
-            ControlRegister<AHBENR, AHB3ENR> ahb3;
+            control_register<AHBENR, AHB1ENR> ahb1;
+            control_register<AHBENR, AHB2ENR> ahb2;
+            control_register<AHBENR, AHB3ENR> ahb3;
 
             struct address {
-                static constexpr inline uintptr_t value = RCC::base_address::value + 0x48;
+                static constexpr inline uintptr_t value = peripherals::base_address::value + 0x48;
             };
         };
     } __attribute__((packed)); /* TODO: Use [[attribute]] Keyword */
+
+
+    template<>
+    struct peripherals::GPIO::address<A> {
+        static constexpr inline uint32_t value = 0x48000000;
+    };
 }
