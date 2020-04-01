@@ -1,5 +1,6 @@
 #pragma once
 
+#include <climits>
 #include <cmath>
 #include <cstdint>
 #include <type_traits>
@@ -9,37 +10,53 @@ enum struct precision : uint8_t { q1_15, q1_31 };
 namespace Detail {
 
 template <uint8_t all_bits>
-using internal_type = std::conditional_t < all_bits < 8,
-      int8_t,
-      std::conditional_t <
-          all_bits<16, int16_t,
-                   std::conditional_t<all_bits<32, int32_t, int64_t>>>;
+using internal_type = std::conditional_t<
+    (all_bits <= 8), uint8_t,
+    std::conditional_t<
+        (all_bits <= 16), uint16_t,
+        std::conditional_t<(all_bits <= 32), uint32_t, uint64_t>>>;
 
+// TODO: fix negative numbers
 template <uint8_t integer_bit, uint8_t fractional_bit>
 class q_number {
     using type = internal_type<integer_bit + fractional_bit>;
+    static inline constexpr uint8_t sign_pos = sizeof(type) * CHAR_BIT - 1;
+
+    // TODO: fix this
+    static_assert(
+        integer_bit >= 0,
+        "There has to be at least one bit for the sign in this implementation");
 
    public:
     constexpr q_number() = default;
     template <typename T,
               std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     constexpr explicit q_number(T value) {
-        m_value =
-            static_cast<type>(std::round(value * std::pow(2, fractional_bit)));
+        m_value = std::signbit(value) << sign_pos |
+                  static_cast<type>(std::round(
+                      std::fabs(value) * std::pow(2, fractional_bit - 1)));
     }
 
     template <typename T,
               std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     q_number &operator=(T value) {
-        m_value =
-            static_cast<type>(std::round(value * std::pow(2, fractional_bit)));
+        m_value = std::signbit(value) << sign_pos |
+                  static_cast<type>(std::round(
+                      std::fabs(value) * std::pow(2, fractional_bit - 1)));
         return *this;
     }
 
     template <typename T,
               std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     constexpr explicit operator T() const {
-        return T(m_value * std::pow(T(2), -fractional_bit));
+        return (m_value & (1 << sign_pos) ? -1 : 1) *
+               T((m_value & ~(1 << sign_pos)) *
+                 std::pow(T(2), -(fractional_bit - 1)));
+    }
+
+    template <typename T, std::enable_if_t<sizeof(T) >= sizeof(type), int> = 0>
+    constexpr T fixed_point_value() const {
+        return T(m_value);
     }
 
    private:
@@ -61,19 +78,30 @@ using float_type = std::conditional_t<p == precision::q1_15, float, double>;
 
 }  // namespace Detail
 
+// TODO: convert to class to also do a radians class
+enum struct degrees : int16_t {};
+
 template <precision p>
 class angle {
    public:
     using type = Detail::precision_to_type<p>;
 
-    template <typename T>
+    // TODO: discuss how to spot too large numbers
+    template <typename T,
+              std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     constexpr explicit angle(const T &value)
         : m_value(value / static_cast<T>(M_PI)) {}
 
-    template <typename T>
+    constexpr explicit angle(degrees d)
+        : angle(Detail::float_type<p>(d) / Detail::float_type<p>(180) *
+                static_cast<Detail::float_type<p>>(M_PI)) {}
+
+    template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
     constexpr explicit operator T() const {
         return T(static_cast<T>(m_value) * static_cast<T>(M_PI));
     }
+
+    // TODO: add output to degrees
 
     constexpr explicit operator type() const { return m_value; }
 
@@ -88,7 +116,7 @@ class modulus {
 
     template <typename T>
     constexpr explicit modulus(const T &value) {
-        if (value > T(1)) {
+        if (value >= 1) {
             m_scale = value * Detail::float_type<p>(1.5);
             m_value = value * std::pow(m_scale, -1);
         } else {
@@ -96,7 +124,7 @@ class modulus {
         }
     }
 
-    template <typename T>
+    template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
     constexpr explicit operator T() const {
         return T(m_value) * static_cast<T>(m_scale);
     }
@@ -117,7 +145,7 @@ class hyperbolic_angle {
     template <typename T>
     explicit hyperbolic_angle(const T &value [[gnu::unused]]) {}
 
-    template <typename T>
+    template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
     explicit operator T() const {
         return T(m_value);
     }
@@ -127,3 +155,4 @@ class hyperbolic_angle {
    private:
     type m_value;
 };
+
