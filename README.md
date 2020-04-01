@@ -1,4 +1,4 @@
-[![Build Status](https://drone.magical.rocks/api/badges/SetZero/G474RE-CORDIC/status.svg)](https://drone.magical.rocks/SetZero/G474RE-CORDIC)
+[![Build Status](https://drone.magical.rocks/api/badges/SetZero/G474RE-CORDIC/status.svg)](https://drone.magical.rocks/SetZero/G474RE-CORDIC) ![GitHub release](https://img.shields.io/github/v/release/SetZero/G474RE-CORDIC?include_prereleases) ![GitHub](https://img.shields.io/github/license/SetZero/G474RE-CORDIC)
 
 # G474RE-CORDIC
 
