@@ -3,6 +3,8 @@
 //
 
 #pragma once
+
+#include <cstdint>
 #include <type_traits>
 
 namespace HAL {
@@ -20,13 +22,12 @@ namespace HAL {
 
         template<typename... T>
         void inline set(T... v) {
-            static_assert((std::is_same<T, byte_type>::value& ...));
+            static_assert((std::is_same<T, byte_type>::value & ...));
             hw_register = (static_cast<value_type>(v) | ...);
         }
 
         template<byte_type F>
-        void inline add()
-        {
+        void inline add() {
             hw_register |= static_cast<value_type>(F);
         }
 
@@ -38,4 +39,4 @@ namespace HAL {
     [[nodiscard]] constexpr inline auto& address() {
         return *reinterpret_cast<Component*>(Component::template address<N>::value);
     }
-}
+}  // namespace HAL

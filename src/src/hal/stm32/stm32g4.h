@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
-#include "../register.h"
-#include "register/cordic.h"
+#include <cstddef>
+#include "hal/register.h"
+#include "hal/stm32/register/cordic.h"
 
 namespace HAL::STM {
     struct A {};

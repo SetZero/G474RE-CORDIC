@@ -1,19 +1,23 @@
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  *
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ *
+ *
+ ******************************************************************************
+ */
 
 /* Includes */
-#include <cstdint>
-#include "hal/stm32/stm32g4.h"
 #include "main.h"
+
+#include <cstdint>
+
+#include "hal/cordic.h"
+#include "hal/cordic_types.h"
+#include "hal/stm32/stm32g4.h"
 
 /* REGISTER BASE ADDRESSES */
 
@@ -40,29 +44,38 @@ static constexpr inline auto GPIO_X_ODER [[gnu::unused]] = 0x14;
 static constexpr inline auto GPIO_X_BSRR = 0x18;
 
 /* CORDIC */
-static constexpr inline auto CORDIC_BASE = 0x40020C00;
+static constexpr inline auto CORDIC_BASE [[gnu::unused]] = 0x40020C00;
 
 /* Utils */
 
-[[nodiscard]] volatile inline uint32_t &memory(const uint32_t loc) {
-    return *reinterpret_cast<uint32_t*>(loc);
-}
+[[nodiscard]] volatile inline uint32_t &memory(const uint32_t loc) { return *reinterpret_cast<uint32_t *>(loc); }
 
 void delay_ms(uint32_t n) {
-    for(; n > 0; n--)
-        for(volatile uint32_t i = 0; i < 3195; i++);
+    for (; n > 0; n--)
+        for (volatile uint32_t i = 0; i < 3195; i++)
+            ;
 }
 
-
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main() {
-    //SystemClock_Config();
-    //memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
+    // SystemClock_Config();
+    // memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
     HAL::address<HAL::STM::peripherals::AHBENR, 0>().ahb1.add<HAL::STM::peripherals::AHBENR::AHB1ENR::CORDIC>();
     HAL::address<HAL::STM::peripherals::AHBENR, 0>().ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
+
+    class cordic_stm32_reg;
+
+    using cc = cordic_config<precision::q1_15>;
+    operation<cc, operation_type::single, functions::cosine> op;
+    op.arg1(degrees(90));
+
+    cordic<cordic_stm32_reg> c;
+    auto result = c.calculate(op);
+
+    q1_15 q [[gnu::unused]] = result.result();
 
     bool rdy [[gnu::unused]] = HAL::address<HAL::STM::peripherals::CORDIC, 0>().csr.is_ready();
 
@@ -71,9 +84,9 @@ int main() {
 
     while (true) {
         memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
-        //memory(GPIO_A_BASE + GPIO_X_ODER) |= (1u << 5u);
+        // memory(GPIO_A_BASE + GPIO_X_ODER) |= (1u << 5u);
         delay_ms(500);
-        //memory(GPIO_A_BASE + GPIO_X_ODER) &= ~(1u << 5u);
+        // memory(GPIO_A_BASE + GPIO_X_ODER) &= ~(1u << 5u);
         memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
         delay_ms(500);
     }
