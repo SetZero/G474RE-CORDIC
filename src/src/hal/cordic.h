@@ -80,9 +80,10 @@ namespace CordicHal {
             // TODO: configure this differently, maybe most efficient, always use one register value, when q1_15 is used
             m_spec_cordic.csr.set_argument_size(config::precision);
             m_spec_cordic.csr.set_result_size(config::precision);
-            m_spec_cordic.csr.set_precision(uint8_t(3));
             m_spec_cordic.csr.set_argument_amount(cordic_control_register_type::result_amount::TWO_REGISTER_VALUE);
             m_spec_cordic.csr.set_result_amount(cordic_control_register_type::result_amount::TWO_REGISTER_VALUE);
+            m_spec_cordic.csr.set_precision(uint8_t(3));
+            m_spec_cordic.csr.set_scale(uint8_t(0));
             m_spec_cordic.csr.enable_dma_write_channel(false);
             m_spec_cordic.csr.enable_dma_read_channel(false);
             m_spec_cordic.csr.enable_interrupts(false);

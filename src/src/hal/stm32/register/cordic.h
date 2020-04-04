@@ -99,17 +99,18 @@ namespace HAL::STM::Cordic {
         template<functions mode>
         void inline set_function_mode() {
             // Make sure only one function is set
-            hw_register &= ~static_cast<uint32_t>(0xFFFF) | static_cast<uint32_t>(mode);
+            hw_register = (hw_register & ~(static_cast<uint32_t>(0xF))) | static_cast<uint32_t>(mode);
         }
 
-        // TODO: do this differently
-        void inline clear_function_mode() { hw_register &= ~0xFFFF; }
-
         /* TODO: (10:8) SCALE: [number 2^n/2^-n] */
+        void inline set_scale(uint8_t scale) {
+            hw_register = (hw_register & ~(static_cast<uint32_t>(0x7) << 8)) | static_cast<uint32_t>(scale & 0x7) << 8;
+        }
 
         /* TODO: (7:4) Precision: [number 1 - 15] */
         void inline set_precision(uint8_t precision) {
-            hw_register &= ~static_cast<uint32_t>(0xFFF << 4) | (precision & 0xFFF) << 4;
+            hw_register = (hw_register & ~(static_cast<uint32_t>(0xF) << 4)) | static_cast<uint32_t>(precision & 0xF)
+                                                                                   << 4;
         }
 
        private:

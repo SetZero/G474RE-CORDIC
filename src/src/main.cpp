@@ -66,13 +66,13 @@ int main() {
     HAL::address<HAL::STM::peripherals::AHBENR, 0>().ahb1.add<HAL::STM::peripherals::AHBENR::AHB1ENR::CORDIC>();
     HAL::address<HAL::STM::peripherals::AHBENR, 0>().ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
 
+    delay_ms(500);
+
     using namespace CordicHal;
 
     using cc = cordic_config<precision::q1_31>;
 
     cordic c{HAL::address<HAL::STM::peripherals::CORDIC, 0>()};
-
-    bool rdy [[gnu::unused]] = HAL::address<HAL::STM::peripherals::CORDIC, 0>().csr.is_ready();
 
     memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
     memory(GPIO_A_BASE + GPIO_X_MODER) |= (1u << (5 * 2u));
@@ -82,7 +82,7 @@ int main() {
     int deg = 0;
 
     while (true) {
-        op.arg1(degrees(0));
+        op.arg1(degrees(deg));
         auto result = c.calculate(op);
 
         memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
@@ -91,7 +91,7 @@ int main() {
         // memory(GPIO_A_BASE + GPIO_X_ODER) &= ~(1u << 5u);
         memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
         q1_31 q [[gnu::unused]] = result.result();
-        delay_ms(500);
+        delay_ms(static_cast<uint32_t>(static_cast<float>(q) * 500));
 
         deg = (deg + 1) % 360;
     }
