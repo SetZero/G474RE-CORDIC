@@ -32,6 +32,11 @@ namespace Detail {
                 static_cast<type>(std::round(std::abs(value) * static_cast<type>(std::pow(2, fractional_bit - 1))));
         }
 
+        template<typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+        constexpr explicit q_number(T value) {
+            m_value = value;
+        }
+
         template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
         q_number &operator=(T value) {
             m_value =

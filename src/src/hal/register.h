@@ -33,7 +33,7 @@ namespace HAL {
 
        private:
         volatile value_type hw_register;
-    };
+    } __attribute__((packed));
 
     template<typename Component, auto N>
     [[nodiscard]] constexpr inline auto& address() {

@@ -22,7 +22,7 @@ endif()
 
 target_compile_options(${PROJECT_NAME}.elf PUBLIC
     -mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections
-    -fno-common -fmessage-length=0 -Wdouble-promotion -fstack-protector-strong)
+    -fno-common -fmessage-length=0 -Wdouble-promotion -fstack-protector-strong -Wno-address-of-packed-member)
 
 target_compile_options(${PROJECT_NAME}.elf PUBLIC -fno-exceptions)
 target_compile_options(${PROJECT_NAME}.elf PUBLIC
