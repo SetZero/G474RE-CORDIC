@@ -14,6 +14,10 @@ if (USE_HAL_DRIVER)
     target_compile_definitions(${PROJECT_NAME}.elf PUBLIC USE_HAL_DRIVER)
 endif()
 
+if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10)
+    target_compile_options(${PROJECT_NAME}.elf PUBLIC -fconcepts)
+endif()
+
 target_compile_options(${PROJECT_NAME}.elf PUBLIC
     -mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections
     -fno-common -fmessage-length=0 -Wdouble-promotion -fstack-protector-strong)
@@ -21,7 +25,7 @@ target_compile_options(${PROJECT_NAME}.elf PUBLIC
 target_compile_options(${PROJECT_NAME}.elf PUBLIC -fno-exceptions)
 target_compile_options(${PROJECT_NAME}.elf PUBLIC
     -Werror -Wall -Wextra -Wpedantic -Wshadow)
-set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${PROJECT_NAME}.elf PROPERTY C_STANDARD 11)
 
 if(CMAKE_BUILD_TYPE EQUAL "DEBUG")

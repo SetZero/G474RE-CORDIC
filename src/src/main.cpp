@@ -12,6 +12,7 @@
 
 /* Includes */
 #include <cstdint>
+#include <concepts>
 #include "hal/stm32/stm32g4.h"
 #include "main.h"
 
@@ -48,11 +49,20 @@ static constexpr inline auto CORDIC_BASE = 0x40020C00;
     return *reinterpret_cast<uint32_t*>(loc);
 }
 
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 void delay_ms(uint32_t n) {
-    for(; n > 0; n--)
-        for(volatile uint32_t i = 0; i < 3195; i++);
+    for (; n > 0; n--)
+        for (uint32_t i = 0; i < 3195; i++);
 }
+#pragma GCC pop_options
 
+template<typename cordic_impl>
+concept basic_cordic =
+requires(const cordic_impl cordic) {
+    { cordic.sine() } -> std::same_as<double>;
+    { cordic.cosine() } -> std::same_as<double>;
+};
 
 /**
   * @brief  The application entry point.
@@ -66,8 +76,9 @@ int main() {
 
     bool rdy [[gnu::unused]] = HAL::address<HAL::STM::peripherals::CORDIC, 0>().csr.is_ready();
 
-    memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
-    memory(GPIO_A_BASE + GPIO_X_MODER) |= (1u << (5 * 2u));
+    auto moder = memory(GPIO_A_BASE + GPIO_X_MODER);
+    moder = moder & ~(0b11u << (5 * 2u));
+    moder = moder | (1u << (5 * 2u));
 
     while (true) {
         memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);

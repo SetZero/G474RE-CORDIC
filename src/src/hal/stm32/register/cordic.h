@@ -89,16 +89,16 @@ namespace HAL::STM::Cordic {
         }
 
         void inline clear_function_mode() {
-            hw_register &= ~(0xFu);
+            hw_register = hw_register & ~(0xFu);
         }
 
        private:
         template<uint32_t bit>
         void inline enable_register(bool enable) {
             if(enable)
-                hw_register |= (1u << bit);
+                hw_register = hw_register | (1u << bit);
             else
-                hw_register &= ~(1u << bit);
+                hw_register = hw_register & ~(1u << bit);
         }
         volatile uint32_t hw_register;
     };
