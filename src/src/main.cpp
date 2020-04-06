@@ -1,20 +1,23 @@
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  *
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ *
+ *
+ ******************************************************************************
+ */
 
 /* Includes */
+#include "main.h"
+
 #include <cstdint>
 #include <concepts>
+#include "hal/cordic.h"
+#include "hal/cordic_types.h"
 #include "hal/stm32/stm32g4.h"
-#include "main.h"
 
 /* REGISTER BASE ADDRESSES */
 
@@ -41,7 +44,7 @@ static constexpr inline auto GPIO_X_ODER [[gnu::unused]] = 0x14;
 static constexpr inline auto GPIO_X_BSRR = 0x18;
 
 /* CORDIC */
-static constexpr inline auto CORDIC_BASE = 0x40020C00;
+static constexpr inline auto CORDIC_BASE [[gnu::unused]] = 0x40020C00;
 
 /* Utils */
 
@@ -55,26 +58,42 @@ void delay_ms(uint32_t n) {
 }
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main() {
-    //SystemClock_Config();
-    //memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
+    // SystemClock_Config();
+    // memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
     HAL::address<HAL::STM::peripherals::AHBENR, 0>().ahb1.add<HAL::STM::peripherals::AHBENR::AHB1ENR::CORDIC>();
     HAL::address<HAL::STM::peripherals::AHBENR, 0>().ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
 
-    bool rdy [[gnu::unused]] = HAL::address<HAL::STM::peripherals::CORDIC, 0>().csr.is_ready();
+    delay_ms(500);
+
+    using namespace CordicHal;
+
+    using cc = cordic_config<precision::q1_31>;
+
+    cordic c{HAL::address<HAL::STM::peripherals::CORDIC, 0>()};
 
     memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
     memory(GPIO_A_BASE + GPIO_X_MODER) |= (1u << (5 * 2u));
 
+    operation<cc, operation_type::single, functions::cosine> op;
+
+    int deg = 0;
+
     while (true) {
+        op.arg1(degrees(deg));
+        auto result = c.calculate(op);
+
         memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
-        //memory(GPIO_A_BASE + GPIO_X_ODER) |= (1u << 5u);
-        delay_ms(1000);
-        //memory(GPIO_A_BASE + GPIO_X_ODER) &= ~(1u << 5u);
+        // memory(GPIO_A_BASE + GPIO_X_ODER) |= (1u << 5u);
+        delay_ms(500);
+        // memory(GPIO_A_BASE + GPIO_X_ODER) &= ~(1u << 5u);
         memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
-        delay_ms(1000);
+        q1_31 q [[gnu::unused]] = result.result();
+        delay_ms(static_cast<uint32_t>(static_cast<float>(q) * 500));
+
+        deg = (deg + 1) % 360;
     }
 }

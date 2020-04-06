@@ -6,8 +6,9 @@
 
 #include <cstddef>
 #include <cstdint>
-#include "../register.h"
-#include "register/cordic.h"
+
+#include "hal/register.h"
+#include "hal/stm32/register/cordic.h"
 
 namespace HAL::STM {
     struct A {};
@@ -23,26 +24,30 @@ namespace HAL::STM {
             static constexpr inline uintptr_t value = 0x40021000;
         };
 
-        struct GPIO final
-        {
-            enum class MODER {
-                INPUT = 0,
-                GP_OUT = 1,
-                ALTERNATIVE_FUNCTION = 2,
-                ANALOG = 3
-            };
+        struct GPIO final {
+            enum class MODER { INPUT = 0, GP_OUT = 1, ALTERNATIVE_FUNCTION = 2, ANALOG = 3 };
 
             GPIO() = delete;
             control_register<GPIO, MODER> moder;
-            template<typename L> struct address;
+            template<typename L>
+            struct address;
         };
 
+        // TODO: structure this better somehow
         struct CORDIC {
+            using csr_register_type = Cordic::cordic_register<CORDIC, Cordic::register_types::CSR>;
+            using wdata_register_type = Cordic::cordic_register<CORDIC, Cordic::register_types::WDATA>;
+            using rdata_register_type = Cordic::cordic_register<CORDIC, Cordic::register_types::RDATA>;
+
             CORDIC() = delete;
 
-            Cordic::cordic_register<CORDIC, Cordic::register_types::CSR> csr;
-            template<auto N> struct address;
-        };
+            csr_register_type csr;
+            wdata_register_type wdata;
+            rdata_register_type rdata;
+
+            template<auto N>
+            struct address;
+        } __attribute__((packed));
 
         struct AHBENR {
             AHBENR() = delete;
@@ -84,8 +89,9 @@ namespace HAL::STM {
             control_register<AHBENR, AHB2ENR> ahb2;
             control_register<AHBENR, AHB3ENR> ahb3;
 
-            template<auto N> struct address;
-        };
+            template<auto N>
+            struct address;
+        } __attribute__((packed));
     } __attribute__((packed)); /* TODO: Use [[attribute]] Keyword */
 
     template<>
@@ -102,4 +108,4 @@ namespace HAL::STM {
     struct peripherals::CORDIC::address<0> {
         static constexpr inline uintptr_t value = 0x40020C00;
     };
-}
+}  // namespace HAL::STM

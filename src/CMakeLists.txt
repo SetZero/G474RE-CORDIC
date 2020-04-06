@@ -4,11 +4,17 @@ option(USE_HARDWARE_FLOAT "Enable the use of hardware floating point operations"
 set(LINKER_SCRIPT STM32G474RETx_FLASH.ld)
 set(SOURCES
     startup/startup_stm32g474xx.s
-    src/main.cpp src/hal/stm32/stm32g4.h src/hal/register.h src/hal/stm32/register/cordic.h)
+    src/main.cpp
+    # src/hal/stm32/stm32g4.h
+    # src/hal/register.h
+    # src/utils.h
+    # src/hal/stm32/register/cordic.h
+    )
 
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
 
 target_compile_definitions(${PROJECT_NAME}.elf PUBLIC STM32G474xx)
+target_include_directories(${PROJECT_NAME}.elf PUBLIC src)
 
 if (USE_HAL_DRIVER)
     target_compile_definitions(${PROJECT_NAME}.elf PUBLIC USE_HAL_DRIVER)
@@ -20,7 +26,7 @@ endif()
 
 target_compile_options(${PROJECT_NAME}.elf PUBLIC
     -mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections
-    -fno-common -fmessage-length=0 -Wdouble-promotion -fstack-protector-strong)
+    -fno-common -fmessage-length=0 -Wdouble-promotion -fstack-protector-strong -Wno-address-of-packed-member)
 
 target_compile_options(${PROJECT_NAME}.elf PUBLIC -fno-exceptions)
 target_compile_options(${PROJECT_NAME}.elf PUBLIC
@@ -40,8 +46,7 @@ else()
     target_compile_options(${PROJECT_NAME}.elf PUBLIC -mfloat-abi=soft)
 endif()
 
-set_target_properties(
-  ${PROJECT_NAME}.elf
+set_target_properties( ${PROJECT_NAME}.elf
   PROPERTIES
   LINK_FLAGS
   "-T ${CMAKE_CURRENT_SOURCE_DIR}/${LINKER_SCRIPT} \
