@@ -12,6 +12,6 @@
 
 #pragma once
 
-volatile uint32_t &memory(uint32_t loc);
+uint32_t &memory(uint32_t loc);
 void delay_ms(uint32_t n);
 
