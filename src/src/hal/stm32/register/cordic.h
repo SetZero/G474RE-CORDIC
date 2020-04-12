@@ -126,6 +126,12 @@ namespace HAL::STM::Cordic {
 
     template<typename Component>
     struct cordic_register<Component, register_types::WDATA, uint32_t> {
+        cordic_register(const cordic_register &) = delete;
+        cordic_register(cordic_register &&) = delete;
+
+        cordic_register &operator=(const cordic_register &) = delete;
+        cordic_register &operator=(cordic_register &&) = delete;
+
         template<typename qtype>
         void write_arg(const qtype &arg [[gnu::unused]]) {
             // TODO: 16 bit writes
@@ -138,6 +144,12 @@ namespace HAL::STM::Cordic {
 
     template<typename Component>
     struct cordic_register<Component, register_types::RDATA, uint32_t> {
+        cordic_register(const cordic_register &) = delete;
+        cordic_register(cordic_register &&) = delete;
+
+        cordic_register &operator=(const cordic_register &) = delete;
+        cordic_register &operator=(cordic_register &&) = delete;
+
         template<typename qtype>
         [[nodiscard]] qtype read_arg() {
             return qtype(hw_register);
