@@ -42,7 +42,7 @@ namespace CordicHal {
 
        private:
         angle_type m_angle{0.0f};
-        typename config_type::qtype m_modulus{0.5f};
+        typename config_type::qtype m_modulus{1.0f};
     };
 
     // TODO: add multiple results
@@ -66,38 +66,39 @@ namespace CordicHal {
     template<typename CordicRegister>
     class cordic {
        public:
+        static_assert(std::is_pointer_v<CordicRegister>, "CordicRegister has to be a pointer type");
+
         using cordic_type = CordicRegister;
-        using cordic_control_register_type = decltype(cordic_type::csr);
+        using cordic_control_register_type = decltype(std::remove_pointer_t<cordic_type>::csr);
 
         constexpr cordic(CordicRegister reg) : m_spec_cordic(reg) {}
 
         template<typename config, operation_type type, functions function>
         typename operation<config, type, function>::result_type calculate(const operation<config, type, function> &op
                                                                           [[gnu::unused]]) {
-            m_spec_cordic.csr
+            m_spec_cordic->csr
                 .template set_function_mode<cordic_control_register_type::template map_function<function>()>();
 
             // TODO: configure this differently, maybe most efficient, always use one register value, when q1_15 is used
-            m_spec_cordic.csr.set_argument_size(config::precision);
-            m_spec_cordic.csr.set_result_size(config::precision);
-            m_spec_cordic.csr.set_argument_amount(cordic_control_register_type::result_amount::TWO_REGISTER_VALUE);
-            m_spec_cordic.csr.set_result_amount(cordic_control_register_type::result_amount::TWO_REGISTER_VALUE);
-            m_spec_cordic.csr.set_precision(uint8_t(3));
-            m_spec_cordic.csr.set_scale(uint8_t(0));
-            m_spec_cordic.csr.enable_dma_write_channel(false);
-            m_spec_cordic.csr.enable_dma_read_channel(false);
-            m_spec_cordic.csr.enable_interrupts(false);
+            m_spec_cordic->csr.set_argument_size(config::precision);
+            m_spec_cordic->csr.set_result_size(config::precision);
+            m_spec_cordic->csr.set_argument_amount(cordic_control_register_type::result_amount::TWO_REGISTER_VALUE);
+            m_spec_cordic->csr.set_result_amount(cordic_control_register_type::result_amount::TWO_REGISTER_VALUE);
+            m_spec_cordic->csr.set_precision(uint8_t(3));
+            m_spec_cordic->csr.set_scale(uint8_t(0));
+            m_spec_cordic->csr.enable_dma_write_channel(false);
+            m_spec_cordic->csr.enable_dma_read_channel(false);
+            m_spec_cordic->csr.enable_interrupts(false);
 
-            m_spec_cordic.wdata.write_arg(op.arg1());
-            m_spec_cordic.wdata.write_arg(op.arg2());
+            m_spec_cordic->wdata.write_arg(op.arg1());
+            m_spec_cordic->wdata.write_arg(op.arg2());
 
-            while (!m_spec_cordic.csr.is_ready())
+            while (!m_spec_cordic->csr.is_ready())
                 ;
 
             typename operation<config, type, function>::result_type result{};
-            result.result(m_spec_cordic.rdata.template read_arg<typename config::qtype>());
-
-            volatile auto res [[gnu::unused]] = m_spec_cordic.rdata.template read_arg<typename config::qtype>();
+            result.result(m_spec_cordic->rdata.template read_arg<typename config::qtype>());
+            volatile auto res [[gnu::unused]] = m_spec_cordic->rdata.template read_arg<typename config::qtype>();
 
             return result;
         }

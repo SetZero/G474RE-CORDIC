@@ -20,6 +20,12 @@ namespace HAL::STM::Cordic {
         using component_type = Component;
         using bit_type = uint32_t;
 
+        cordic_register(const cordic_register &) = delete;
+        cordic_register(cordic_register &&) = delete;
+
+        cordic_register &operator=(const cordic_register &) = delete;
+        cordic_register &operator=(cordic_register &&) = delete;
+
         /* FUNCTION */
         enum class functions : uint8_t {
             cosine = 0,
@@ -58,56 +64,57 @@ namespace HAL::STM::Cordic {
         };
 
         /* (31) RRDY: [boolean] */
-        [[nodiscard]] bool is_ready() const { return is_flag_set<cordic_control_bits::ready_flag>(&hw_register); }
+        [[nodiscard]] bool is_ready() const { return is_flag_set<cordic_control_bits::ready_flag>(hw_register); }
 
         /* ARGSIZE: [option: 16bit / 32bit] */
         void inline set_argument_size(precision size) {
-            set_bit_flag<cordic_control_bits::argsize_flag>(&hw_register, size == precision::q1_15);
+            set_bit_flag<cordic_control_bits::argsize_flag>(hw_register, size == precision::q1_15);
         }
 
         /* RESSIZE: [option: 16bit / 32bit] */
         void inline set_result_size(precision size) {
-            set_bit_flag<cordic_control_bits::ressize_flag>(&hw_register, size == precision::q1_15);
+            set_bit_flag<cordic_control_bits::ressize_flag>(hw_register, size == precision::q1_15);
         }
 
         /* NARGS: [option: one / two 32bit values] */
         void inline set_argument_amount(result_amount size) {
-            set_bit_flag<cordic_control_bits::nargs_flag>(&hw_register, size == result_amount::TWO_REGISTER_VALUE);
+            set_bit_flag<cordic_control_bits::nargs_flag>(hw_register, size == result_amount::TWO_REGISTER_VALUE);
         }
 
         /* (19) NRES: [option: one 32bit or two 16bit / two 32bit] */
         void inline set_result_amount(result_amount size) {
-            set_bit_flag<cordic_control_bits::nres_flag>(&hw_register, size == result_amount::TWO_REGISTER_VALUE);
+            set_bit_flag<cordic_control_bits::nres_flag>(hw_register, size == result_amount::TWO_REGISTER_VALUE);
         }
 
         /* (18) DMAWEN: [boolean] */
         void inline enable_dma_write_channel(bool enable) {
-            set_bit_flag<cordic_control_bits::dma_write_enable_flag>(&hw_register, enable);
+            set_bit_flag<cordic_control_bits::dma_write_enable_flag>(hw_register, enable);
         }
 
         /* (17) dma: [boolean] */
         void inline enable_dma_read_channel(bool enable) {
-            set_bit_flag<cordic_control_bits::dma_read_enable_flag>(&hw_register, enable);
+            set_bit_flag<cordic_control_bits::dma_read_enable_flag>(hw_register, enable);
         }
 
         /* (16) interrupts: [boolean] */
         void inline enable_interrupts(bool enable) {
-            set_bit_flag<cordic_control_bits::interrupt_enable_flag>(&hw_register, enable);
+            set_bit_flag<cordic_control_bits::interrupt_enable_flag>(hw_register, enable);
         }
 
         // TODO: test this
+        /* (3:0) Function: [mode 0-9] */
         template<functions mode>
         void inline set_function_mode() {
             // Make sure only one function is set
             hw_register = (hw_register & ~(static_cast<uint32_t>(0xF))) | static_cast<uint32_t>(mode);
         }
 
-        /* TODO: (10:8) SCALE: [number 2^n/2^-n] */
+        /* (10:8) SCALE: [number 2^n/2^-n] */
         void inline set_scale(uint8_t scale) {
             hw_register = (hw_register & ~(static_cast<uint32_t>(0x7) << 8)) | static_cast<uint32_t>(scale & 0x7) << 8;
         }
 
-        /* TODO: (7:4) Precision: [number 1 - 15] */
+        /* (7:4) Precision: [number 1 - 15] */
         void inline set_precision(uint8_t precision) {
             hw_register = (hw_register & ~(static_cast<uint32_t>(0xF) << 4)) | static_cast<uint32_t>(precision & 0xF)
                                                                                    << 4;
@@ -119,8 +126,14 @@ namespace HAL::STM::Cordic {
 
     template<typename Component>
     struct cordic_register<Component, register_types::WDATA, uint32_t> {
+        cordic_register(const cordic_register &) = delete;
+        cordic_register(cordic_register &&) = delete;
+
+        cordic_register &operator=(const cordic_register &) = delete;
+        cordic_register &operator=(cordic_register &&) = delete;
+
         template<typename qtype>
-        void write_arg(const qtype &arg) {
+        void write_arg(const qtype &arg [[gnu::unused]]) {
             // TODO: 16 bit writes
             hw_register = arg.template fixed_point_value<uint32_t>();
         }
@@ -131,6 +144,12 @@ namespace HAL::STM::Cordic {
 
     template<typename Component>
     struct cordic_register<Component, register_types::RDATA, uint32_t> {
+        cordic_register(const cordic_register &) = delete;
+        cordic_register(cordic_register &&) = delete;
+
+        cordic_register &operator=(const cordic_register &) = delete;
+        cordic_register &operator=(cordic_register &&) = delete;
+
         template<typename qtype>
         [[nodiscard]] qtype read_arg() {
             return qtype(hw_register);
