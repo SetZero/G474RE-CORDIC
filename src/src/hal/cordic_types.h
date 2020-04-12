@@ -51,7 +51,7 @@ namespace Detail {
                    T((m_value & ~(1 << sign_pos)) * std::pow(T(2), -(fractional_bit - 1)));
         }
 
-        template<typename T, std::enable_if_t<sizeof(T) >= sizeof(type), int> = 0>
+        template<typename T, std::enable_if_t<sizeof(T) >= sizeof(type) && std::is_unsigned_v<T>, int> = 0>
         constexpr T fixed_point_value() const {
             return T(m_value);
         }

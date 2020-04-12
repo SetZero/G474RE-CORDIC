@@ -36,7 +36,7 @@ namespace HAL {
     } __attribute__((packed));
 
     template<typename Component, auto N>
-    [[nodiscard]] constexpr inline auto& address() {
-        return *reinterpret_cast<Component*>(Component::template address<N>::value);
+    [[nodiscard]] constexpr inline auto address() {
+        return reinterpret_cast<Component*>(Component::template address<N>::value);
     }
 }  // namespace HAL
