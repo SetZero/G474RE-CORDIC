@@ -123,7 +123,7 @@ void init_led() {
 
 void init_timer() {
     HAL::address<HAL::STM::peripherals::APBENR, 0>()->apb11.add<HAL::STM::peripherals::APBENR::APB1ENR1::TIM2EN>();
-    memory(TIM2_BASE + TIMER_PRESCALER) = 10;     // 16.000.000 / 10 = 1.6Mhz
+    memory(TIM2_BASE + TIMER_PRESCALER) = 5;      // 16.000.000 / 10 = 1.6Mhz
     memory(TIM2_BASE + TIMER_ARR) = 26667;        // 1.6Mhz / 26667 = ca. 60Hz
     memory(TIM2_BASE + TIMER_CCR) = 8889;         // pulse width 8889/26667 == 1/3 of period
     memory(TIM2_BASE + TIMER_CCER) = (1u << 0u);  // CC1E
@@ -158,7 +158,6 @@ void init_uart() {
 int main() {
     // SystemClock_Config();
     // memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
-    // auto &csr_reg [[gnu::unused]] = HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb1;
     HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb1.add<HAL::STM::peripherals::AHBENR::AHB1ENR::CORDIC>();
     HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
 
@@ -168,34 +167,27 @@ int main() {
 
     using namespace CordicHal;
 
-    // using cc = cordic_config<precision::q1_31>;
+    using cc = cordic_config<precision::q1_31>;
 
-    // cordic c{HAL::address<HAL::STM::peripherals::CORDIC, 0>()};
+    cordic c{HAL::address<HAL::STM::peripherals::CORDIC, 0>()};
 
     // memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
     // memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (5 * 2u));
 
-    // operation<cc, operation_type::single, functions::cosine> op;
+    operation<cc, operation_type::single, functions::cosine> op;
 
-    // int16_t deg = 0;
+    int16_t deg = 0;
 
     while (true) {
-        memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
-        delay_ms(500);
-        memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
-        delay_ms(500);
-        /*int16_t rdeg = deg - 180;
+        int16_t rdeg = deg - 180;
         op.arg1(angle<precision::q1_31>{degrees{rdeg}});
         auto result = c.calculate(op);
 
-        memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
-        // memory(GPIO_A_BASE + GPIO_X_ODER) |= (1u << 5u);
-        delay_ms(500);
-        // memory(GPIO_A_BASE + GPIO_X_ODER) &= ~(1u << 5u);
-        // memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
-        q1_31 q [[gnu::unused]] = result.result();
+        q1_31 q = result.result();
 
-        delay_ms(static_cast<uint32_t>((static_cast<float>(q) + 1) * 500));
-        deg = (deg + 1) % 360;*/
+        volatile float float_val = static_cast<float>(q);
+        memory(TIM2_BASE + TIMER_CCR) = static_cast<uint32_t>((float_val + 1) * 0.5f * 26667);
+        deg = (deg + 1) % 360;
+        delay_ms(50);
     }
 }

@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include <array>
+#include <utility>
+
 #include "hal/cordic.h"
 #include "hal/cordic_types.h"
 #include "utils.h"
@@ -40,14 +43,24 @@ namespace HAL::STM::Cordic {
             square_root = 9,
         };
 
+        using func_mapper_pair = std::pair<CordicHal::functions, functions>;
+
+        static inline constexpr value_mapper func_mapper{
+            func_mapper_pair{CordicHal::functions::cosine, functions::cosine},
+            func_mapper_pair{CordicHal::functions::sine, functions::sine},
+            func_mapper_pair{CordicHal::functions::phase, functions::phase},
+            func_mapper_pair{CordicHal::functions::modulus, functions::modulus},
+            func_mapper_pair{CordicHal::functions::arctangent, functions::arctangent},
+            func_mapper_pair{CordicHal::functions::hyperbolic_cosine, functions::hyperbolic_cosine},
+            func_mapper_pair{CordicHal::functions::hyperbolic_sine, functions::hyperbolic_sine},
+            func_mapper_pair{CordicHal::functions::arctanh, functions::arctanh},
+            func_mapper_pair{CordicHal::functions::natural_logarithm, functions::natural_logarithm},
+            func_mapper_pair{CordicHal::functions::square_root, functions::square_root}};
+
         // TODO: add remaining types
         template<CordicHal::functions func>
         static constexpr auto map_function() {
-            if constexpr (func == CordicHal::functions::cosine) {
-                return functions::cosine;
-            }
-
-            return functions::cosine;
+            return func_mapper[func];
         }
 
         enum class result_amount { ONE_REGISTER_VALUE, TWO_REGISTER_VALUE };
@@ -123,6 +136,7 @@ namespace HAL::STM::Cordic {
        private:
         volatile uint32_t hw_register;
     } __attribute__((packed));
+    // namespace HAL::STM::Cordic
 
     template<typename Component>
     struct cordic_register<Component, register_types::WDATA, uint32_t> {
@@ -133,8 +147,7 @@ namespace HAL::STM::Cordic {
         cordic_register &operator=(cordic_register &&) = delete;
 
         template<typename qtype>
-        void write_arg(const qtype &arg [[gnu::unused]]) {
-            // TODO: 16 bit writes
+        void write_arg(const qtype &arg) {
             hw_register = arg.template fixed_point_value<uint32_t>();
         }
 

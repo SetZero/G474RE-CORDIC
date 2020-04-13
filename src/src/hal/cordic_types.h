@@ -11,8 +11,8 @@ namespace Detail {
 
     template<uint8_t all_bits>
     using internal_type = std::conditional_t<
-        (all_bits <= 8), uint8_t,
-        std::conditional_t<(all_bits <= 16), uint16_t, std::conditional_t<(all_bits <= 32), uint32_t, uint64_t>>>;
+        (all_bits <= 8), int8_t,
+        std::conditional_t<(all_bits <= 16), int16_t, std::conditional_t<(all_bits <= 32), int32_t, int64_t>>>;
 
     // TODO: fix negative numbers
     template<uint8_t integer_bit, uint8_t fractional_bit>
@@ -27,9 +27,7 @@ namespace Detail {
         constexpr q_number() = default;
         template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
         constexpr explicit q_number(T value) {
-            m_value =
-                std::signbit(value) << sign_pos |
-                static_cast<type>(std::round(std::abs(value) * static_cast<type>(std::pow(2, fractional_bit - 1))));
+            m_value = static_cast<type>(std::round(value * static_cast<type>(std::pow(2, fractional_bit))));
         }
 
         template<typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
@@ -39,16 +37,13 @@ namespace Detail {
 
         template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
         q_number &operator=(T value) {
-            m_value =
-                std::signbit(value) << sign_pos |
-                static_cast<type>(std::round(std::abs(value) * static_cast<type>(std::pow(2, fractional_bit - 1))));
+            m_value = static_cast<type>(std::round(value * static_cast<type>(std::pow(2, fractional_bit))));
             return *this;
         }
 
         template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
         constexpr explicit operator T() const {
-            return (m_value & (1 << sign_pos) ? -1 : 1) *
-                   T((m_value & ~(1 << sign_pos)) * std::pow(T(2), -(fractional_bit - 1)));
+            return static_cast<type>(m_value) * powf(2.0f, -fractional_bit);
         }
 
         template<typename T, std::enable_if_t<sizeof(T) >= sizeof(type) && std::is_unsigned_v<T>, int> = 0>
@@ -86,16 +81,14 @@ class angle {
     template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     constexpr explicit angle(const T &value) : m_value(value / static_cast<T>(M_PI)) {}
 
-    constexpr angle(degrees d)
-        : angle(Detail::float_type<p>(d) / Detail::float_type<p>(180) * static_cast<Detail::float_type<p>>(M_PI)) {}
+    constexpr angle(degrees d) : m_value(Detail::float_type<p>(d) / Detail::float_type<p>(180.0)) {}
 
     template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
     constexpr explicit operator T() const {
-        return T(static_cast<T>(m_value) * static_cast<T>(M_PI));
+        return T(static_cast<T>(m_value) * T(M_PI));
     }
 
     // TODO: add output to degrees
-
     constexpr explicit operator type() const { return m_value; }
 
    private:

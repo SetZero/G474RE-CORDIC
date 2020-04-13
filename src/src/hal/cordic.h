@@ -3,8 +3,18 @@
 #include "hal/cordic_types.h"
 
 namespace CordicHal {
-    // TODO: add needed functions
-    enum class functions { cosine, sine };
+    enum struct functions : uint8_t {
+        cosine,
+        sine,
+        phase,
+        modulus,
+        arctangent,
+        hyperbolic_cosine,
+        hyperbolic_sine,
+        arctanh,
+        natural_logarithm,
+        square_root
+    };
 
     enum class operation_type { single, pipeline };
 
@@ -36,9 +46,9 @@ namespace CordicHal {
             return *this;
         }
 
-        typename config_type::qtype arg1() const { return static_cast<typename config_type::qtype>(m_angle); }
+        auto arg1() const { return static_cast<typename config_type::qtype>(m_angle); }
 
-        typename config_type::qtype arg2() const { return m_modulus; }
+        auto arg2() const { return m_modulus; }
 
        private:
         angle_type m_angle{0.0f};
@@ -57,7 +67,7 @@ namespace CordicHal {
             return *this;
         }
 
-        result_type result() const { return result_type(0.0f); }
+        result_type result() const { return m_result; }
 
        private:
         ResultType m_result;
