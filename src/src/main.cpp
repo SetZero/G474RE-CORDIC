@@ -71,23 +71,20 @@ static constexpr inline auto TIMER_CR1 [[gnu::unused]] = 0x000;
 static constexpr inline auto TIMER_CCMR [[gnu::unused]] = 0x018;
 static constexpr inline auto TIMER_CCER [[gnu::unused]] = 0x020;
 static constexpr inline auto TIMER_PRESCALER [[gnu::unused]] = 0x028;
-static constexpr inline auto TIMER_ARR[[gnu::unused]] = 0x02C;
-static constexpr inline auto TIMER_CCR[[gnu::unused]] = 0x034;
+static constexpr inline auto TIMER_ARR [[gnu::unused]] = 0x02C;
+static constexpr inline auto TIMER_CCR [[gnu::unused]] = 0x034;
 
 /* UART */
-static constexpr inline auto LPUART1SEL [[gnu::unused]]  = 0x88;
+static constexpr inline auto LPUART1SEL [[gnu::unused]] = 0x88;
 
 /* Utils */
 
-[[nodiscard]] inline uint32_t &memory(const uint32_t loc) {
-    return *reinterpret_cast<uint32_t*>(loc);
-}
+[[nodiscard]] inline uint32_t &memory(const uint32_t loc) { return *reinterpret_cast<uint32_t *>(loc); }
 
 void delay_ms(uint32_t n) {
     for (; n > 0; n--)
         for (uint32_t i = 0; i < 3195; i++) asm("nop");
 }
-
 
 /***** TIMER ******/
 enum class CR1_DIR : uint32_t {
@@ -116,45 +113,40 @@ enum class CCMR_OC1M : uint32_t {
 
 void init_led() {
     HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
-    memory(GPIO_A_BASE + GPIO_X_AFRL) |= static_cast<uint32_t >(PA5_AF_L::TIM2_CH1);
+    memory(GPIO_A_BASE + GPIO_X_AFRL) |= static_cast<uint32_t>(PA5_AF_L::TIM2_CH1);
     memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
-    memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t >(GPIO_MODES::ALT) << (5 * 2u));
-    memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << 5u); // Output push-pull
-    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << 10u); //clear speed
-    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) |= (10u << 10u); // HIGH Speed
+    memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (5 * 2u));
+    memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << 5u);     // Output push-pull
+    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << 10u);  // clear speed
+    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) |= (10u << 10u);   // HIGH Speed
 }
 
 void init_timer() {
     HAL::address<HAL::STM::peripherals::APBENR, 0>()->apb11.add<HAL::STM::peripherals::APBENR::APB1ENR1::TIM2EN>();
-    memory(TIM2_BASE + TIMER_PRESCALER) = 10;       // 16.000.000 / 10 = 1.6Mhz
-    memory(TIM2_BASE + TIMER_ARR) = 26667;         // 1.6Mhz / 26667 = ca. 60Hz
-    memory(TIM2_BASE + TIMER_CCR) = 8889;          // pulse width 8889/26667 == 1/3 of period
-    memory(TIM2_BASE + TIMER_CCER) = (1u << 0u);   // CC1E
+    memory(TIM2_BASE + TIMER_PRESCALER) = 10;     // 16.000.000 / 10 = 1.6Mhz
+    memory(TIM2_BASE + TIMER_ARR) = 26667;        // 1.6Mhz / 26667 = ca. 60Hz
+    memory(TIM2_BASE + TIMER_CCR) = 8889;         // pulse width 8889/26667 == 1/3 of period
+    memory(TIM2_BASE + TIMER_CCER) = (1u << 0u);  // CC1E
 
-    memory(TIM2_BASE + TIMER_CR1) |= static_cast<uint32_t >(CR1_DIR::DIR_UP)
-                                     | static_cast<uint32_t >(CR1_CLKDIV::DIV1)
-                                     | static_cast<uint32_t >(CR1_EN::ENABLE_TIMER)
-                                     | static_cast<uint32_t >(CR1_ARPE::BUFFER_ARR);
+    memory(TIM2_BASE + TIMER_CR1) |= static_cast<uint32_t>(CR1_DIR::DIR_UP) | static_cast<uint32_t>(CR1_CLKDIV::DIV1) |
+                                     static_cast<uint32_t>(CR1_EN::ENABLE_TIMER) |
+                                     static_cast<uint32_t>(CR1_ARPE::BUFFER_ARR);
 }
 
 void init_pwm() {
-    memory(TIM2_BASE + TIMER_CCMR) |= static_cast<uint32_t >(CCMR_OC1M::PWM_MODE_1) | (1u << 11u); // PWM Mode 1 + OC2PE enable
+    memory(TIM2_BASE + TIMER_CCMR) |=
+        static_cast<uint32_t>(CCMR_OC1M::PWM_MODE_1) | (1u << 11u);  // PWM Mode 1 + OC2PE enable
 }
 
 /****************/
 
 /***** UART *****/
 
-enum class UARTCLK : uint32_t {
-   PCLK,
-   SYSCLK,
-   HSI16,
-   LSE
-};
+enum class UARTCLK : uint32_t { PCLK, SYSCLK, HSI16, LSE };
 
 void init_uart() {
     HAL::address<HAL::STM::peripherals::APBENR, 0>()->apb12.add<HAL::STM::peripherals::APBENR::APB1ENR2::LPUART1EN>();
-    memory(RCC_BASE + LPUART1SEL) = static_cast<uint32_t >(UARTCLK::PCLK);
+    memory(RCC_BASE + LPUART1SEL) = static_cast<uint32_t>(UARTCLK::PCLK);
 }
 
 /****************/
@@ -166,7 +158,7 @@ void init_uart() {
 int main() {
     // SystemClock_Config();
     // memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
-    //auto &csr_reg [[gnu::unused]] = HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb1;
+    // auto &csr_reg [[gnu::unused]] = HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb1;
     HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb1.add<HAL::STM::peripherals::AHBENR::AHB1ENR::CORDIC>();
     HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
 
@@ -176,16 +168,16 @@ int main() {
 
     using namespace CordicHal;
 
-    //using cc = cordic_config<precision::q1_31>;
+    // using cc = cordic_config<precision::q1_31>;
 
-    //cordic c{HAL::address<HAL::STM::peripherals::CORDIC, 0>()};
+    // cordic c{HAL::address<HAL::STM::peripherals::CORDIC, 0>()};
 
-    //memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
-    //memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (5 * 2u));
+    // memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
+    // memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (5 * 2u));
 
-    //operation<cc, operation_type::single, functions::cosine> op;
+    // operation<cc, operation_type::single, functions::cosine> op;
 
-    //int16_t deg = 0;
+    // int16_t deg = 0;
 
     while (true) {
         memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
