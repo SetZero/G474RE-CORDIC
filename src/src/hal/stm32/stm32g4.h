@@ -92,11 +92,55 @@ namespace HAL::STM {
             template<auto N>
             struct address;
         } __attribute__((packed));
+
+        struct APBENR {
+
+            enum class APB1ENR1 : uint32_t {
+                TIM2EN = (1u << 0u),
+                TIM3EN = (1u << 1u),
+                TIM4EN = (1u << 2u),
+                TIM5EN = (1u << 3u),
+                TIM6EN = (1u << 4u),
+                TIM7EN = (1u << 5u),
+                CRSEN = (1u << 8u),
+                RTCAPBEN = (1u << 10u),
+                WWDGEN = (1u << 11u),
+                SPI2EN = (1u << 14u),
+                SP3EN = (1u << 15u),
+                USART2EN = (1u << 17u),
+                USART3EN = (1u << 18u),
+                UART4EN = (1u << 19u),
+                UART5EN = (1u << 20u),
+                I2C1EN = (1u << 21u),
+                I2C2EN = (1u << 22u),
+                UCPD1EN = (1u << 23u),
+                FDCANEN = (1u << 25u),
+                PWREN = (1u << 28u),
+                I2C3EN = (1u << 30u),
+                LPTIM1EN = (1u << 31u),
+            };
+
+            enum class APB1ENR2 : uint32_t {
+                LPUART1EN = (1u << 0u),
+                I2C4EN = (1u << 1u),
+                UCPD1EN = (1u << 8u)
+            };
+
+            control_register<APBENR, APB1ENR1> apb11;
+            control_register<APBENR, APB1ENR2> apb12;
+            template<auto N>
+            struct address;
+        } __attribute__((packed));
     } __attribute__((packed)); /* TODO: Use [[attribute]] Keyword */
 
     template<>
     struct peripherals::AHBENR::address<0> {
         static constexpr inline uintptr_t value = peripherals::base_address::value + 0x48;
+    };
+
+    template<>
+    struct peripherals::APBENR::address<0> {
+        static constexpr inline uintptr_t value = peripherals::base_address::value + 0x58;
     };
 
     template<>
