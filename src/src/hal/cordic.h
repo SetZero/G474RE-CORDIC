@@ -46,9 +46,9 @@ namespace CordicHal {
             return *this;
         }
 
-        typename config_type::qtype arg1() const { return static_cast<typename config_type::qtype>(m_angle); }
+        auto arg1() const { return static_cast<typename config_type::qtype>(m_angle); }
 
-        typename config_type::qtype arg2() const { return m_modulus; }
+        auto arg2() const { return m_modulus; }
 
        private:
         angle_type m_angle{0.0f};
@@ -67,7 +67,7 @@ namespace CordicHal {
             return *this;
         }
 
-        result_type result() const { return result_type(0.0f); }
+        result_type result() const { return m_result; }
 
        private:
         ResultType m_result;

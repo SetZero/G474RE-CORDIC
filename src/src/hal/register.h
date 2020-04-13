@@ -27,8 +27,9 @@ namespace HAL {
         }
 
         template<byte_type F>
-        void inline add() {
-            hw_register |= static_cast<value_type>(F);
+        void inline add()
+        {
+            hw_register = hw_register | static_cast<value_type>(F);
         }
 
        private:
