@@ -67,8 +67,9 @@ static constexpr inline auto CORDIC_BASE [[gnu::unused]] = 0x40020C00;
 
 /* TIMER */
 static constexpr inline auto TIM2_BASE [[gnu::unused]] = 0x40000000;
-static constexpr inline auto TIMER_CR1[[gnu::unused]] = 0x000;
-static constexpr inline auto TIMER_CCMR[[gnu::unused]] = 0x018;
+static constexpr inline auto TIMER_CR1 [[gnu::unused]] = 0x000;
+static constexpr inline auto TIMER_CCMR [[gnu::unused]] = 0x018;
+static constexpr inline auto TIMER_CCER [[gnu::unused]] = 0x020;
 static constexpr inline auto TIMER_PRESCALER [[gnu::unused]] = 0x028;
 static constexpr inline auto TIMER_ARR[[gnu::unused]] = 0x02C;
 static constexpr inline auto TIMER_CCR[[gnu::unused]] = 0x034;
@@ -102,12 +103,10 @@ enum class CR1_CLKDIV : uint32_t {
 
 enum class CR1_EN : uint32_t {
     ENABLE_TIMER = (1u << 0u),
-    DISABLE_TIMER = (0u << 0u),
 };
 
 enum class CR1_ARPE : uint32_t {
     BUFFER_ARR = (1u << 7u),
-    UNBUFFER_ARR = (0u << 7u),
 };
 
 enum class CCMR_OC1M : uint32_t {
@@ -130,6 +129,7 @@ void init_timer() {
     memory(TIM2_BASE + TIMER_PRESCALER) = 10;       // 16.000.000 / 10 = 1.6Mhz
     memory(TIM2_BASE + TIMER_ARR) = 26667;         // 1.6Mhz / 26667 = ca. 60Hz
     memory(TIM2_BASE + TIMER_CCR) = 8889;          // pulse width 8889/26667 == 1/3 of period
+    memory(TIM2_BASE + TIMER_CCER) = (1u << 0u);   // CC1E
 
     memory(TIM2_BASE + TIMER_CR1) |= static_cast<uint32_t >(CR1_DIR::DIR_UP)
                                      | static_cast<uint32_t >(CR1_CLKDIV::DIV1)
@@ -171,8 +171,8 @@ int main() {
     HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
 
     init_led();
-    //init_timer();
-    //init_pwm();
+    init_timer();
+    init_pwm();
 
     using namespace CordicHal;
 
@@ -180,8 +180,8 @@ int main() {
 
     //cordic c{HAL::address<HAL::STM::peripherals::CORDIC, 0>()};
 
-    memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
-    memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (5 * 2u));
+    //memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
+    //memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (5 * 2u));
 
     //operation<cc, operation_type::single, functions::cosine> op;
 
