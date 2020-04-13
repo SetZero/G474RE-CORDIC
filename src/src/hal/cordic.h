@@ -3,8 +3,18 @@
 #include "hal/cordic_types.h"
 
 namespace CordicHal {
-    // TODO: add needed functions
-    enum class functions { cosine, sine };
+    enum struct functions : uint8_t {
+        cosine,
+        sine,
+        phase,
+        modulus,
+        arctangent,
+        hyperbolic_cosine,
+        hyperbolic_sine,
+        arctanh,
+        natural_logarithm,
+        square_root
+    };
 
     enum class operation_type { single, pipeline };
 

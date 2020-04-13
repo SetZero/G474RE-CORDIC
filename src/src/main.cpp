@@ -89,12 +89,12 @@ int main() {
 
         memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
         // memory(GPIO_A_BASE + GPIO_X_ODER) |= (1u << 5u);
-        delay_ms(500);
         // memory(GPIO_A_BASE + GPIO_X_ODER) &= ~(1u << 5u);
-        memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
-        q1_31 q [[gnu::unused]] = result.result();
+        q1_31 q = result.result();
 
         delay_ms(static_cast<uint32_t>((static_cast<float>(q) + 1) * 500));
+        memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
         deg = (deg + 1) % 360;
+        delay_ms(20);
     }
 }

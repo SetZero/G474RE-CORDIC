@@ -27,7 +27,7 @@ target_compile_options(${PROJECT_NAME}.elf PUBLIC
 target_compile_options(${PROJECT_NAME}.elf PUBLIC -fno-exceptions)
 target_compile_options(${PROJECT_NAME}.elf PUBLIC
     -Werror -Wall -Wextra -Wpedantic -Wshadow)
-set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${PROJECT_NAME}.elf PROPERTY C_STANDARD 11)
 
 if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
