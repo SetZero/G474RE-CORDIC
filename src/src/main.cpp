@@ -75,6 +75,14 @@ static constexpr inline auto TIMER_ARR [[gnu::unused]] = 0x02C;
 static constexpr inline auto TIMER_CCR [[gnu::unused]] = 0x034;
 
 /* UART */
+static constexpr inline auto LPUART_BASE [[gnu::unused]] = 0x40008000;
+static constexpr inline auto LPUART_CR1 [[gnu::unused]] = 0x00;
+static constexpr inline auto LPUART_CR2 [[gnu::unused]] = 0x04;
+static constexpr inline auto LPUART_CR3 [[gnu::unused]] = 0x08;
+static constexpr inline auto LPUART_BRR [[gnu::unused]] = 0x0C;
+static constexpr inline auto LPUART_ISR [[gnu::unused]] = 0x1C;
+static constexpr inline auto LPUART_RDR [[gnu::unused]] = 0x24;
+static constexpr inline auto LPUART_TDR [[gnu::unused]] = 0x28;
 static constexpr inline auto LPUART1SEL [[gnu::unused]] = 0x88;
 
 /* Utils */
@@ -144,9 +152,35 @@ void init_pwm() {
 
 enum class UARTCLK : uint32_t { PCLK, SYSCLK, HSI16, LSE };
 
+void init_uart_pin() {
+    HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
+    // Make GPIOA Pin 2,3 (PA2, PA3) alternate-function output
+    memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (2 * 2u));
+    memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (3 * 2u));
+    memory(GPIO_A_BASE + GPIO_X_AFRL) |= (0b1100u << 8u);   // LPUART PA2
+    memory(GPIO_A_BASE + GPIO_X_AFRL) |= (0b1100u << 12u);  // LPUART PA3
+
+    memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << 2u);    // Output push-pull
+    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << 4u);  // clear speed
+    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) |= (10u << 4u);   // HIGH Speed
+
+    memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << 3u);    // Output push-pull
+    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << 6u);  // clear speed
+    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) |= (10u << 6u);   // HIGH Speed
+}
+
 void init_uart() {
     HAL::address<HAL::STM::peripherals::APBENR, 0>()->apb12.add<HAL::STM::peripherals::APBENR::APB1ENR2::LPUART1EN>();
-    memory(RCC_BASE + LPUART1SEL) = static_cast<uint32_t>(UARTCLK::PCLK);
+    memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 29u);     // disable fifo
+    memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 28u);     //  1 Start bit, 8 Data bits, n Stop bit
+    memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 12u);     //  1 Start bit, 8 Data bits, n Stop bit
+    memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 10u);     //  no parity
+    memory(LPUART_BASE + LPUART_CR2) &= ~(0b11u << 12u);  // 1 stop bit
+    memory(LPUART_BASE + LPUART_BRR) = 0x369;             // 9600 baud
+    memory(LPUART_BASE + LPUART_CR1) |= (1u << 0u);       // enable uart
+    memory(LPUART_BASE + LPUART_CR1) |= (1u << 2u);       // enable rx
+    memory(LPUART_BASE + LPUART_CR1) |= (1u << 3u);       // enable tx
+    // memory(RCC_BASE + LPUART1SEL) = static_cast<uint32_t>(UARTCLK::PCLK);
 }
 
 /****************/
@@ -165,6 +199,9 @@ int main() {
     init_timer();
     init_pwm();
 
+    init_uart_pin();
+    init_uart();
+
     using namespace CordicHal;
 
     using cc = cordic_config<precision::q1_31>;
@@ -179,13 +216,16 @@ int main() {
     int16_t deg = 0;
 
     while (true) {
+        memory(LPUART_BASE + LPUART_TDR) = 'U';
+        delay_ms(50);
+        //while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
         int16_t rdeg = deg - 180;
         op.arg1(angle<precision::q1_31>{degrees{rdeg}});
         auto result = c.calculate(op);
 
         q1_31 q = result.result();
 
-        volatile float float_val = static_cast<float>(q);
+        volatile auto float_val = static_cast<float>(q);
         memory(TIM2_BASE + TIMER_CCR) = static_cast<uint32_t>((float_val + 1) * 0.5f * 26667);
         deg = (deg + 1) % 360;
         delay_ms(50);
