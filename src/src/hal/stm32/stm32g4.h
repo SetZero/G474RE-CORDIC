@@ -126,8 +126,24 @@ namespace HAL::STM {
                 UCPD1EN = (1u << 8u)
             };
 
+            enum class APB2ENR : uint32_t {
+                SYSCFGEN = (1u << 0u),
+                TIM1EN = (1u << 11u),
+                SPI1EN = (1u << 12u),
+                TIM8EN = (1u << 13u),
+                USART1EN = (1u << 14u),
+                SPI4EN = (1u << 15u),
+                TIM15EN = (1u << 16u),
+                TIM16EN = (1u << 17u),
+                TIM17EN = (1u << 18u),
+                TIM20EN = (1u << 20u),
+                SAI1EN = (1u << 21u),
+                HRTIM1EN = (1u << 26u),
+            };
+
             control_register<APBENR, APB1ENR1> apb11;
             control_register<APBENR, APB1ENR2> apb12;
+            control_register<APBENR, APB2ENR> apb2;
             template<auto N>
             struct address;
         } __attribute__((packed));
