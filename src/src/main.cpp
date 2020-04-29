@@ -87,6 +87,7 @@ static constexpr inline auto LPUART1SEL [[gnu::unused]] = 0x88;
 
 /* UART */
 static constexpr inline auto UART_BASE [[gnu::unused]] = 0x40013800;
+static constexpr inline auto UART2_BASE [[gnu::unused]] = 0x40004400;
 static constexpr inline auto UART_CR1 [[gnu::unused]] = 0x00;
 static constexpr inline auto UART_CR2 [[gnu::unused]] = 0x04;
 static constexpr inline auto UART_CR3 [[gnu::unused]] = 0x08;
@@ -181,7 +182,7 @@ void init_lpuart_pin() {
 
 void init_lpuart() {
     HAL::address<HAL::STM::peripherals::APBENR, 0>()->apb12.add<HAL::STM::peripherals::APBENR::APB1ENR2::LPUART1EN>();
-    //memory(LPUART_BASE + LPUART_CR1) |= (1u << 29u);            // enable fifo
+    // memory(LPUART_BASE + LPUART_CR1) |= (1u << 29u);            // enable fifo
     memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 28u);           //  1 Start bit, 8 Data bits, n Stop bit
     memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
     memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 10u);           //  no parity
@@ -196,34 +197,46 @@ void init_lpuart() {
 /****************/
 
 /***** UART *****/
+template<auto txpin, auto rxpin>
 void init_uart_pin() {
     HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
     // Make GPIOA Pin 2,3 (PA2, PA3) alternate-function output
-    memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(1111u << 18u);
-    memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (9 * 2u));
-    memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (10 * 2u));
-    memory(GPIO_A_BASE + GPIO_X_AFRH) &= ~(0xFFu << 4u);
-    memory(GPIO_A_BASE + GPIO_X_AFRH) |= (0b0111u << 4u);  // UART PA9
-    memory(GPIO_A_BASE + GPIO_X_AFRH) |= (0b0111u << 8u);  // UART PA10
+    memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(1111u << txpin * 2u);
+    memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (txpin * 2u));
+    memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (rxpin * 2u));
+    if constexpr(txpin * 4 > 31) {
+        memory(GPIO_A_BASE + GPIO_X_AFRH) &= ~(0xFFu << (txpin * 4u - 32));
+        memory(GPIO_A_BASE + GPIO_X_AFRH) |= (0b0111u << (txpin * 4u - 32));  // UART PA9
+        memory(GPIO_A_BASE + GPIO_X_AFRH) |= (0b0111u << (rxpin * 4u - 32));  // UART PA10
+    } else {
+        memory(GPIO_A_BASE + GPIO_X_AFRL) &= ~(0xFFu << (txpin * 4u));
+        memory(GPIO_A_BASE + GPIO_X_AFRL) |= (0b0111u << (txpin * 4u));  // UART PA9
+        memory(GPIO_A_BASE + GPIO_X_AFRL) |= (0b0111u << (rxpin * 4u));  // UART PA10
+    }
 
-    memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << 9u);     // Output push-pull
-    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << 18u);  // clear speed
-    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) |= (11u << 18u);   // very HIGH Speed
+    memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << txpin);     // Output push-pull
+    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << (txpin *  2));  // clear speed
+    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) |= (11u << (txpin *  2));   // very HIGH Speed
 
-    memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << 10u);    // Output push-pull
-    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << 20u);  // clear speed
-    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) |= (11u << 20u);   // very HIGH Speed
+    memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << rxpin);    // Output push-pull
+    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << (rxpin *  2));  // clear speed
+    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) |= (11u << (rxpin *  2));   // very HIGH Speed
 }
 
+template<auto base_addr>
 void init_uart() {
-    HAL::address<HAL::STM::peripherals::APBENR, 0>()->apb2.add<HAL::STM::peripherals::APBENR::APB2ENR::USART1EN>();
-    memory(UART_BASE + UART_CR1) &= ~(1u << 28u);           //  1 Start bit, 8 Data bits, n Stop bit
-    memory(UART_BASE + UART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
-    memory(UART_BASE + UART_BRR) = 16'000'000u / (115200);  // 9600 baud
-    memory(UART_BASE + UART_CR2) &= ~(0b11u << 12u);        // 9600 baud
-    memory(UART_BASE + UART_CR3) = 0;
-    memory(UART_BASE + UART_CR1) |= (1u << 0u);  // enable uart
-    memory(UART_BASE + UART_CR1) |= (1u << 3u);  // enable tx
+    if constexpr(base_addr == UART_BASE) {
+        HAL::address<HAL::STM::peripherals::APBENR, 0>()->apb2.add<HAL::STM::peripherals::APBENR::APB2ENR::USART1EN>();
+    } else {
+        HAL::address<HAL::STM::peripherals::APBENR, 0>()->apb11.add<HAL::STM::peripherals::APBENR::APB1ENR1::USART2EN>();
+    }
+    memory(base_addr + UART_CR1) &= ~(1u << 28u);           //  1 Start bit, 8 Data bits, n Stop bit
+    memory(base_addr + UART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
+    memory(base_addr + UART_BRR) = 16'000'000u / (115200);  // 9600 baud
+    memory(base_addr + UART_CR2) &= ~(0b11u << 12u);        // 9600 baud
+    memory(base_addr + UART_CR3) = 0;
+    memory(base_addr + UART_CR1) |= (1u << 0u);  // enable uart
+    memory(base_addr + UART_CR1) |= (1u << 3u);  // enable tx
     // memory(UART_BASE + UART_CR1) |= (1u << 2u); // enable tx
 }
 /****************/
@@ -242,10 +255,15 @@ int main() {
     init_timer();
     init_pwm();*/
 
-    init_uart_pin();
-    init_uart();
+    // init_uart_pin();
+    // init_uart();
     // init_lpuart_pin();
     // init_lpuart();
+    init_uart_pin<9u, 10u>();
+    init_uart<UART_BASE>();
+
+    init_uart_pin<2u, 3u>();
+    init_uart<UART2_BASE>();
 
     using namespace CordicHal;
 
@@ -253,8 +271,8 @@ int main() {
 
     // cordic c{HAL::address<HAL::STM::peripherals::CORDIC, 0>()};
 
-    memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (10 * 2u));
-    memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (10 * 2u));
+    //memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (10 * 2u));
+    //memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (10 * 2u));
 
     // operation<cc, operation_type::single, functions::cosine> op;
 
@@ -263,9 +281,10 @@ int main() {
 
     while (true) {
         memory(UART_BASE + UART_TDR) = 'A' + chr;
-        //memory(LPUART_BASE + LPUART_TDR) = 'U';
+        memory(UART2_BASE + UART_TDR) = 'A' + chr;
+        // memory(LPUART_BASE + LPUART_TDR) = 'U';
         chr = (chr + 1) % 26;
-        delay_ms(50);
+        delay_ms(10);
         /*//while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
         int16_t rdeg = deg - 180;
         op.arg1(angle<precision::q1_31>{degrees{rdeg}});
