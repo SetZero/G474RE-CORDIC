@@ -36,7 +36,43 @@ namespace HAL {
         volatile value_type hw_register;
     } __attribute__((packed));
 
+    template<typename Component, typename byte_type, typename ValueType = uint32_t, uint32_t bit_width = 1, uint32_t bits = std::numeric_limits<ValueType>::digits>
+    struct repeated_control_register final {
+        using component_type = Component;
+        using value_type = ValueType;
+        using bit_type = byte_type;
+        static constexpr auto values =  bits / bit_width;
+
+        repeated_control_register() = delete;
+        repeated_control_register(const repeated_control_register&) = delete;
+        repeated_control_register(repeated_control_register&&) = delete;
+        repeated_control_register& operator=(const repeated_control_register&) = delete;
+        repeated_control_register& operator=(repeated_control_register&&) = delete;
+
+        template<value_type position, byte_type F>
+        void inline add()
+        {
+            static_assert(position <= values);
+            hw_register = hw_register | (static_cast<value_type>(F) << (bit_width * position));
+        }
+
+        template<value_type position>
+        void inline clear()
+        {
+            static_assert(position <= values);
+            hw_register = hw_register & ~(((1u << bit_width) - 1) << (bit_width * position));
+        }
+
+       private:
+        volatile value_type hw_register;
+    } __attribute__((packed));
+
     template<typename Component, auto N>
+    [[nodiscard]] constexpr inline auto address() {
+        return reinterpret_cast<Component*>(Component::template address<N>::value);
+    }
+
+    template<typename Component, typename N>
     [[nodiscard]] constexpr inline auto address() {
         return reinterpret_cast<Component*>(Component::template address<N>::value);
     }

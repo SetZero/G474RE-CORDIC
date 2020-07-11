@@ -131,8 +131,10 @@ enum class CCMR_OC1M : uint32_t {
 void init_led() {
     HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
     memory(GPIO_A_BASE + GPIO_X_AFRL) |= static_cast<uint32_t>(PA5_AF_L::TIM2_CH1);
-    memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
-    memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (5 * 2u));
+    //memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.clear<5>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.add<5, HAL::STM::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
+    //memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (5 * 2u));
     memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << 5u);     // Output push-pull
     memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << 10u);  // clear speed
     memory(GPIO_A_BASE + GPIO_X_OSPEEDR) |= (10u << 10u);   // HIGH Speed
@@ -280,8 +282,8 @@ int main() {
     uint8_t chr = 0;
 
     while (true) {
-        memory(UART_BASE + UART_TDR) = 'A' + chr;
-        memory(UART2_BASE + UART_TDR) = 'A' + chr;
+        memory(UART_BASE + UART_TDR) = '1' + chr;
+        memory(UART2_BASE + UART_TDR) = '1' + chr;
         // memory(LPUART_BASE + LPUART_TDR) = 'U';
         chr = (chr + 1) % 26;
         delay_ms(10);

@@ -26,10 +26,17 @@ namespace HAL::STM {
 
         struct GPIO final {
             enum class MODER { INPUT = 0, GP_OUT = 1, ALTERNATIVE_FUNCTION = 2, ANALOG = 3 };
+            enum class OTYPER { PUSH_PULL = 0, OPEN_DRAIN = 1 };
+            enum class OSPEEDR { LOW_SPEED = 0, MEDIUM_SPEED = 1, HIGH_SPEED = 2, VERY_HIGH_SPEED = 3 };
+            enum class PUPDR { NONE = 0, PULLUP = 1, PULLDOWN = 2 };
 
             GPIO() = delete;
-            control_register<GPIO, MODER> moder;
-            template<typename L>
+            repeated_control_register<GPIO, MODER, uint32_t, 2> moder;
+            repeated_control_register<GPIO, OTYPER, uint32_t, 1, 16> otyper;
+            repeated_control_register<GPIO, OSPEEDR, uint32_t, 2> ospeedr;
+            repeated_control_register<GPIO, PUPDR, uint32_t, 2> pupdr;
+
+            template<typename N>
             struct address;
         };
 
@@ -49,7 +56,7 @@ namespace HAL::STM {
             struct address;
         } __attribute__((packed));
 
-        struct AHBENR {
+        struct AHBENR final {
             AHBENR() = delete;
 
             enum class AHB1ENR : uint32_t {
@@ -93,7 +100,7 @@ namespace HAL::STM {
             struct address;
         } __attribute__((packed));
 
-        struct APBENR {
+        struct APBENR final {
 
             enum class APB1ENR1 : uint32_t {
                 TIM2EN = (1u << 0u),
