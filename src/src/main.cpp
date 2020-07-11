@@ -131,10 +131,11 @@ enum class CCMR_OC1M : uint32_t {
 void init_led() {
     HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
     memory(GPIO_A_BASE + GPIO_X_AFRL) |= static_cast<uint32_t>(PA5_AF_L::TIM2_CH1);
-    //memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
+    // memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
     HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.clear<5>();
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.add<5, HAL::STM::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
-    //memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (5 * 2u));
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
+        ->moder.add<5, HAL::STM::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
+    // memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (5 * 2u));
     memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << 5u);     // Output push-pull
     memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << 10u);  // clear speed
     memory(GPIO_A_BASE + GPIO_X_OSPEEDR) |= (10u << 10u);   // HIGH Speed
@@ -202,14 +203,13 @@ void init_lpuart() {
 template<auto txpin, auto rxpin>
 void init_uart_pin() {
     HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
-    // Make GPIOA Pin 2,3 (PA2, PA3) alternate-function output
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.clear<txpin>();
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.clear<rxpin>();
 
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.add<txpin, HAL::STM::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.add<rxpin, HAL::STM::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
+        ->moder.clear_add<txpin, HAL::STM::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
+        ->moder.clear_add<rxpin, HAL::STM::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
 
-    if constexpr(txpin * 4 > 31) {
+    if constexpr (txpin * 4 > 31) {
         memory(GPIO_A_BASE + GPIO_X_AFRH) &= ~(0xFFu << (txpin * 4u - 32));
         memory(GPIO_A_BASE + GPIO_X_AFRH) |= (0b0111u << (txpin * 4u - 32));  // UART PA9
         memory(GPIO_A_BASE + GPIO_X_AFRH) |= (0b0111u << (rxpin * 4u - 32));  // UART PA10
@@ -219,23 +219,24 @@ void init_uart_pin() {
         memory(GPIO_A_BASE + GPIO_X_AFRL) |= (0b0111u << (rxpin * 4u));  // UART PA10
     }
 
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->otyper.clear<txpin>();
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->otyper.add<txpin, HAL::STM::peripherals::GPIO::OTYPER::PUSH_PULL>();
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->ospeedr.clear<txpin>();
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->ospeedr.add<txpin, HAL::STM::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
+        ->otyper.clear_add<txpin, HAL::STM::peripherals::GPIO::OTYPER::PUSH_PULL>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
+        ->ospeedr.clear_add<txpin, HAL::STM::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED>();
 
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->otyper.clear<rxpin>();
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->otyper.add<rxpin, HAL::STM::peripherals::GPIO::OTYPER::PUSH_PULL>();
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->ospeedr.clear<rxpin>();
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->ospeedr.add<rxpin, HAL::STM::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
+        ->otyper.clear_add<rxpin, HAL::STM::peripherals::GPIO::OTYPER::PUSH_PULL>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
+        ->ospeedr.clear_add<rxpin, HAL::STM::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED>();
 }
 
 template<auto base_addr>
 void init_uart() {
-    if constexpr(base_addr == UART_BASE) {
+    if constexpr (base_addr == UART_BASE) {
         HAL::address<HAL::STM::peripherals::APBENR, 0>()->apb2.add<HAL::STM::peripherals::APBENR::APB2ENR::USART1EN>();
     } else {
-        HAL::address<HAL::STM::peripherals::APBENR, 0>()->apb11.add<HAL::STM::peripherals::APBENR::APB1ENR1::USART2EN>();
+        HAL::address<HAL::STM::peripherals::APBENR, 0>()
+            ->apb11.add<HAL::STM::peripherals::APBENR::APB1ENR1::USART2EN>();
     }
     memory(base_addr + UART_CR1) &= ~(1u << 28u);           //  1 Start bit, 8 Data bits, n Stop bit
     memory(base_addr + UART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
@@ -278,8 +279,8 @@ int main() {
 
     // cordic c{HAL::address<HAL::STM::peripherals::CORDIC, 0>()};
 
-    //memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (10 * 2u));
-    //memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (10 * 2u));
+    // memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (10 * 2u));
+    // memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (10 * 2u));
 
     // operation<cc, operation_type::single, functions::cosine> op;
 
