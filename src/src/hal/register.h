@@ -59,7 +59,7 @@ namespace HAL {
         template<value_type position>
         void inline clear()
         {
-            static_assert(position <= values);
+            static_assert(position <= values, "Index out of Range");
             hw_register = hw_register & ~(((1u << bit_width) - 1) << (bit_width * position));
         }
 

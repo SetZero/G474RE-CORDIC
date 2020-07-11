@@ -203,9 +203,12 @@ template<auto txpin, auto rxpin>
 void init_uart_pin() {
     HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
     // Make GPIOA Pin 2,3 (PA2, PA3) alternate-function output
-    memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(1111u << txpin * 2u);
-    memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (txpin * 2u));
-    memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (rxpin * 2u));
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.clear<txpin>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.clear<rxpin>();
+
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.add<txpin, HAL::STM::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.add<rxpin, HAL::STM::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
+
     if constexpr(txpin * 4 > 31) {
         memory(GPIO_A_BASE + GPIO_X_AFRH) &= ~(0xFFu << (txpin * 4u - 32));
         memory(GPIO_A_BASE + GPIO_X_AFRH) |= (0b0111u << (txpin * 4u - 32));  // UART PA9
@@ -216,13 +219,15 @@ void init_uart_pin() {
         memory(GPIO_A_BASE + GPIO_X_AFRL) |= (0b0111u << (rxpin * 4u));  // UART PA10
     }
 
-    memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << txpin);     // Output push-pull
-    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << (txpin *  2));  // clear speed
-    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) |= (11u << (txpin *  2));   // very HIGH Speed
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->otyper.clear<txpin>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->otyper.add<txpin, HAL::STM::peripherals::GPIO::OTYPER::PUSH_PULL>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->ospeedr.clear<txpin>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->ospeedr.add<txpin, HAL::STM::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED>();
 
-    memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << rxpin);    // Output push-pull
-    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << (rxpin *  2));  // clear speed
-    memory(GPIO_A_BASE + GPIO_X_OSPEEDR) |= (11u << (rxpin *  2));   // very HIGH Speed
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->otyper.clear<rxpin>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->otyper.add<rxpin, HAL::STM::peripherals::GPIO::OTYPER::PUSH_PULL>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->ospeedr.clear<rxpin>();
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->ospeedr.add<rxpin, HAL::STM::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED>();
 }
 
 template<auto base_addr>
