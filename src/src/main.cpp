@@ -288,8 +288,8 @@ int main() {
     uint8_t chr = 0;
 
     while (true) {
-        memory(UART_BASE + UART_TDR) = '1' + chr;
-        memory(UART2_BASE + UART_TDR) = '1' + chr;
+        memory(UART_BASE + UART_TDR) = 'A' + chr;
+        memory(UART2_BASE + UART_TDR) = 'A' + chr;
         // memory(LPUART_BASE + LPUART_TDR) = 'U';
         chr = (chr + 1) % 26;
         delay_ms(10);

@@ -41,7 +41,6 @@ namespace HAL {
         using component_type = Component;
         using value_type = ValueType;
         using bit_type = byte_type;
-        static constexpr auto values = bits / bit_width;
 
         repeated_control_register() = delete;
         repeated_control_register(const repeated_control_register&) = delete;
@@ -68,8 +67,66 @@ namespace HAL {
         }
 
        private:
+        static constexpr auto values = bits / bit_width;
         volatile value_type hw_register;
     } __attribute__((packed));
+
+    enum class data_register_type : uint32_t { READ_WRITE, READ_ONLY, RESERVED };
+
+    template<typename component, data_register_type Mode = data_register_type::RESERVED, typename ValueType = uint32_t,
+             ValueType mask = ValueType{0xFFFF'FFFF}>
+    struct data_register;
+
+    template<typename Component, typename ValueType, ValueType mask>
+    struct data_register<Component, data_register_type::RESERVED, ValueType, mask> final {
+        typedef Component component_type;
+        typedef ValueType value_type;
+        data_register() = delete;
+        data_register(const data_register&) = delete;
+        data_register(data_register&&) = delete;
+        data_register& operator=(const data_register&) = delete;
+        data_register& operator=(data_register&&) = delete;
+
+       private:
+        volatile value_type hwRegister;
+    };
+    template<typename Component, typename ValueType, ValueType mask>
+    struct data_register<Component, data_register_type::READ_ONLY, ValueType, mask> final {
+        typedef Component component_type;
+        typedef ValueType value_type;
+        data_register() = delete;
+        data_register(const data_register&) = delete;
+        data_register(data_register&&) = delete;
+        data_register& operator=(const data_register&) = delete;
+        data_register& operator=(data_register&&) = delete;
+        [[nodiscard]] inline value_type operator*() const { return hwRegister & mask; }
+
+       private:
+        volatile value_type hwRegister;
+    };
+
+    template<typename Component, typename ValueType, ValueType mask>
+    struct data_register<Component, data_register_type::READ_WRITE, ValueType, mask> final
+    {
+        typedef Component component_type;
+        typedef ValueType value_type;
+        data_register() = delete;
+        data_register(const data_register&) = delete;
+        data_register(data_register&&) = delete;
+        data_register& operator=(const data_register&) = delete;
+        data_register& operator=(data_register&&) = delete;
+
+        inline volatile value_type& operator*()
+        {
+            return hwRegister;
+        }
+        [[nodiscard]] inline value_type operator*() const
+        {
+            return hwRegister & mask;
+        }
+       private:
+        volatile value_type hwRegister;
+    };
 
     template<typename Component, auto N>
     [[nodiscard]] constexpr inline auto address() {

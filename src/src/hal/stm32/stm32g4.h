@@ -35,6 +35,8 @@ namespace HAL::STM {
             repeated_control_register<GPIO, OTYPER, uint32_t, 1, 16> otyper;
             repeated_control_register<GPIO, OSPEEDR, uint32_t, 2> ospeedr;
             repeated_control_register<GPIO, PUPDR, uint32_t, 2> pupdr;
+            data_register<GPIO, data_register_type::READ_ONLY, uint32_t, uint32_t{0xFFFF}> idr;
+            data_register<GPIO, data_register_type::READ_WRITE, uint32_t, uint32_t{0xFFFF}> odr;
 
             template<typename N>
             struct address;
@@ -169,6 +171,36 @@ namespace HAL::STM {
     template<>
     struct peripherals::GPIO::address<A> {
         static constexpr inline uintptr_t value = 0x48000000;
+    };
+
+    template<>
+    struct peripherals::GPIO::address<B> {
+        static constexpr inline uintptr_t value = 0x48000400;
+    };
+
+    template<>
+    struct peripherals::GPIO::address<C> {
+        static constexpr inline uintptr_t value = 0x48000800;
+    };
+
+    template<>
+    struct peripherals::GPIO::address<D> {
+        static constexpr inline uintptr_t value = 0x48000C00;
+    };
+
+    template<>
+    struct peripherals::GPIO::address<E> {
+        static constexpr inline uintptr_t value = 0x48001000;
+    };
+
+    template<>
+    struct peripherals::GPIO::address<F> {
+        static constexpr inline uintptr_t value = 0x48001400;
+    };
+
+    template<>
+    struct peripherals::GPIO::address<G> {
+        static constexpr inline uintptr_t value = 0x48001800;
     };
 
     template<>
