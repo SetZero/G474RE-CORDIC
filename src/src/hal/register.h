@@ -67,7 +67,7 @@ namespace HAL {
         }
 
        private:
-        static constexpr auto values = bits / bit_width;
+        static constexpr inline auto values = bits / bit_width;
         volatile value_type hw_register;
     } __attribute__((packed));
 

@@ -29,6 +29,7 @@ namespace HAL::STM {
             enum class OTYPER { PUSH_PULL = 0, OPEN_DRAIN = 1 };
             enum class OSPEEDR { LOW_SPEED = 0, MEDIUM_SPEED = 1, HIGH_SPEED = 2, VERY_HIGH_SPEED = 3 };
             enum class PUPDR { NONE = 0, PULLUP = 1, PULLDOWN = 2 };
+            enum class BSSR { SET = 1 };
 
             GPIO() = delete;
             repeated_control_register<GPIO, MODER, uint32_t, 2> moder;
@@ -37,6 +38,8 @@ namespace HAL::STM {
             repeated_control_register<GPIO, PUPDR, uint32_t, 2> pupdr;
             data_register<GPIO, data_register_type::READ_ONLY, uint32_t, uint32_t{0xFFFF}> idr;
             data_register<GPIO, data_register_type::READ_WRITE, uint32_t, uint32_t{0xFFFF}> odr;
+            repeated_control_register<GPIO, BSSR, uint16_t, 1> bssr_set_io;
+            repeated_control_register<GPIO, BSSR, uint16_t, 1> bssr_clear_io;
 
             template<typename N>
             struct address;

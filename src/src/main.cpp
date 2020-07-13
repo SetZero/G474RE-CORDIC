@@ -267,6 +267,7 @@ int main() {
     // init_uart();
     // init_lpuart_pin();
     // init_lpuart();
+
     init_uart_pin<9u, 10u>();
     init_uart<UART_BASE>();
 
@@ -287,12 +288,22 @@ int main() {
     // int16_t deg = 0;
     uint8_t chr = 0;
 
+    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.clear_add<5, HAL::STM::peripherals::GPIO::MODER::GP_OUT>();
+    //memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
+    //memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << 10u);
+    //memory(GPIO_A_BASE + GPIO_X_MODER) |= (1u << 10u);
+
     while (true) {
         memory(UART_BASE + UART_TDR) = 'A' + chr;
-        memory(UART2_BASE + UART_TDR) = 'A' + chr;
+        //memory(UART2_BASE + UART_TDR) = 'A' + chr;
         // memory(LPUART_BASE + LPUART_TDR) = 'U';
         chr = (chr + 1) % 26;
-        delay_ms(10);
+        HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->bssr_set_io.add<5, HAL::STM::peripherals::GPIO::BSSR::SET>();
+        //memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
+        delay_ms(500);
+        //memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
+        HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->bssr_clear_io.add<5, HAL::STM::peripherals::GPIO::BSSR::SET>();
+        delay_ms(500);
         /*//while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
         int16_t rdeg = deg - 180;
         op.arg1(angle<precision::q1_31>{degrees{rdeg}});
