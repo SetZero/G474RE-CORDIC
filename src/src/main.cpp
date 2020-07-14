@@ -18,6 +18,7 @@
 #include "hal/cordic.h"
 #include "hal/cordic_types.h"
 #include "hal/stm32/stm32g4.h"
+#include "hal/gpio.h"
 
 /* REGISTER BASE ADDRESSES */
 
@@ -129,12 +130,12 @@ enum class CCMR_OC1M : uint32_t {
 };
 
 void init_led() {
-    HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
+    hal::address<hal::stm::stm32g4::peripherals::AHBENR, 0>()->ahb2.add<hal::stm::stm32g4::peripherals::AHBENR::AHB2ENR::GPIOA>();
     memory(GPIO_A_BASE + GPIO_X_AFRL) |= static_cast<uint32_t>(PA5_AF_L::TIM2_CH1);
     // memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.clear<5>();
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
-        ->moder.add<5, HAL::STM::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
+    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()->moder.clear<5>();
+    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
+        ->moder.add<5, hal::stm::stm32g4::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
     // memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (5 * 2u));
     memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << 5u);     // Output push-pull
     memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << 10u);  // clear speed
@@ -142,7 +143,7 @@ void init_led() {
 }
 
 void init_timer() {
-    HAL::address<HAL::STM::peripherals::APBENR, 0>()->apb11.add<HAL::STM::peripherals::APBENR::APB1ENR1::TIM2EN>();
+    hal::address<hal::stm::stm32g4::peripherals::APBENR, 0>()->apb11.add<hal::stm::stm32g4::peripherals::APBENR::APB1ENR1::TIM2EN>();
     memory(TIM2_BASE + TIMER_PRESCALER) = 5;      // 16.000.000 / 10 = 1.6Mhz
     memory(TIM2_BASE + TIMER_ARR) = 26667;        // 1.6Mhz / 26667 = ca. 60Hz
     memory(TIM2_BASE + TIMER_CCR) = 8889;         // pulse width 8889/26667 == 1/3 of period
@@ -165,7 +166,7 @@ void init_pwm() {
 enum class UARTCLK : uint32_t { PCLK, SYSCLK, HSI16, LSE };
 
 void init_lpuart_pin() {
-    HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
+    hal::address<hal::stm::stm32g4::peripherals::AHBENR, 0>()->ahb2.add<hal::stm::stm32g4::peripherals::AHBENR::AHB2ENR::GPIOA>();
     // Make GPIOA Pin 2,3 (PA2, PA3) alternate-function output
     memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(1111u << 4u);
     memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (2 * 2u));
@@ -184,7 +185,7 @@ void init_lpuart_pin() {
 }
 
 void init_lpuart() {
-    HAL::address<HAL::STM::peripherals::APBENR, 0>()->apb12.add<HAL::STM::peripherals::APBENR::APB1ENR2::LPUART1EN>();
+    hal::address<hal::stm::stm32g4::peripherals::APBENR, 0>()->apb12.add<hal::stm::stm32g4::peripherals::APBENR::APB1ENR2::LPUART1EN>();
     // memory(LPUART_BASE + LPUART_CR1) |= (1u << 29u);            // enable fifo
     memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 28u);           //  1 Start bit, 8 Data bits, n Stop bit
     memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
@@ -202,12 +203,12 @@ void init_lpuart() {
 /***** UART *****/
 template<auto txpin, auto rxpin>
 void init_uart_pin() {
-    HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
+    hal::address<hal::stm::stm32g4::peripherals::AHBENR, 0>()->ahb2.add<hal::stm::stm32g4::peripherals::AHBENR::AHB2ENR::GPIOA>();
 
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
-        ->moder.clear_add<txpin, HAL::STM::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
-        ->moder.clear_add<rxpin, HAL::STM::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
+    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
+        ->moder.clear_add<txpin, hal::stm::stm32g4::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
+    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
+        ->moder.clear_add<rxpin, hal::stm::stm32g4::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
 
     if constexpr (txpin * 4 > 31) {
         memory(GPIO_A_BASE + GPIO_X_AFRH) &= ~(0xFFu << (txpin * 4u - 32));
@@ -219,24 +220,24 @@ void init_uart_pin() {
         memory(GPIO_A_BASE + GPIO_X_AFRL) |= (0b0111u << (rxpin * 4u));  // UART PA10
     }
 
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
-        ->otyper.clear_add<txpin, HAL::STM::peripherals::GPIO::OTYPER::PUSH_PULL>();
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
-        ->ospeedr.clear_add<txpin, HAL::STM::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED>();
+    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
+        ->otyper.clear_add<txpin, hal::stm::stm32g4::peripherals::GPIO::OTYPER::PUSH_PULL>();
+    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
+        ->ospeedr.clear_add<txpin, hal::stm::stm32g4::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED>();
 
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
-        ->otyper.clear_add<rxpin, HAL::STM::peripherals::GPIO::OTYPER::PUSH_PULL>();
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()
-        ->ospeedr.clear_add<rxpin, HAL::STM::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED>();
+    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
+        ->otyper.clear_add<rxpin, hal::stm::stm32g4::peripherals::GPIO::OTYPER::PUSH_PULL>();
+    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
+        ->ospeedr.clear_add<rxpin, hal::stm::stm32g4::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED>();
 }
 
 template<auto base_addr>
 void init_uart() {
     if constexpr (base_addr == UART_BASE) {
-        HAL::address<HAL::STM::peripherals::APBENR, 0>()->apb2.add<HAL::STM::peripherals::APBENR::APB2ENR::USART1EN>();
+        hal::address<hal::stm::stm32g4::peripherals::APBENR, 0>()->apb2.add<hal::stm::stm32g4::peripherals::APBENR::APB2ENR::USART1EN>();
     } else {
-        HAL::address<HAL::STM::peripherals::APBENR, 0>()
-            ->apb11.add<HAL::STM::peripherals::APBENR::APB1ENR1::USART2EN>();
+        hal::address<hal::stm::stm32g4::peripherals::APBENR, 0>()
+            ->apb11.add<hal::stm::stm32g4::peripherals::APBENR::APB1ENR1::USART2EN>();
     }
     memory(base_addr + UART_CR1) &= ~(1u << 28u);           //  1 Start bit, 8 Data bits, n Stop bit
     memory(base_addr + UART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
@@ -254,10 +255,11 @@ void init_uart() {
  * @retval int
  */
 int main() {
+    using gpio = hal::periphery::gpio<hal::stm::stm32g4::A>;
     // SystemClock_Config();
     // memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
-    HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb1.add<HAL::STM::peripherals::AHBENR::AHB1ENR::CORDIC>();
-    HAL::address<HAL::STM::peripherals::AHBENR, 0>()->ahb2.add<HAL::STM::peripherals::AHBENR::AHB2ENR::GPIOA>();
+    hal::address<hal::stm::stm32g4::peripherals::AHBENR, 0>()->ahb1.add<hal::stm::stm32g4::peripherals::AHBENR::AHB1ENR::CORDIC>();
+    hal::address<hal::stm::stm32g4::peripherals::AHBENR, 0>()->ahb2.add<hal::stm::stm32g4::peripherals::AHBENR::AHB2ENR::GPIOA>();
 
     /*init_led();
     init_timer();
@@ -274,11 +276,11 @@ int main() {
     init_uart_pin<2u, 3u>();
     init_uart<UART2_BASE>();
 
-    using namespace CordicHal;
+    using namespace hal::cordic;
 
     // using cc = cordic_config<precision::q1_31>;
 
-    // cordic c{HAL::address<HAL::STM::peripherals::CORDIC, 0>()};
+    // cordic c{hal::address<hal::stm::stm32g4::peripherals::CORDIC, 0>()};
 
     // memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (10 * 2u));
     // memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (10 * 2u));
@@ -288,7 +290,8 @@ int main() {
     // int16_t deg = 0;
     uint8_t chr = 0;
 
-    HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->moder.clear_add<5, HAL::STM::peripherals::GPIO::MODER::GP_OUT>();
+    gpio::mode().clear_add<5, hal::stm::stm32g4::peripherals::GPIO::MODER::GP_OUT>();
+    //hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()->moder.clear_add<5, hal::stm::stm32g4::peripherals::GPIO::MODER::GP_OUT>();
     //memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
     //memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << 10u);
     //memory(GPIO_A_BASE + GPIO_X_MODER) |= (1u << 10u);
@@ -298,11 +301,11 @@ int main() {
         //memory(UART2_BASE + UART_TDR) = 'A' + chr;
         // memory(LPUART_BASE + LPUART_TDR) = 'U';
         chr = (chr + 1) % 26;
-        HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->bssr_set_io.add<5, HAL::STM::peripherals::GPIO::BSSR::SET>();
+        hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()->bssr_set_io.add<5, hal::stm::stm32g4::peripherals::GPIO::BSSR::SET>();
         //memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
         delay_ms(500);
         //memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
-        HAL::address<HAL::STM::peripherals::GPIO, HAL::STM::A>()->bssr_clear_io.add<5, HAL::STM::peripherals::GPIO::BSSR::SET>();
+        hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()->bssr_clear_io.add<5, hal::stm::stm32g4::peripherals::GPIO::BSSR::SET>();
         delay_ms(500);
         /*//while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
         int16_t rdeg = deg - 180;

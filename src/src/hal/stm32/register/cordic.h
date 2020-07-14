@@ -11,7 +11,7 @@
 #include "hal/cordic_types.h"
 #include "utils.h"
 
-namespace HAL::STM::Cordic {
+namespace hal::stm::stm32g4::cordic {
 
     enum class register_types { CSR, WDATA, RDATA };
 
@@ -43,22 +43,22 @@ namespace HAL::STM::Cordic {
             square_root = 9,
         };
 
-        using func_mapper_pair = std::pair<CordicHal::functions, functions>;
+        using func_mapper_pair = std::pair<hal::cordic::functions, functions>;
 
         static inline constexpr value_mapper func_mapper{
-            func_mapper_pair{CordicHal::functions::cosine, functions::cosine},
-            func_mapper_pair{CordicHal::functions::sine, functions::sine},
-            func_mapper_pair{CordicHal::functions::phase, functions::phase},
-            func_mapper_pair{CordicHal::functions::modulus, functions::modulus},
-            func_mapper_pair{CordicHal::functions::arctangent, functions::arctangent},
-            func_mapper_pair{CordicHal::functions::hyperbolic_cosine, functions::hyperbolic_cosine},
-            func_mapper_pair{CordicHal::functions::hyperbolic_sine, functions::hyperbolic_sine},
-            func_mapper_pair{CordicHal::functions::arctanh, functions::arctanh},
-            func_mapper_pair{CordicHal::functions::natural_logarithm, functions::natural_logarithm},
-            func_mapper_pair{CordicHal::functions::square_root, functions::square_root}};
+            func_mapper_pair{hal::cordic::functions::cosine, functions::cosine},
+            func_mapper_pair{hal::cordic::functions::sine, functions::sine},
+            func_mapper_pair{hal::cordic::functions::phase, functions::phase},
+            func_mapper_pair{hal::cordic::functions::modulus, functions::modulus},
+            func_mapper_pair{hal::cordic::functions::arctangent, functions::arctangent},
+            func_mapper_pair{hal::cordic::functions::hyperbolic_cosine, functions::hyperbolic_cosine},
+            func_mapper_pair{hal::cordic::functions::hyperbolic_sine, functions::hyperbolic_sine},
+            func_mapper_pair{hal::cordic::functions::arctanh, functions::arctanh},
+            func_mapper_pair{hal::cordic::functions::natural_logarithm, functions::natural_logarithm},
+            func_mapper_pair{hal::cordic::functions::square_root, functions::square_root}};
 
         // TODO: add remaining types
-        template<CordicHal::functions func>
+        template<hal::cordic::functions func>
         static constexpr auto map_function() {
             return func_mapper[func];
         }

@@ -10,7 +10,7 @@
 #include "hal/register.h"
 #include "hal/stm32/register/cordic.h"
 
-namespace HAL::STM {
+namespace hal::stm::stm32g4 {
     struct A {};
     struct B {};
     struct C {};
@@ -47,9 +47,9 @@ namespace HAL::STM {
 
         // TODO: structure this better somehow
         struct CORDIC {
-            using csr_register_type = Cordic::cordic_register<CORDIC, Cordic::register_types::CSR>;
-            using wdata_register_type = Cordic::cordic_register<CORDIC, Cordic::register_types::WDATA>;
-            using rdata_register_type = Cordic::cordic_register<CORDIC, Cordic::register_types::RDATA>;
+            using csr_register_type = cordic::cordic_register<CORDIC, cordic::register_types::CSR>;
+            using wdata_register_type = cordic::cordic_register<CORDIC, cordic::register_types::WDATA>;
+            using rdata_register_type = cordic::cordic_register<CORDIC, cordic::register_types::RDATA>;
 
             CORDIC() = delete;
 

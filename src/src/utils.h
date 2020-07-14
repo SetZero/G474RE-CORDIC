@@ -46,3 +46,10 @@ template<typename... ValuePairs>
 value_mapper(ValuePairs... args)
     ->value_mapper<typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::first_type,
                    typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::second_type, sizeof...(args)>;
+
+
+template<typename MCU, typename PIN>
+concept gpio_mcu =
+requires {
+    typename MCU::GPIO::template address<PIN>; // needs GPIO
+};

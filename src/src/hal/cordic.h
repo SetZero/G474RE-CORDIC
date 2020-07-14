@@ -2,7 +2,7 @@
 
 #include "hal/cordic_types.h"
 
-namespace CordicHal {
+namespace hal::cordic {
     enum struct functions : uint8_t {
         cosine,
         sine,
@@ -119,4 +119,4 @@ namespace CordicHal {
 
     template<typename CordicType>
     cordic(CordicType reg)->cordic<CordicType>;
-}  // namespace CordicHal
+}  // namespace hal::cordic
