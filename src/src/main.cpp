@@ -210,7 +210,7 @@ void init_uart_pin() {
     hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
         ->moder.clear_add<rxpin, hal::stm::stm32g4::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
 
-    if constexpr (txpin * 4 > 31) {
+    /*if constexpr (txpin * 4 > 31) {
         memory(GPIO_A_BASE + GPIO_X_AFRH) &= ~(0xFFu << (txpin * 4u - 32));
         memory(GPIO_A_BASE + GPIO_X_AFRH) |= (0b0111u << (txpin * 4u - 32));  // UART PA9
         memory(GPIO_A_BASE + GPIO_X_AFRH) |= (0b0111u << (rxpin * 4u - 32));  // UART PA10
@@ -218,7 +218,11 @@ void init_uart_pin() {
         memory(GPIO_A_BASE + GPIO_X_AFRL) &= ~(0xFFu << (txpin * 4u));
         memory(GPIO_A_BASE + GPIO_X_AFRL) |= (0b0111u << (txpin * 4u));  // UART PA9
         memory(GPIO_A_BASE + GPIO_X_AFRL) |= (0b0111u << (rxpin * 4u));  // UART PA10
-    }
+    }*/
+    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
+        ->afr.clear_add<rxpin, hal::stm::stm32g4::peripherals::GPIO::AFR::AF7>();
+    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
+        ->afr.clear_add<txpin, hal::stm::stm32g4::peripherals::GPIO::AFR::AF7>();
 
     hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
         ->otyper.clear_add<txpin, hal::stm::stm32g4::peripherals::GPIO::OTYPER::PUSH_PULL>();

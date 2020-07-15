@@ -57,7 +57,7 @@ namespace hal {
         template<value_type position>
         void inline clear() {
             static_assert(position <= values, "Index out of Range");
-            hw_register = hw_register & ~(((1u << bit_width) - 1) << (bit_width * position));
+            hw_register = hw_register & ~(((value_type{1} << bit_width) - 1) << (bit_width * position));
         }
 
         template<value_type position, byte_type F>
@@ -67,7 +67,7 @@ namespace hal {
         }
 
        private:
-        static constexpr inline auto values = bits / bit_width;
+        static constexpr inline value_type values = bits / bit_width;
         volatile value_type hw_register;
     } __attribute__((packed));
 

@@ -30,6 +30,8 @@ namespace hal::stm::stm32g4 {
             enum class OSPEEDR { LOW_SPEED = 0, MEDIUM_SPEED = 1, HIGH_SPEED = 2, VERY_HIGH_SPEED = 3 };
             enum class PUPDR { NONE = 0, PULLUP = 1, PULLDOWN = 2 };
             enum class BSSR { SET = 1 };
+            enum class AFR { AF0 = 0, AF1, AF2, AF3, AF4, AF5, AF6, AF7, AF8, AF9, AF10, AF11, AF12, AF13, AF14, AF15 };
+            enum class BRR { RESET = 1 };
 
             GPIO() = delete;
             repeated_control_register<GPIO, MODER, uint32_t, 2> moder;
@@ -40,6 +42,9 @@ namespace hal::stm::stm32g4 {
             data_register<GPIO, data_register_type::READ_WRITE, uint32_t, uint32_t{0xFFFF}> odr;
             repeated_control_register<GPIO, BSSR, uint16_t, 1> bssr_set_io;
             repeated_control_register<GPIO, BSSR, uint16_t, 1> bssr_clear_io;
+            data_register<GPIO, data_register_type::READ_WRITE, uint32_t, uint32_t{0x1FFFF}> lckr;
+            repeated_control_register<GPIO, AFR, uint64_t, 4> afr;
+            repeated_control_register<GPIO, BRR, uint32_t, 1, 16> brr;
 
             template<typename N>
             struct address;
@@ -106,7 +111,6 @@ namespace hal::stm::stm32g4 {
         } __attribute__((packed));
 
         struct APBENR final {
-
             enum class APB1ENR1 : uint32_t {
                 TIM2EN = (1u << 0u),
                 TIM3EN = (1u << 1u),
@@ -132,11 +136,7 @@ namespace hal::stm::stm32g4 {
                 LPTIM1EN = (1u << 31u),
             };
 
-            enum class APB1ENR2 : uint32_t {
-                LPUART1EN = (1u << 0u),
-                I2C4EN = (1u << 1u),
-                UCPD1EN = (1u << 8u)
-            };
+            enum class APB1ENR2 : uint32_t { LPUART1EN = (1u << 0u), I2C4EN = (1u << 1u), UCPD1EN = (1u << 8u) };
 
             enum class APB2ENR : uint32_t {
                 SYSCFGEN = (1u << 0u),
@@ -210,4 +210,4 @@ namespace hal::stm::stm32g4 {
     struct peripherals::CORDIC::address<0> {
         static constexpr inline uintptr_t value = 0x40020C00;
     };
-}  // namespace HAL::STM
+}  // namespace hal::stm::stm32g4
