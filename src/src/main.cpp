@@ -260,7 +260,8 @@ void init_uart() {
  * @retval int
  */
 int main() {
-    using gpio = hal::periphery::gpio<hal::stm::stm32g4::A>;
+    namespace mcu_ns = hal::stm::stm32g4;
+    using port_a = hal::periphery::gpio<mcu_ns::A, mcu_ns::peripherals>;
     // SystemClock_Config();
     // memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
     hal::address<hal::stm::stm32g4::peripherals::AHBENR, 0>()
@@ -297,20 +298,18 @@ int main() {
     // int16_t deg = 0;
     uint8_t chr = 0;
 
-    gpio::mode().clear_add<5, hal::stm::stm32g4::peripherals::GPIO::MODER::GP_OUT>();
+    port_a::set_port_mode<5, port_a::modes::OUTPUT>();
 
     while (true) {
         // memory(UART_BASE + UART_TDR) = 'A' + chr;
         memory(UART2_BASE + UART_TDR) = 'A' + chr;
         // memory(LPUART_BASE + LPUART_TDR) = 'U';
         chr = (chr + 1) % 26;
-        hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-            ->bssr_set_io.add<5, hal::stm::stm32g4::peripherals::GPIO::BSSR::SET>();
+        port_a::on<5>();
         // memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
         delay_ms(500);
         // memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
-        hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-            ->bssr_clear_io.add<5, hal::stm::stm32g4::peripherals::GPIO::BSSR::SET>();
+        port_a::off<5>();
         delay_ms(500);
         /*//while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
         int16_t rdeg = deg - 180;
