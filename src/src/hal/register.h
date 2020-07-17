@@ -48,22 +48,28 @@ namespace hal {
         repeated_control_register& operator=(const repeated_control_register&) = delete;
         repeated_control_register& operator=(repeated_control_register&&) = delete;
 
-        template<value_type position, byte_type F>
+        template<byte_type F, value_type... position>
+        void inline set() {
+            static_assert(all_true<(position <= values)...>::value);
+            hw_register = ((static_cast<value_type>(F) << (bit_width * position)) | ...);
+        }
+
+        template<byte_type F, value_type... position>
         void inline add() {
-            static_assert(position <= values);
-            hw_register = hw_register | (static_cast<value_type>(F) << (bit_width * position));
+            static_assert(all_true<(position <= values)...>::value);
+            hw_register = hw_register | ((static_cast<value_type>(F) << (bit_width * position)) | ...);
         }
 
-        template<value_type position>
+        template<value_type... position>
         void inline clear() {
-            static_assert(position <= values, "Index out of Range");
-            hw_register = hw_register & ~(((value_type{1} << bit_width) - 1) << (bit_width * position));
+            static_assert(all_true<(position <= values)...>::value, "Index out of Range");
+            hw_register = hw_register & (~(((value_type{1} << bit_width) - 1) << (bit_width * position)) & ...);
         }
 
-        template<value_type position, byte_type F>
+        template<byte_type F, value_type... position>
         void inline clear_add() {
-            clear<position>();
-            add<position, F>();
+            clear<position...>();
+            add<F, position...>();
         }
 
        private:
@@ -106,8 +112,7 @@ namespace hal {
     };
 
     template<typename Component, typename ValueType, ValueType mask>
-    struct data_register<Component, data_register_type::READ_WRITE, ValueType, mask> final
-    {
+    struct data_register<Component, data_register_type::READ_WRITE, ValueType, mask> final {
         typedef Component component_type;
         typedef ValueType value_type;
         data_register() = delete;
@@ -116,14 +121,9 @@ namespace hal {
         data_register& operator=(const data_register&) = delete;
         data_register& operator=(data_register&&) = delete;
 
-        inline volatile value_type& operator*()
-        {
-            return hwRegister;
-        }
-        [[nodiscard]] inline value_type operator*() const
-        {
-            return hwRegister & mask;
-        }
+        inline volatile value_type& operator*() { return hwRegister; }
+        [[nodiscard]] inline value_type operator*() const { return hwRegister & mask; }
+
        private:
         volatile value_type hwRegister;
     };
@@ -137,4 +137,4 @@ namespace hal {
     [[nodiscard]] constexpr inline auto address() {
         return reinterpret_cast<Component*>(Component::template address<N>::value);
     }
-}  // namespace HAL
+}  // namespace hal

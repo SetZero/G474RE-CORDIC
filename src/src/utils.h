@@ -37,22 +37,26 @@ struct value_mapper {
     template<typename... ValuePairs>
     constexpr value_mapper(ValuePairs... args) : m_mappings{args...} {}
 
-    // TODO: implement
     constexpr ValueType2 operator[](ValueType1 index) const {
-        constexpr auto result = std::find(m_mappings.cbegin(), m_mappings.cend(),
-                                     [&index](auto &current_value) { return current_value.first == index; });
-        static_assert(result != m_mappings.cend(), "Invalid value");
+        auto result = std::find_if(m_mappings.cbegin(), m_mappings.cend(),
+                                   [&index](auto &current_value) { return current_value.first == index; });
 
         return (*result).second;
     }
 
-    std::array<std::pair<ValueType1, ValueType2>, MappingSize> m_mappings;
+    const std::array<std::pair<ValueType1, ValueType2>, MappingSize> m_mappings;
 };
 
 template<typename... ValuePairs>
 value_mapper(ValuePairs... args)
     -> value_mapper<typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::first_type,
                     typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::second_type, sizeof...(args)>;
+
+template<bool...>
+struct bool_pack;
+
+template<bool... bs>
+using all_true = std::is_same<bool_pack<bs..., true>, bool_pack<true, bs...>>;
 
 template<typename MCU, typename PIN>
 concept gpio_mcu = requires {
