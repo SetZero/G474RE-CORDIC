@@ -218,18 +218,13 @@ void init_uart_pin() {
     // alternative function mode
     port_a::set_port_mode<port_a::modes::ALTERNATIVE_FUNCTION, txpin, rxpin>();
 
-    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->moder.clear_add<hal::stm::stm32g4::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION, txpin, rxpin>();
-
     // set AF to 7
     hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
         ->afr.clear_add<hal::stm::stm32g4::peripherals::GPIO::AFR::AF7, rxpin, txpin>();
 
     // Set GPIO (txpin/rxpin) speed +  push/pull
-    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->otyper.clear_add<hal::stm::stm32g4::peripherals::GPIO::OTYPER::PUSH_PULL, txpin, rxpin>();
-    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->ospeedr.clear_add<hal::stm::stm32g4::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED, txpin, rxpin>();
+    port_a::set_speed<port_a::speed::VERY_HIGH_SPEED, txpin, rxpin>();
+    port_a::set_type<port_a::type::PUSH_PULL, txpin, rxpin>();
 }
 
 template<auto base_addr>
