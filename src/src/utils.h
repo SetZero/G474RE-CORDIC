@@ -47,6 +47,9 @@ value_mapper(ValuePairs... args)
     ->value_mapper<typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::first_type,
                    typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::second_type, sizeof...(args)>;
 
+template<bool...> struct bool_pack;
+template<bool... bs>
+using all_true = std::is_same<bool_pack<bs..., true>, bool_pack<true, bs...>>;
 
 template<typename MCU, typename PIN>
 concept gpio_mcu =

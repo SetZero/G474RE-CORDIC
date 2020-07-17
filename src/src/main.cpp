@@ -20,6 +20,8 @@
 #include "hal/gpio.h"
 #include "hal/stm32/stm32g4.h"
 
+namespace mcu_ns = hal::stm::stm32g4;
+
 /* REGISTER BASE ADDRESSES */
 
 static constexpr auto RCC_BASE = 0x40021000;
@@ -136,7 +138,7 @@ void init_led() {
     // memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
     hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()->moder.clear<5>();
     hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->moder.add<5, hal::stm::stm32g4::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
+        ->moder.add<hal::stm::stm32g4::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION, 5>();
     // memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (5 * 2u));
     memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << 5u);     // Output push-pull
     memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << 10u);  // clear speed
@@ -207,32 +209,27 @@ void init_lpuart() {
 /***** UART *****/
 template<auto txpin, auto rxpin>
 void init_uart_pin() {
+    using port_a = hal::periphery::gpio<mcu_ns::A, mcu_ns::peripherals>;
+
     // enable GPIO clock
     hal::address<hal::stm::stm32g4::peripherals::AHBENR, 0>()
         ->ahb2.add<hal::stm::stm32g4::peripherals::AHBENR::AHB2ENR::GPIOA>();
 
     // alternative function mode
+    port_a::set_port_mode<port_a::modes::ALTERNATIVE_FUNCTION, txpin, rxpin>();
+
     hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->moder.clear_add<txpin, hal::stm::stm32g4::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
-    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->moder.clear_add<rxpin, hal::stm::stm32g4::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION>();
+        ->moder.clear_add<hal::stm::stm32g4::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION, txpin, rxpin>();
 
     // set AF to 7
     hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->afr.clear_add<rxpin, hal::stm::stm32g4::peripherals::GPIO::AFR::AF7>();
-    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->afr.clear_add<txpin, hal::stm::stm32g4::peripherals::GPIO::AFR::AF7>();
+        ->afr.clear_add<hal::stm::stm32g4::peripherals::GPIO::AFR::AF7, rxpin, txpin>();
 
     // Set GPIO (txpin/rxpin) speed +  push/pull
     hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->otyper.clear_add<txpin, hal::stm::stm32g4::peripherals::GPIO::OTYPER::PUSH_PULL>();
+        ->otyper.clear_add<hal::stm::stm32g4::peripherals::GPIO::OTYPER::PUSH_PULL, txpin, rxpin>();
     hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->ospeedr.clear_add<txpin, hal::stm::stm32g4::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED>();
-
-    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->otyper.clear_add<rxpin, hal::stm::stm32g4::peripherals::GPIO::OTYPER::PUSH_PULL>();
-    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->ospeedr.clear_add<rxpin, hal::stm::stm32g4::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED>();
+        ->ospeedr.clear_add<hal::stm::stm32g4::peripherals::GPIO::OSPEEDR::VERY_HIGH_SPEED, txpin, rxpin>();
 }
 
 template<auto base_addr>
@@ -260,7 +257,6 @@ void init_uart() {
  * @retval int
  */
 int main() {
-    namespace mcu_ns = hal::stm::stm32g4;
     using port_a = hal::periphery::gpio<mcu_ns::A, mcu_ns::peripherals>;
     // SystemClock_Config();
     // memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
@@ -298,7 +294,7 @@ int main() {
     // int16_t deg = 0;
     uint8_t chr = 0;
 
-    port_a::set_port_mode<5, port_a::modes::OUTPUT>();
+    port_a::set_port_mode<port_a::modes::OUTPUT, 5>();
 
     while (true) {
         // memory(UART_BASE + UART_TDR) = 'A' + chr;
