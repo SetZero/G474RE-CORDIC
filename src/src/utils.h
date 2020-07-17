@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <tuple>
@@ -36,23 +37,28 @@ struct value_mapper {
     template<typename... ValuePairs>
     constexpr value_mapper(ValuePairs... args) : m_mappings{args...} {}
 
-    // TODO: implement
-    constexpr ValueType2 operator[](ValueType1 index [[gnu::unused]]) const { return m_mappings[0].second; }
+    constexpr ValueType2 operator[](ValueType1 index) const {
+        auto result = std::find_if(m_mappings.cbegin(), m_mappings.cend(),
+                                   [&index](auto &current_value) { return current_value.first == index; });
 
-    std::array<std::pair<ValueType1, ValueType2>, MappingSize> m_mappings;
+        return (*result).second;
+    }
+
+    const std::array<std::pair<ValueType1, ValueType2>, MappingSize> m_mappings;
 };
 
 template<typename... ValuePairs>
 value_mapper(ValuePairs... args)
-    ->value_mapper<typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::first_type,
-                   typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::second_type, sizeof...(args)>;
+    -> value_mapper<typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::first_type,
+                    typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::second_type, sizeof...(args)>;
 
-template<bool...> struct bool_pack;
+template<bool...>
+struct bool_pack;
+
 template<bool... bs>
 using all_true = std::is_same<bool_pack<bs..., true>, bool_pack<true, bs...>>;
 
 template<typename MCU, typename PIN>
-concept gpio_mcu =
-requires {
-    typename MCU::GPIO::template address<PIN>; // needs GPIO
+concept gpio_mcu = requires {
+    typename MCU::GPIO::template address<PIN>;  // needs GPIO
 };
