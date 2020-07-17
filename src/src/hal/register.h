@@ -49,6 +49,12 @@ namespace hal {
         repeated_control_register& operator=(repeated_control_register&&) = delete;
 
         template<byte_type F, value_type... position>
+        void inline set() {
+            static_assert(all_true<(position <= values)...>::value);
+            hw_register = ((static_cast<value_type>(F) << (bit_width * position)) | ...);
+        }
+
+        template<byte_type F, value_type... position>
         void inline add() {
             static_assert(all_true<(position <= values)...>::value);
             hw_register = hw_register | ((static_cast<value_type>(F) << (bit_width * position)) | ...);
