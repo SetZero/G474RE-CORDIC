@@ -217,11 +217,7 @@ void init_uart_pin() {
         ->ahb2.add<hal::stm::stm32g4::peripherals::AHBENR::AHB2ENR::GPIOA>();
 
     // alternative function mode
-    port_a::set_port_mode<gpio_values::modes::ALTERNATIVE_FUNCTION, txpin, rxpin>();
-
-    // set AF to 7
-    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->afr.clear_add<hal::stm::stm32g4::peripherals::GPIO::AFR::AF7, rxpin, txpin>();
+    port_a::set_alternative_function<gpio_values::alternative_function::AF7, txpin, rxpin>();
 
     // Set GPIO (txpin/rxpin) speed +  push/pull
     port_a::set_speed<gpio_values::speed::VERY_HIGH_SPEED, txpin, rxpin>();

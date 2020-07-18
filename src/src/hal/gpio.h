@@ -15,6 +15,7 @@ namespace hal::periphery {
         enum class modes { OUTPUT, INPUT, ALTERNATIVE_FUNCTION, ANALOG };  // TODO: Remove direct access to AF
         enum class type { PUSH_PULL = 0, OPEN_DRAIN = 1 };
         enum class speed { LOW_SPEED = 0, MEDIUM_SPEED = 1, HIGH_SPEED = 2, VERY_HIGH_SPEED = 3 };
+        enum class alternative_function { AF0 = 0, AF1, AF2, AF3, AF4, AF5, AF6, AF7, AF8, AF9, AF10, AF11, AF12, AF13, AF14, AF15 };
     }
 
     namespace detail {
@@ -37,6 +38,24 @@ namespace hal::periphery {
                 speed_mapper_pair{gpio_values::speed::MEDIUM_SPEED, mcu::GPIO::OSPEEDR::MEDIUM_SPEED},
                 speed_mapper_pair{gpio_values::speed::HIGH_SPEED, mcu::GPIO::OSPEEDR::HIGH_SPEED},
                 speed_mapper_pair{gpio_values::speed::VERY_HIGH_SPEED, mcu::GPIO::OSPEEDR::VERY_HIGH_SPEED}};
+            using af_mapper_pair = std::pair<gpio_values::alternative_function, typename mcu::GPIO::AFR>;
+            static inline constexpr value_mapper af_mapper{
+                af_mapper_pair{gpio_values::alternative_function::AF0, mcu::GPIO::AFR::AF0},
+                af_mapper_pair{gpio_values::alternative_function::AF1, mcu::GPIO::AFR::AF1},
+                af_mapper_pair{gpio_values::alternative_function::AF2, mcu::GPIO::AFR::AF2},
+                af_mapper_pair{gpio_values::alternative_function::AF3, mcu::GPIO::AFR::AF3},
+                af_mapper_pair{gpio_values::alternative_function::AF4, mcu::GPIO::AFR::AF4},
+                af_mapper_pair{gpio_values::alternative_function::AF5, mcu::GPIO::AFR::AF5},
+                af_mapper_pair{gpio_values::alternative_function::AF6, mcu::GPIO::AFR::AF6},
+                af_mapper_pair{gpio_values::alternative_function::AF7, mcu::GPIO::AFR::AF7},
+                af_mapper_pair{gpio_values::alternative_function::AF8, mcu::GPIO::AFR::AF8},
+                af_mapper_pair{gpio_values::alternative_function::AF9, mcu::GPIO::AFR::AF9},
+                af_mapper_pair{gpio_values::alternative_function::AF10, mcu::GPIO::AFR::AF10},
+                af_mapper_pair{gpio_values::alternative_function::AF11, mcu::GPIO::AFR::AF11},
+                af_mapper_pair{gpio_values::alternative_function::AF12, mcu::GPIO::AFR::AF12},
+                af_mapper_pair{gpio_values::alternative_function::AF13, mcu::GPIO::AFR::AF13},
+                af_mapper_pair{gpio_values::alternative_function::AF14, mcu::GPIO::AFR::AF14},
+                af_mapper_pair{gpio_values::alternative_function::AF15, mcu::GPIO::AFR::AF15}};
         };
     }
 
@@ -57,22 +76,28 @@ namespace hal::periphery {
 
         template<typename decltype(port()->bssr_set_io)::value_type... io>
         static void on() {
-            return port()->bssr_set_io.template add<mcu::GPIO::BSSR::SET, io...>();
+            port()->bssr_set_io.template add<mcu::GPIO::BSSR::SET, io...>();
         }
 
         template<typename decltype(port()->bssr_clear_io)::value_type... io>
         static void off() {
-            return port()->bssr_clear_io.template add<mcu::GPIO::BSSR::SET, io...>();
+            port()->bssr_clear_io.template add<mcu::GPIO::BSSR::SET, io...>();
         }
 
         template<gpio_values::type gpio_type, typename decltype(port()->otyper)::value_type... io>
         static void set_type() {
-            return port()->otyper.template add<mcu_detail::type_mapper[gpio_type], io...>();
+            port()->otyper.template add<mcu_detail::type_mapper[gpio_type], io...>();
         }
 
         template<gpio_values::speed gpio_speed, typename decltype(port()->ospeedr)::value_type... io>
         static void set_speed() {
-            return port()->ospeedr.template add<mcu_detail::speed_mapper[gpio_speed], io...>();
+            port()->ospeedr.template add<mcu_detail::speed_mapper[gpio_speed], io...>();
+        }
+
+        template<gpio_values::alternative_function af, typename decltype(port()->afr)::value_type... io>
+        static void set_alternative_function() {
+            set_port_mode<gpio_values::modes::ALTERNATIVE_FUNCTION, io...>();
+            port()->afr.template add<mcu_detail::af_mapper[af], io...>();
         }
     };
 }  // namespace hal::periphery
