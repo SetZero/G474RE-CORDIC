@@ -84,6 +84,10 @@ namespace hal::periphery {
             port()->bssr_clear_io.template add<mcu::GPIO::BSSR::SET, io...>();
         }
 
+        static auto get() {
+            return *port()->idr;
+        }
+
         template<gpio_values::type gpio_type, typename decltype(port()->otyper)::value_type... io>
         static void set_type() {
             port()->otyper.template add<mcu_detail::type_mapper[gpio_type], io...>();
@@ -94,6 +98,7 @@ namespace hal::periphery {
             port()->ospeedr.template add<mcu_detail::speed_mapper[gpio_speed], io...>();
         }
 
+        //TODO: ADD AF LUT
         template<gpio_values::alternative_function af, typename decltype(port()->afr)::value_type... io>
         static void set_alternative_function() {
             set_port_mode<gpio_values::modes::ALTERNATIVE_FUNCTION, io...>();
