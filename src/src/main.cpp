@@ -21,6 +21,7 @@
 #include "hal/stm32/stm32g4.h"
 
 namespace mcu_ns = hal::stm::stm32g4;
+namespace gpio_values = hal::periphery::gpio_values;
 
 /* REGISTER BASE ADDRESSES */
 
@@ -216,15 +217,15 @@ void init_uart_pin() {
         ->ahb2.add<hal::stm::stm32g4::peripherals::AHBENR::AHB2ENR::GPIOA>();
 
     // alternative function mode
-    port_a::set_port_mode<port_a::modes::ALTERNATIVE_FUNCTION, txpin, rxpin>();
+    port_a::set_port_mode<gpio_values::modes::ALTERNATIVE_FUNCTION, txpin, rxpin>();
 
     // set AF to 7
     hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
         ->afr.clear_add<hal::stm::stm32g4::peripherals::GPIO::AFR::AF7, rxpin, txpin>();
 
     // Set GPIO (txpin/rxpin) speed +  push/pull
-    port_a::set_speed<port_a::speed::VERY_HIGH_SPEED, txpin, rxpin>();
-    port_a::set_type<port_a::type::PUSH_PULL, txpin, rxpin>();
+    port_a::set_speed<gpio_values::speed::VERY_HIGH_SPEED, txpin, rxpin>();
+    port_a::set_type<gpio_values::type::PUSH_PULL, txpin, rxpin>();
 }
 
 template<auto base_addr>
@@ -289,7 +290,7 @@ int main() {
     // int16_t deg = 0;
     uint8_t chr = 0;
 
-    port_a::set_port_mode<port_a::modes::OUTPUT, 5>();
+    port_a::set_port_mode<gpio_values::modes::OUTPUT, 5>();
 
     while (true) {
         // memory(UART_BASE + UART_TDR) = 'A' + chr;

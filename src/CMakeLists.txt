@@ -9,7 +9,7 @@ set(SOURCES
     # src/hal/register.h
     # src/utils.h
     # src/hal/stm32/register/cordic.h
-        src/hal/gpio.h)
+        src/hal/gpio.h src/hal/hal_info.h)
 
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
 

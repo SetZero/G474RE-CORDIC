@@ -1,5 +1,7 @@
 #pragma once
 
+#include <hal/hal_info.h>
+
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -61,4 +63,10 @@ using all_true = std::is_same<bool_pack<bs..., true>, bool_pack<true, bs...>>;
 template<typename MCU, typename PIN>
 concept gpio_mcu = requires {
     typename MCU::GPIO::template address<PIN>;  // needs GPIO
+};
+
+template<typename MCU>
+concept mcu_with_vendor_info = requires {
+    MCU::vendor_information::vendors;  // needs Vendor Name
+    std::is_same_v<decltype(MCU::vendor_information::vendors), hal::info::vendors>; // vendors must be a vendor :P
 };

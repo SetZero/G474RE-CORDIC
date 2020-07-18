@@ -9,6 +9,7 @@
 
 #include "hal/register.h"
 #include "hal/stm32/register/cordic.h"
+#include "hal/hal_info.h"
 
 namespace hal::stm::stm32g4 {
     struct A {};
@@ -20,6 +21,9 @@ namespace hal::stm::stm32g4 {
     struct G {};
 
     struct peripherals {
+        struct vendor_information {
+            static constexpr inline info::vendors vendors = info::vendors::STM;
+        };
         struct base_address {
             static constexpr inline uintptr_t value = 0x40021000;
         };
