@@ -58,7 +58,7 @@ template<bool...>
 struct bool_pack;
 
 template<bool... bs>
-using all_true = std::is_same<bool_pack<bs..., true>, bool_pack<true, bs...>>;
+static inline constexpr bool all_true = std::is_same_v<bool_pack<bs..., true>, bool_pack<true, bs...>>;
 
 template<typename MCU, typename PIN>
 concept gpio_mcu = requires {
@@ -67,6 +67,6 @@ concept gpio_mcu = requires {
 
 template<typename MCU>
 concept mcu_with_vendor_info = requires {
-    MCU::vendor_information::vendors;  // needs Vendor Name
-    std::is_same_v<decltype(MCU::vendor_information::vendors), hal::info::vendors>; // vendors must be a vendor :P
+    MCU::vendor_information::vendors;                                                // needs Vendor Name
+    std::is_same_v<decltype(MCU::vendor_information::vendors), hal::info::vendors>;  // vendors must be a vendor :P
 };

@@ -50,19 +50,19 @@ namespace hal {
 
         template<byte_type F, value_type... position>
         void inline set() {
-            static_assert(all_true<(position <= values)...>::value);
+            static_assert(all_true<(position <= values)...>);
             hw_register = ((static_cast<value_type>(F) << (bit_width * position)) | ...);
         }
 
         template<byte_type F, value_type... position>
         void inline add() {
-            static_assert(all_true<(position <= values)...>::value);
+            static_assert(all_true<(position <= values)...>);
             hw_register = hw_register | ((static_cast<value_type>(F) << (bit_width * position)) | ...);
         }
 
         template<value_type... position>
         void inline clear() {
-            static_assert(all_true<(position <= values)...>::value, "Index out of Range");
+            static_assert(all_true<(position <= values)...>, "Index out of Range");
             hw_register = hw_register & (~(((value_type{1} << bit_width) - 1) << (bit_width * position)) & ...);
         }
 
@@ -76,6 +76,63 @@ namespace hal {
         static constexpr inline value_type values = bits / bit_width;
         volatile value_type hw_register;
     } __attribute__((packed));
+
+    template<typename T>
+    concept RegisterDescription = requires {
+        T::function;
+        T::start;
+        T::end;
+        typename T::data_type;
+        typename T::enum_type;
+    };
+
+    template<auto Function, typename DataType, std::uint8_t Start, std::uint8_t End = Start>
+    requires(Start <= End) struct register_entry_desc {
+        using enum_type = decltype(Function);
+        using data_type = DataType;
+
+        static inline constexpr auto function = Function;
+        static inline constexpr auto start = Start;
+        static inline constexpr auto end = End;
+    };
+
+    template<typename... Functions>
+    constexpr bool is_set(Functions... func) {
+        const std::array functions{func...};
+
+        return std::all_of(functions.cbegin(), functions.cend(), [&functions](auto& current_value) {
+            return std::count(functions.cbegin(), functions.cend(), current_value) == 1;
+        });
+    }
+
+    template<typename EnumType, EnumType Function, RegisterDescription... Description>
+    requires(is_set(Description::function...)) constexpr size_t lookup_function_index() {
+        const std::array functions{Description::function...};
+
+        return std::distance(functions.cbegin(), std::find(functions.cbegin(), functions.cend(), Function));
+    }
+
+    template<RegisterDescription... Description>
+    requires(is_set(Description::function...)) struct register_desc {
+        using description_container_t = std::tuple<Description...>;
+        using enum_type = std::tuple_element_t<0, description_container_t>::enum_type;
+
+        template<enum_type Function>
+        using get_type_to_function =
+            std::tuple_element_t<lookup_function_index<enum_type, Function, Description...>(), description_container_t>;
+
+        template<enum_type Function>
+        using data_type = typename get_type_to_function<Function>::data_type;
+
+        template<enum_type Function>
+        static inline constexpr auto start_bit = get_type_to_function<Function>::start;
+
+        template<enum_type Function>
+        static inline constexpr auto end_bit = get_type_to_function<Function>::end;
+
+        template<enum_type Function>
+        void set_value(data_type<Function> value){};
+    };
 
     enum class data_register_type : uint32_t { READ_WRITE, READ_ONLY, RESERVED };
 

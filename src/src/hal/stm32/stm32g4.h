@@ -7,9 +7,9 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "hal/hal_info.h"
 #include "hal/register.h"
 #include "hal/stm32/register/cordic.h"
-#include "hal/hal_info.h"
 
 namespace hal::stm::stm32g4 {
     struct A {};
@@ -53,6 +53,36 @@ namespace hal::stm::stm32g4 {
             template<typename N>
             struct address;
         };
+
+        struct UART final {
+            URT() = delete;
+
+            enum class CR : uint32_t {
+                RXFFIE = 31,
+                TXFEIE = 30,
+                FIFOEN = 29,
+                M1 = 28,
+                M0 = 12,
+                EOBIE = 27,
+                RTOIE = 26
+            };
+
+            control_register<UART, CR, uint32_t> cr1;
+            control_register<UART, CR, uint32_t> cr2;
+            control_register<UART, CR, uint32_t> cr3;
+            control_register<UART, CR, uint32_t> brr;
+            control_register<UART, uint8_t> gtpr;
+            control_register<UART, uint8_t> rtor;
+            control_register<UART, uint8_t> rqr;
+            control_register<UART, uint8_t> isr;
+            control_register<UART, uint8_t> icr;
+            control_register<UART, uint8_t> rdr;
+            control_register<UART, uint8_t> tdr;
+            control_register<UART, uint8_t> presc;
+
+            template<typename N>
+            struct adress;
+        } __attribute__((packed));
 
         // TODO: structure this better somehow
         struct CORDIC {
@@ -208,6 +238,16 @@ namespace hal::stm::stm32g4 {
     template<>
     struct peripherals::GPIO::address<G> {
         static constexpr inline uintptr_t value = 0x48001800;
+    };
+
+    template<>
+    struct peripherals::UART::adress<0> {
+        static constexpr inline uintptr_t value = 0x40013800;
+    };
+
+    template<>
+    struct peripherals::UART::adress<1> {
+        static constexpr inline uintptr_t value = 0x40004400;
     };
 
     template<>
