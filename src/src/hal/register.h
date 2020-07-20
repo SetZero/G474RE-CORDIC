@@ -4,6 +4,10 @@
 
 #pragma once
 
+#include <algorithm>
+#include <array>
+#include <bitset>
+#include <concepts>
 #include <cstdint>
 #include <type_traits>
 
@@ -79,31 +83,72 @@ namespace hal {
 
     template<typename T>
     concept RegisterDescription = requires {
-        T::function;
-        T::start;
-        T::end;
+        typename T::position_type;
         typename T::data_type;
         typename T::enum_type;
+        T::function;
     };
 
-    template<auto Function, typename DataType, std::uint8_t Start, std::uint8_t End = Start>
-    requires(Start <= End) struct register_entry_desc {
-        using enum_type = decltype(Function);
-        using data_type = DataType;
-
-        static inline constexpr auto function = Function;
-        static inline constexpr auto start = Start;
-        static inline constexpr auto end = End;
+    template<typename T>
+    concept BitPositionType = requires(T a) {
+        typename T::position_type;
+        T::contains_pos(T::position_type(0u));
     };
 
-    template<typename... Functions>
-    constexpr bool is_set(Functions... func) {
-        const std::array functions{func...};
+    template<typename... Values>
+    constexpr bool is_set(Values... values) {
+        const std::array arr{values...};
 
-        return std::all_of(functions.cbegin(), functions.cend(), [&functions](auto& current_value) {
-            return std::count(functions.cbegin(), functions.cend(), current_value) == 1;
+        return std::all_of(arr.cbegin(), arr.cend(), [&arr](auto& current_value) {
+            return std::count(arr.cbegin(), arr.cend(), current_value) == 1;
         });
     }
+
+    template<auto... BitPos>
+    concept valid_positions = (std::unsigned_integral<decltype(BitPos)> && ...) && (is_set(BitPos...));
+
+    template<typename IndexType>
+    struct bit_pos_detail;
+
+    template<auto FirstPos, auto... BitPos>
+    requires(valid_positions<FirstPos, BitPos...>) struct bit_pos_detail<
+        std::integer_sequence<decltype(FirstPos), FirstPos, (BitPos)...>> {
+        static inline constexpr auto num_pos = sizeof...(BitPos) + 1;
+        static inline constexpr std::array bitpos{FirstPos, BitPos...};
+
+        template<auto... T>
+        static inline constexpr auto contains_pos() {
+            is_set<T..., FirstPos, BitPos...>();
+        }
+    };
+
+    template<auto FirstPos, decltype(FirstPos)... BitPos>
+    using bit_pos = bit_pos_detail<std::integer_sequence<decltype(FirstPos), FirstPos, BitPos...>>;
+
+    template<auto Offset, typename IndexType>
+    struct range_to_positions_helper;
+
+    template<auto Offset, decltype(Offset)... BitPos>
+    struct range_to_positions_helper<Offset, std::integer_sequence<decltype(Offset), BitPos...>> {
+        using type = bit_pos<Offset, (Offset + 1) + BitPos...>;
+    };
+
+    template<auto Offset, typename IndexType>
+    using range_to_positions_helper_t = range_to_positions_helper<Offset, IndexType>::type;
+
+    template<auto Start, auto End>
+    using bit_range = range_to_positions_helper_t<
+        Start, std::make_integer_sequence<decltype(Start), static_cast<decltype(Start)>(End - Start)>>;
+
+    template<auto Function, typename DataType, typename PositionType>
+    struct register_entry_desc {
+        using enum_type = decltype(Function);
+        // TODO: add data_type concept
+        using data_type = DataType;
+        using position_type = PositionType;
+
+        static inline constexpr auto function = Function;
+    };
 
     template<typename EnumType, EnumType Function, RegisterDescription... Description>
     requires(is_set(Description::function...)) constexpr size_t lookup_function_index() {
@@ -112,9 +157,10 @@ namespace hal {
         return std::distance(functions.cbegin(), std::find(functions.cbegin(), functions.cend(), Function));
     }
 
-    template<RegisterDescription... Description>
-    requires(is_set(Description::function...)) struct register_desc {
+    template<typename RegisterType, RegisterDescription... Description>
+    requires(is_set(Description::function...) && std::integral<RegisterType>) struct register_desc {
         using description_container_t = std::tuple<Description...>;
+        using register_type = RegisterType;
         using enum_type = std::tuple_element_t<0, description_container_t>::enum_type;
 
         template<enum_type Function>
@@ -131,9 +177,38 @@ namespace hal {
         static inline constexpr auto end_bit = get_type_to_function<Function>::end;
 
         template<enum_type Function>
-        void set_value(data_type<Function> value){};
-    };
+        void set_value(data_type<Function> value) {
+            std::bitset<std::min(sizeof(value) * 4ul, 64ul)> set(value);
+            using current_description = get_type_to_function<Function>;
+            const auto num_pos = current_description::position_type::num_pos;
 
+            for (std::remove_const_t<decltype(num_pos)> i = 0; i < num_pos; ++i) {
+                const auto current_bitpos = current_description::position_type::bitpos[i];
+
+                m_register = m_register & ~(1 << current_bitpos);
+                m_register = m_register | (set[i] << current_bitpos);
+            }
+        }
+
+        template<enum_type Function>
+        data_type<Function> get_value() {
+            std::bitset<64ul> set;
+            using current_description = get_type_to_function<Function>;
+            const auto num_pos = current_description::position_type::num_pos;
+
+            for (std::remove_const_t<decltype(num_pos)> i = 0; i < num_pos; ++i) {
+                const auto current_bitpos = current_description::position_type::bitpos[i];
+
+                set[i] = (m_register >> current_bitpos) & 1;
+            }
+
+            // TODO: maybe do this differently ?
+            return static_cast<data_type<Function>>(set.to_ullong());
+        }
+
+       private:
+        register_type m_register;
+    };
     enum class data_register_type : uint32_t { READ_WRITE, READ_ONLY, RESERVED };
 
     template<typename component, data_register_type Mode = data_register_type::RESERVED, typename ValueType = uint32_t,

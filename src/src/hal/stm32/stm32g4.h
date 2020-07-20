@@ -55,7 +55,7 @@ namespace hal::stm::stm32g4 {
         };
 
         struct UART final {
-            URT() = delete;
+            UART() = delete;
 
             enum class CR : uint32_t {
                 RXFFIE = 31,
@@ -80,7 +80,7 @@ namespace hal::stm::stm32g4 {
             control_register<UART, uint8_t> tdr;
             control_register<UART, uint8_t> presc;
 
-            template<typename N>
+            template<auto N>
             struct adress;
         } __attribute__((packed));
 
