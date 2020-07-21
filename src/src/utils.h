@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <tuple>
 #include <utility>
+#include <concepts>
 
 template<auto bit, typename T>
 void set_bit(T value) {
@@ -51,8 +52,8 @@ struct value_mapper {
 
 template<typename... ValuePairs>
 value_mapper(ValuePairs... args)
-    -> value_mapper<typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::first_type,
-                    typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::second_type, sizeof...(args)>;
+-> value_mapper<typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::first_type,
+        typename std::tuple_element_t<0, std::tuple<ValuePairs...>>::second_type, sizeof...(args)>;
 
 template<bool...>
 struct bool_pack;
@@ -60,10 +61,32 @@ struct bool_pack;
 template<bool... bs>
 static inline constexpr bool all_true = std::is_same_v<bool_pack<bs..., true>, bool_pack<true, bs...>>;
 
-template<typename MCU, typename PIN>
-concept gpio_mcu = requires {
-    typename MCU::GPIO::template address<PIN>;  // needs GPIO
+template<typename T>
+concept input_register_type = requires(T reg) {
+    { reg.clear() };
 };
+
+template<typename T>
+concept output_register_type = requires(T reg) {
+    { *reg } -> std::integral;
+};
+
+template<typename MCU, typename PIN>
+concept stm_mcu = requires(MCU::GPIO a) {
+    typename MCU::GPIO::template address<PIN>;
+    requires input_register_type<decltype(a.moder)>;
+    requires input_register_type<decltype(a.otyper)>;
+    requires input_register_type<decltype(a.ospeedr)>;
+    requires input_register_type<decltype(a.pupdr)>;
+    requires output_register_type<decltype(a.idr)>;
+    requires input_register_type<decltype(a.bssr_set_io)>;
+    requires input_register_type<decltype(a.bssr_clear_io)>;
+    requires input_register_type<decltype(a.afr)>;
+    requires input_register_type<decltype(a.moder)>;
+};
+
+template<typename MCU, typename PIN>
+concept gpio_mcu = stm_mcu<MCU, PIN>;
 
 template<typename MCU>
 concept mcu_with_vendor_info = requires {

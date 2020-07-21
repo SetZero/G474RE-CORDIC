@@ -24,6 +24,8 @@ if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10)
     target_compile_options(${PROJECT_NAME}.elf PUBLIC -fconcepts)
 endif()
 
+target_compile_options(${PROJECT_NAME}.elf PUBLIC  -fconcepts-diagnostics-depth=3)
+
 target_compile_options(${PROJECT_NAME}.elf PUBLIC
     -mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections
     -fno-common -fmessage-length=0 -Wdouble-promotion -fstack-protector-strong -Wno-address-of-packed-member)
