@@ -96,7 +96,6 @@ namespace hal {
     template<typename T>
     concept BitPositionType = requires(T a) {
         typename T::position_type;
-        T::contains_pos(T::position_type(0u));
     };
 
     template<typename... Values>
@@ -146,11 +145,6 @@ namespace hal {
         std::integer_sequence<decltype(FirstPos), FirstPos, (BitPos)...>> {
         static inline constexpr auto num_pos = sizeof...(BitPos) + 1;
         static inline constexpr std::array bitpos{FirstPos, BitPos...};
-
-        template<auto... T>
-        static inline constexpr auto contains_pos() {
-            is_set<T..., FirstPos, BitPos...>();
-        }
     };
 
     template<auto FirstPos, decltype(FirstPos)... BitPos>
