@@ -7,8 +7,10 @@
 #include <algorithm>
 #include <array>
 #include <bitset>
+#include <climits>
 #include <concepts>
 #include <cstdint>
+#include <tuple>
 #include <type_traits>
 
 #include "utils.h"
@@ -106,8 +108,35 @@ namespace hal {
         });
     }
 
+    template<typename RegisterType, typename RegisterDescription>
+    requires(std::unsigned_integral<RegisterType>) constexpr auto marked_positions() {
+        std::decay_t<RegisterType> to_test = 0;
+        for (const auto& current_pos : RegisterDescription::position_type::bitpos) {
+            to_test |= 1 << current_pos;
+        }
+        return to_test;
+    }
+
+    template<typename RegisterType, typename... Descriptions>
+    requires(std::unsigned_integral<RegisterType>) constexpr bool does_allocate_complete_register() {
+        std::decay_t<RegisterType> to_test = 0;
+
+        std::array all_marked_positions{marked_positions<RegisterType, Descriptions>()...};
+        bool overlaps = false;
+
+        for (auto current_marked_position : all_marked_positions) {
+            overlaps |= (to_test & current_marked_position);
+            to_test |= current_marked_position;
+        }
+
+        return !overlaps && to_test == std::numeric_limits<decltype(to_test)>::max();
+    }
+
     template<auto... BitPos>
     concept valid_positions = (std::unsigned_integral<decltype(BitPos)> && ...) && (is_set(BitPos...));
+
+    template<typename RegisterType, typename... Descriptions>
+    concept is_fully_described_register = does_allocate_complete_register<RegisterType, Descriptions...>();
 
     template<typename IndexType>
     struct bit_pos_detail;
@@ -142,13 +171,20 @@ namespace hal {
     using bit_range = range_to_positions_helper_t<
         Start, std::make_integer_sequence<decltype(Start), static_cast<decltype(Start)>(End - Start)>>;
 
-    template<auto Function, typename DataType, typename PositionType>
+    struct reserved_type {
+        reserved_type() = delete;
+    };
+
+    enum struct access_mode { read_only, write_only, read_write };
+
+    template<auto Function, typename DataType, typename PositionType, access_mode Mode = access_mode::read_write>
     struct register_entry_desc {
         using enum_type = decltype(Function);
         // TODO: add data_type concept
         using data_type = DataType;
         using position_type = PositionType;
 
+        static inline constexpr auto amode = Mode;
         static inline constexpr auto function = Function;
     };
 
@@ -160,7 +196,8 @@ namespace hal {
     }
 
     template<typename RegisterType, RegisterDescription... Description>
-    requires(is_set(Description::function...) && std::integral<RegisterType>) struct register_desc {
+    requires(is_set(Description::function...) && std::integral<RegisterType> &&
+             is_fully_described_register<RegisterType, Description...>) struct register_desc {
         using description_container_t = std::tuple<Description...>;
         using register_type = RegisterType;
         using enum_type = std::tuple_element_t<0, description_container_t>::enum_type;
@@ -173,13 +210,17 @@ namespace hal {
         using data_type = typename get_type_to_function<Function>::data_type;
 
         template<enum_type Function>
+        static inline constexpr auto amode = get_type_to_function<Function>::amode;
+
+        template<enum_type Function>
         static inline constexpr auto start_bit = get_type_to_function<Function>::start;
 
         template<enum_type Function>
         static inline constexpr auto end_bit = get_type_to_function<Function>::end;
 
         template<enum_type Function>
-        void set_value(data_type<Function> value) {
+        requires(!std::is_same_v<data_type<Function>, reserved_type> &&
+                 amode<Function> != access_mode::read_only) void set_value(data_type<Function> value) {
             std::bitset<std::min(sizeof(value) * 4ul, 64ul)> set(value);
             using current_description = get_type_to_function<Function>;
             const auto num_pos = current_description::position_type::num_pos;
@@ -193,7 +234,8 @@ namespace hal {
         }
 
         template<enum_type Function>
-        data_type<Function> get_value() {
+        requires(amode<Function> != access_mode::write_only) data_type<Function> get_value() {
+            // TODO: choose bits based on data_type
             std::bitset<64ul> set;
             using current_description = get_type_to_function<Function>;
             const auto num_pos = current_description::position_type::num_pos;
@@ -211,6 +253,7 @@ namespace hal {
        private:
         register_type m_register;
     };
+
     enum class data_register_type : uint32_t { READ_WRITE, READ_ONLY, RESERVED };
 
     template<typename component, data_register_type Mode = data_register_type::RESERVED, typename ValueType = uint32_t,
