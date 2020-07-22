@@ -22,3 +22,6 @@ src/behaviour_tests/Makefile
 src/behaviour_tests/cmake_install.cmake
 src/behaviour_tests/CMakeCache.txt
 src/behaviour_tests/register_tests
+src/behaviour_tests/utils_tests
+src/behaviour_tests/Testing
+src/behaviour_tests/CTestTestfile.cmake

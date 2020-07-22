@@ -140,21 +140,22 @@ namespace hal {
     template<typename IndexType>
     struct bit_pos_detail;
 
-    template<auto FirstPos, auto... BitPos>
-    requires(valid_positions<FirstPos, BitPos...>) struct bit_pos_detail<
-        std::integer_sequence<decltype(FirstPos), FirstPos, (BitPos)...>> {
-        static inline constexpr auto num_pos = sizeof...(BitPos) + 1;
-        static inline constexpr std::array bitpos{FirstPos, BitPos...};
+    template<auto... BitPos>
+    requires(valid_positions<BitPos...>) struct bit_pos_detail<make_integer_sequence<BitPos...>> {
+        static inline constexpr auto num_pos = sizeof...(BitPos);
+        static inline constexpr std::array bitpos{BitPos...};
+
+        using as_sequence = make_integer_sequence<BitPos...>;
     };
 
-    template<auto FirstPos, decltype(FirstPos)... BitPos>
-    using bit_pos = bit_pos_detail<std::integer_sequence<decltype(FirstPos), FirstPos, BitPos...>>;
+    template<auto... BitPos>
+    using bit_pos = bit_pos_detail<make_integer_sequence<BitPos...>>;
 
     template<auto Offset, typename IndexType>
     struct range_to_positions_helper;
 
     template<auto Offset, decltype(Offset)... BitPos>
-    struct range_to_positions_helper<Offset, std::integer_sequence<decltype(Offset), BitPos...>> {
+    struct range_to_positions_helper<Offset, make_integer_sequence<BitPos...>> {
         using type = bit_pos<Offset, (Offset + 1) + BitPos...>;
     };
 
@@ -194,6 +195,7 @@ namespace hal {
              is_fully_described_register<RegisterType, Description...>) struct register_desc {
         using description_container_t = std::tuple<Description...>;
         using register_type = RegisterType;
+        using decayed_register_type = std::decay_t<RegisterType>;
         using enum_type = std::tuple_element_t<0, description_container_t>::enum_type;
 
         template<enum_type Function>
@@ -215,33 +217,21 @@ namespace hal {
         template<enum_type Function>
         requires(!std::is_same_v<data_type<Function>, reserved_type> &&
                  amode<Function> != access_mode::read_only) void set_value(data_type<Function> value) {
-            std::bitset<std::min(sizeof(value) * 4ul, 64ul)> set(value);
+            std::bitset<std::min(sizeof(value) * CHAR_BIT, 64ul)> set(value);
             using current_description = get_type_to_function<Function>;
-            const auto num_pos = current_description::position_type::num_pos;
 
-            for (std::remove_const_t<decltype(num_pos)> i = 0; i < num_pos; ++i) {
-                const auto current_bitpos = current_description::position_type::bitpos[i];
-
-                m_register = m_register & ~(1 << current_bitpos);
-                m_register = m_register | (set[i] << current_bitpos);
-            }
+            m_register = set_bits<decayed_register_type>(set, m_register,
+                                                         typename current_description::position_type::as_sequence{});
         }
 
         template<enum_type Function>
         requires(amode<Function> != access_mode::write_only) data_type<Function> get_value() {
-            // TODO: choose bits based on data_type
-            std::bitset<64ul> set;
+            std::bitset<std::min(sizeof(m_register) * CHAR_BIT, 64ul)> register_value(m_register);
             using current_description = get_type_to_function<Function>;
-            const auto num_pos = current_description::position_type::num_pos;
 
-            for (std::remove_const_t<decltype(num_pos)> i = 0; i < num_pos; ++i) {
-                const auto current_bitpos = current_description::position_type::bitpos[i];
-
-                set[i] = (m_register >> current_bitpos) & 1;
-            }
-
-            // TODO: maybe do this differently ?
-            return static_cast<data_type<Function>>(set.to_ullong());
+            // TODO: get correct size unsigned integer, based on type size
+            return static_cast<data_type<Function>>(
+                get_bits<uint64_t>(register_value, typename current_description::position_type::as_sequence{}));
         }
 
        private:
