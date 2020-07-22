@@ -59,9 +59,12 @@ namespace hal::periphery {
         };
     }
 
-    template<typename gpio_port, gpio_mcu<gpio_port> mcu = __SELECTED_MCU__>
+    template<typename gpio_port, gpio_mcu<gpio_port> mcu = __SELECTED_MCU__, info::vendors vendor = mcu::vendor_information::vendors>
+    class gpio;
+
+    template<typename gpio_port, gpio_mcu<gpio_port> mcu>
         requires (mcu::vendor_information::vendors == info::vendors::STM)
-    class gpio {
+    class gpio<gpio_port, mcu, info::vendors::STM> {
        private:
         static inline constexpr auto port = hal::address<typename mcu::GPIO, gpio_port>;
         using mcu_detail = detail::stm_mcu_mapper<gpio_port, mcu>;
