@@ -6,6 +6,10 @@
 
 namespace hal::info {
     enum class vendors { STM, MICROCHIP };
+
+    template<typename MCU>
+    class vendor_information {};
+
 }  // namespace hal::info
 
 template<typename T>
@@ -35,13 +39,14 @@ concept stm_mcu = requires(MCU::GPIO a) {
 
 template<typename MCU>
 concept mcu_with_vendor_info = requires {
-    MCU::vendor_information::vendors;                                                // needs Vendor Name
-    std::is_same_v<decltype(MCU::vendor_information::vendors), hal::info::vendors>;  // vendors must be a vendor :P
+    hal::info::vendor_information<MCU>::vendor;
+    std::is_same_v<decltype(hal::info::vendor_information<MCU>::vendor),
+                   hal::info::vendors>;  // vendors must be a vendor :P
 };
 
 namespace hal::periphery {
     namespace detail {
         template<mcu_with_vendor_info MCU, typename Component>
-        requires(MCU::vendor_information::vendors == hal::info::vendors::STM) struct stm_mcu_mapper {};
+        requires(hal::info::vendor_information<MCU>::vendor == hal::info::vendors::STM) struct stm_mcu_mapper {};
     }  // namespace detail
 }  // namespace hal::periphery

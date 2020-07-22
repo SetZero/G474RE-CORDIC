@@ -12,6 +12,7 @@
 #include "hal/stm32/register/cordic.h"
 
 namespace hal::stm::stm32g4 {
+
     struct A {};
     struct B {};
     struct C {};
@@ -27,10 +28,7 @@ namespace hal::stm::stm32g4 {
         struct four {};
     }  // namespace uart_nr
 
-    struct peripherals {
-        struct vendor_information {
-            static constexpr inline info::vendors vendors = info::vendors::STM;
-        };
+    struct mcu_info {
         struct base_address {
             static constexpr inline uintptr_t value = 0x40021000;
         };
@@ -203,62 +201,71 @@ namespace hal::stm::stm32g4 {
     } __attribute__((packed)); /* TODO: Use [[attribute]] Keyword */
 
     template<>
-    struct peripherals::AHBENR::address<0> {
-        static constexpr inline uintptr_t value = peripherals::base_address::value + 0x48;
+    struct mcu_info::AHBENR::address<0> {
+        static constexpr inline uintptr_t value = mcu_info::base_address::value + 0x48;
     };
 
     template<>
-    struct peripherals::APBENR::address<0> {
-        static constexpr inline uintptr_t value = peripherals::base_address::value + 0x58;
+    struct mcu_info::APBENR::address<0> {
+        static constexpr inline uintptr_t value = mcu_info::base_address::value + 0x58;
     };
 
     template<>
-    struct peripherals::GPIO::address<A> {
+    struct mcu_info::GPIO::address<A> {
         static constexpr inline uintptr_t value = 0x48000000;
     };
 
     template<>
-    struct peripherals::GPIO::address<B> {
+    struct mcu_info::GPIO::address<B> {
         static constexpr inline uintptr_t value = 0x48000400;
     };
 
     template<>
-    struct peripherals::GPIO::address<C> {
+    struct mcu_info::GPIO::address<C> {
         static constexpr inline uintptr_t value = 0x48000800;
     };
 
     template<>
-    struct peripherals::GPIO::address<D> {
+    struct mcu_info::GPIO::address<D> {
         static constexpr inline uintptr_t value = 0x48000C00;
     };
 
     template<>
-    struct peripherals::GPIO::address<E> {
+    struct mcu_info::GPIO::address<E> {
         static constexpr inline uintptr_t value = 0x48001000;
     };
 
     template<>
-    struct peripherals::GPIO::address<F> {
+    struct mcu_info::GPIO::address<F> {
         static constexpr inline uintptr_t value = 0x48001400;
     };
 
     template<>
-    struct peripherals::GPIO::address<G> {
+    struct mcu_info::GPIO::address<G> {
         static constexpr inline uintptr_t value = 0x48001800;
     };
 
     template<>
-    struct peripherals::UART::adress<uart_nr::one> {
+    struct mcu_info::UART::adress<uart_nr::one> {
         static constexpr inline uintptr_t value = 0x40013800;
     };
 
     template<>
-    struct peripherals::UART::adress<uart_nr::two> {
+    struct mcu_info::UART::adress<uart_nr::two> {
         static constexpr inline uintptr_t value = 0x40004400;
     };
 
     template<>
-    struct peripherals::CORDIC::address<0> {
+    struct mcu_info::CORDIC::address<0> {
         static constexpr inline uintptr_t value = 0x40020C00;
     };
+
 }  // namespace hal::stm::stm32g4
+
+namespace hal::info {
+    template<>
+    struct vendor_information<hal::stm::stm32g4::mcu_info> {
+        static constexpr inline hal::info::vendors vendor = info::vendors::STM;
+    };
+
+}  // namespace hal::info

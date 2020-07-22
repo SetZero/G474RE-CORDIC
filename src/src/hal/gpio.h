@@ -8,7 +8,7 @@
 #include "stm32/stm32g4.h"
 
 // TODO: remove this
-#define __SELECTED_MCU__ hal::stm::stm32g4::peripherals
+#define __SELECTED_MCU__ hal::stm::stm32g4::mcu_info
 
 template<typename MCU, typename PIN>
 concept gpio_mcu = stm_mcu<MCU, PIN>;
@@ -86,12 +86,11 @@ namespace hal::periphery {
 
     }  // namespace detail
 
-    template<typename gpio_port, gpio_mcu<gpio_port> mcu = __SELECTED_MCU__,
-             info::vendors vendor = mcu::vendor_information::vendors>
-    class gpio;
+    // template<typename gpio_port, gpio_mcu<gpio_port> mcu = __SELECTED_MCU__>
+    // class gpio;
 
     template<typename gpio_port, gpio_mcu<gpio_port> mcu>
-    requires(mcu::vendor_information::vendors == info::vendors::STM) class gpio<gpio_port, mcu, info::vendors::STM> {
+    requires(hal::info::vendor_information<mcu>::vendor == info::vendors::STM) class gpio {
        private:
         static inline constexpr auto port = hal::address<typename mcu::GPIO, gpio_port>;
         using mcu_detail = typename detail::stm_mcu_mapper<mcu, detail::gpio_component>::mapper<gpio_port>;

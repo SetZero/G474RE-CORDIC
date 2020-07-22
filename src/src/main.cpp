@@ -18,8 +18,8 @@
 #include "hal/cordic.h"
 #include "hal/cordic_types.h"
 #include "hal/gpio.h"
-#include "hal/uart.h"
 #include "hal/stm32/stm32g4.h"
+#include "hal/uart.h"
 
 namespace mcu_ns = hal::stm::stm32g4;
 namespace gpio_values = hal::periphery::gpio_values;
@@ -134,13 +134,13 @@ enum class CCMR_OC1M : uint32_t {
 };
 
 void init_led() {
-    hal::address<hal::stm::stm32g4::peripherals::AHBENR, 0>()
-        ->ahb2.add<hal::stm::stm32g4::peripherals::AHBENR::AHB2ENR::GPIOA>();
+    hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
+        ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOA>();
     memory(GPIO_A_BASE + GPIO_X_AFRL) |= static_cast<uint32_t>(PA5_AF_L::TIM2_CH1);
     // memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (5 * 2u));
-    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()->moder.clear<5>();
-    hal::address<hal::stm::stm32g4::peripherals::GPIO, hal::stm::stm32g4::A>()
-        ->moder.add<hal::stm::stm32g4::peripherals::GPIO::MODER::ALTERNATIVE_FUNCTION, 5>();
+    hal::address<hal::stm::stm32g4::mcu_info::GPIO, hal::stm::stm32g4::A>()->moder.clear<5>();
+    hal::address<hal::stm::stm32g4::mcu_info::GPIO, hal::stm::stm32g4::A>()
+        ->moder.add<hal::stm::stm32g4::mcu_info::GPIO::MODER::ALTERNATIVE_FUNCTION, 5>();
     // memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (5 * 2u));
     memory(GPIO_A_BASE + GPIO_X_OTYPER) &= ~(1u << 5u);     // Output push-pull
     memory(GPIO_A_BASE + GPIO_X_OSPEEDR) &= ~(11u << 10u);  // clear speed
@@ -148,8 +148,8 @@ void init_led() {
 }
 
 void init_timer() {
-    hal::address<hal::stm::stm32g4::peripherals::APBENR, 0>()
-        ->apb11.add<hal::stm::stm32g4::peripherals::APBENR::APB1ENR1::TIM2EN>();
+    hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
+        ->apb11.add<hal::stm::stm32g4::mcu_info::APBENR::APB1ENR1::TIM2EN>();
     memory(TIM2_BASE + TIMER_PRESCALER) = 5;      // 16.000.000 / 10 = 1.6Mhz
     memory(TIM2_BASE + TIMER_ARR) = 26667;        // 1.6Mhz / 26667 = ca. 60Hz
     memory(TIM2_BASE + TIMER_CCR) = 8889;         // pulse width 8889/26667 == 1/3 of period
@@ -172,8 +172,8 @@ void init_pwm() {
 enum class UARTCLK : uint32_t { PCLK, SYSCLK, HSI16, LSE };
 
 void init_lpuart_pin() {
-    hal::address<hal::stm::stm32g4::peripherals::AHBENR, 0>()
-        ->ahb2.add<hal::stm::stm32g4::peripherals::AHBENR::AHB2ENR::GPIOA>();
+    hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
+        ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOA>();
     // Make GPIOA Pin 2,3 (PA2, PA3) alternate-function output
     memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(1111u << 4u);
     memory(GPIO_A_BASE + GPIO_X_MODER) |= (static_cast<uint32_t>(GPIO_MODES::ALT) << (2 * 2u));
@@ -192,8 +192,8 @@ void init_lpuart_pin() {
 }
 
 void init_lpuart() {
-    hal::address<hal::stm::stm32g4::peripherals::APBENR, 0>()
-        ->apb12.add<hal::stm::stm32g4::peripherals::APBENR::APB1ENR2::LPUART1EN>();
+    hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
+        ->apb12.add<hal::stm::stm32g4::mcu_info::APBENR::APB1ENR2::LPUART1EN>();
     // memory(LPUART_BASE + LPUART_CR1) |= (1u << 29u);            // enable fifo
     memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 28u);           //  1 Start bit, 8 Data bits, n Stop bit
     memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
@@ -211,11 +211,11 @@ void init_lpuart() {
 /***** UART *****/
 template<auto txpin, auto rxpin>
 void init_uart_pin() {
-    using port_a = hal::periphery::gpio<mcu_ns::A, mcu_ns::peripherals>;
+    using port_a = hal::periphery::gpio<mcu_ns::A, mcu_ns::mcu_info>;
 
     // enable GPIO clock
-    hal::address<hal::stm::stm32g4::peripherals::AHBENR, 0>()
-        ->ahb2.add<hal::stm::stm32g4::peripherals::AHBENR::AHB2ENR::GPIOA>();
+    hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
+        ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOA>();
 
     // alternative function mode
     port_a::set_alternative_function<gpio_values::alternative_function::AF7, txpin, rxpin>();
@@ -228,11 +228,11 @@ void init_uart_pin() {
 template<auto base_addr>
 void init_uart() {
     if constexpr (base_addr == UART_BASE) {
-        hal::address<hal::stm::stm32g4::peripherals::APBENR, 0>()
-            ->apb2.add<hal::stm::stm32g4::peripherals::APBENR::APB2ENR::USART1EN>();
+        hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
+            ->apb2.add<hal::stm::stm32g4::mcu_info::APBENR::APB2ENR::USART1EN>();
     } else {
-        hal::address<hal::stm::stm32g4::peripherals::APBENR, 0>()
-            ->apb11.add<hal::stm::stm32g4::peripherals::APBENR::APB1ENR1::USART2EN>();
+        hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
+            ->apb11.add<hal::stm::stm32g4::mcu_info::APBENR::APB1ENR1::USART2EN>();
     }
     memory(base_addr + UART_CR1) &= ~(1u << 28u);           //  1 Start bit, 8 Data bits, n Stop bit
     memory(base_addr + UART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
@@ -250,14 +250,14 @@ void init_uart() {
  * @retval int
  */
 int main() {
-    using port_a = hal::periphery::gpio<mcu_ns::A, mcu_ns::peripherals>;
-    // using uart_one = hal::periphery::uart<mcu_ns::uart_nr::one>;
+    using port_a = hal::periphery::gpio<mcu_ns::A, mcu_ns::mcu_info>;
+    // using uart_one = hal::periphery::uart<mcu_ns::uart_nr::one, mcu_ns::mcu_info>;
     // SystemClock_Config();
     // memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
-    hal::address<hal::stm::stm32g4::peripherals::AHBENR, 0>()
-        ->ahb1.add<hal::stm::stm32g4::peripherals::AHBENR::AHB1ENR::CORDIC>();
-    hal::address<hal::stm::stm32g4::peripherals::AHBENR, 0>()
-        ->ahb2.add<hal::stm::stm32g4::peripherals::AHBENR::AHB2ENR::GPIOA>();
+    hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
+        ->ahb1.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB1ENR::CORDIC>();
+    hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
+        ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOA>();
 
     /*init_led();
     init_timer();
