@@ -41,4 +41,8 @@ TEST_CASE("Basic Register tests") {
     REQUIRE(second_test[31] == false);
     REQUIRE(((second_test[30] << 2) | (second_test[29] << 1) | second_test[28]) == uint8_t(3));
     REQUIRE(((second_test[23] << 1) | (second_test[10])) == uint8_t(1));
+
+    REQUIRE(r1->get_value<functions::enable>() == false);
+    REQUIRE(r1->get_value<functions::scale>() == 3);
+    REQUIRE(r1->get_value<functions::split>() == 1);
 }
