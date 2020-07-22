@@ -17,3 +17,8 @@
 
 src/cmake-build-debug
 src/.idea
+src/behaviour_tests/CMakeFiles
+src/behaviour_tests/Makefile
+src/behaviour_tests/cmake_install.cmake
+src/behaviour_tests/CMakeCache.txt
+src/behaviour_tests/register_tests

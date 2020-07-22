@@ -11,6 +11,8 @@
 #include <cstdint>
 #include <type_traits>
 
+#include "utils.h"
+
 namespace hal {
     template<typename Component, typename byte_type, typename ValueType = uint32_t>
     struct control_register final {
