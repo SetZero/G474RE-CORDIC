@@ -20,6 +20,13 @@ namespace hal::stm::stm32g4 {
     struct F {};
     struct G {};
 
+    namespace uart_nr {
+        struct one {};
+        struct two {};
+        struct three {};
+        struct four {};
+    }  // namespace uart_nr
+
     struct peripherals {
         struct vendor_information {
             static constexpr inline info::vendors vendors = info::vendors::STM;
@@ -80,7 +87,7 @@ namespace hal::stm::stm32g4 {
             control_register<UART, uint8_t> tdr;
             control_register<UART, uint8_t> presc;
 
-            template<auto N>
+            template<typename N>
             struct adress;
         } __attribute__((packed));
 
@@ -241,12 +248,12 @@ namespace hal::stm::stm32g4 {
     };
 
     template<>
-    struct peripherals::UART::adress<0> {
+    struct peripherals::UART::adress<uart_nr::one> {
         static constexpr inline uintptr_t value = 0x40013800;
     };
 
     template<>
-    struct peripherals::UART::adress<1> {
+    struct peripherals::UART::adress<uart_nr::two> {
         static constexpr inline uintptr_t value = 0x40004400;
     };
 

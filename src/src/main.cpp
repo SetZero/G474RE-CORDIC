@@ -18,6 +18,7 @@
 #include "hal/cordic.h"
 #include "hal/cordic_types.h"
 #include "hal/gpio.h"
+#include "hal/uart.h"
 #include "hal/stm32/stm32g4.h"
 
 namespace mcu_ns = hal::stm::stm32g4;
@@ -250,6 +251,7 @@ void init_uart() {
  */
 int main() {
     using port_a = hal::periphery::gpio<mcu_ns::A, mcu_ns::peripherals>;
+    // using uart_one = hal::periphery::uart<mcu_ns::uart_nr::one>;
     // SystemClock_Config();
     // memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
     hal::address<hal::stm::stm32g4::peripherals::AHBENR, 0>()

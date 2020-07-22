@@ -217,7 +217,7 @@ namespace hal {
         template<enum_type Function>
         requires(!std::is_same_v<data_type<Function>, reserved_type> &&
                  amode<Function> != access_mode::read_only) void set_value(data_type<Function> value) {
-            std::bitset<std::min(sizeof(value) * CHAR_BIT, 64ul)> set(value);
+            std::bitset<std::min(sizeof(value) * CHAR_BIT, 64u)> set(value);
             using current_description = get_type_to_function<Function>;
 
             m_register = set_bits<decayed_register_type>(set, m_register,
@@ -226,7 +226,7 @@ namespace hal {
 
         template<enum_type Function>
         requires(amode<Function> != access_mode::write_only) data_type<Function> get_value() {
-            std::bitset<std::min(sizeof(m_register) * CHAR_BIT, 64ul)> register_value(m_register);
+            std::bitset<std::min(sizeof(m_register) * CHAR_BIT, 64u)> register_value(m_register);
             using current_description = get_type_to_function<Function>;
 
             // TODO: get correct size unsigned integer, based on type size
