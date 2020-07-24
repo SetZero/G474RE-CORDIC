@@ -7,9 +7,6 @@
 #include "hal/hal_info.h"
 #include "stm32/stm32g4.h"
 
-// TODO: remove this
-#define __SELECTED_MCU__ hal::stm::stm32g4::mcu_info
-
 template<typename MCU, typename PIN>
 concept gpio_mcu = stm_mcu<MCU, PIN>;
 
@@ -85,9 +82,6 @@ namespace hal::periphery {
         };
 
     }  // namespace detail
-
-    // template<typename gpio_port, gpio_mcu<gpio_port> mcu = __SELECTED_MCU__>
-    // class gpio;
 
     template<typename gpio_port, gpio_mcu<gpio_port> mcu>
     requires(hal::info::vendor_information<mcu>::vendor == info::vendors::STM) class gpio {
