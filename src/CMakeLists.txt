@@ -1,28 +1,17 @@
-option(USE_HAL_DRIVER "Enable the use of the hal driver" off)
 option(USE_HARDWARE_FLOAT "Enable the use of hardware floating point operations" off)
+add_subdirectory(./lib)
 
 set(LINKER_SCRIPT STM32G474RETx_FLASH.ld)
 set(SOURCES
     startup/startup_stm32g474xx.s
-    src/main.cpp
-    # src/hal/stm32/stm32g4.h
-    # src/hal/register.h
-    # src/utils.h
-    # src/hal/stm32/register/cordic.h
-        src/hal/gpio.h src/hal/hal_info.h)
+    src/main.cpp)
 
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
+set_target_properties(${PROJECT_NAME}.elf PROPERTIES CXX_STANDARD 20 C_STANDARD 11)
+target_link_libraries(${PROJECT_NAME}.elf hal_lib)
 
 target_compile_definitions(${PROJECT_NAME}.elf PUBLIC STM32G474xx)
 target_include_directories(${PROJECT_NAME}.elf PUBLIC src)
-
-if (USE_HAL_DRIVER)
-    target_compile_definitions(${PROJECT_NAME}.elf PUBLIC USE_HAL_DRIVER)
-endif()
-
-if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10)
-    target_compile_options(${PROJECT_NAME}.elf PUBLIC -fconcepts)
-endif()
 
 target_compile_options(${PROJECT_NAME}.elf PUBLIC  -fconcepts-diagnostics-depth=3)
 
