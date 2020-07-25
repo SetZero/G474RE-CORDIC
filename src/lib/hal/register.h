@@ -170,7 +170,7 @@ namespace hal {
         reserved_type() = delete;
     };
 
-    enum struct access_mode { read_only, write_only, read_write };
+    enum struct access_mode { read_only, write_only, read_write, no_access };
 
     template<auto Function, typename DataType, typename PositionType, access_mode Mode = access_mode::read_write>
     struct register_entry_desc {
@@ -181,7 +181,7 @@ namespace hal {
 
         static inline constexpr auto amode = Mode;
         static inline constexpr auto function = Function;
-    };
+    } __attribute__((packed));
 
     template<typename EnumType, EnumType Function, RegisterDescription... Description>
     requires(is_set(Description::function...)) constexpr size_t lookup_function_index() {
@@ -215,8 +215,8 @@ namespace hal {
         static inline constexpr auto end_bit = get_type_to_function<Function>::end;
 
         template<enum_type Function>
-        requires(!std::is_same_v<data_type<Function>, reserved_type> &&
-                 amode<Function> != access_mode::read_only) void set_value(data_type<Function> value) {
+        requires(!std::is_same_v<data_type<Function>, reserved_type> && amode<Function> != access_mode::read_only &&
+                 amode<Function> != access_mode::no_access) void set_value(data_type<Function> value) {
             std::bitset<std::min<std::size_t>(sizeof(value) * CHAR_BIT, 64u)> set(value);
             using current_description = get_type_to_function<Function>;
 
@@ -225,7 +225,8 @@ namespace hal {
         }
 
         template<enum_type Function>
-        requires(amode<Function> != access_mode::write_only) data_type<Function> get_value() {
+        requires(amode<Function> != access_mode::write_only &&
+                 amode<Function> != access_mode::no_access) data_type<Function> get_value() {
             std::bitset<std::min<std::size_t>(sizeof(m_register) * CHAR_BIT, 64u)> register_value(m_register);
             using current_description = get_type_to_function<Function>;
 
@@ -236,7 +237,7 @@ namespace hal {
 
        private:
         register_type m_register;
-    };
+    } __attribute__((packed));
 
     enum class data_register_type : uint32_t { READ_WRITE, READ_ONLY, RESERVED };
 

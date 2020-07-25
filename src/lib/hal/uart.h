@@ -19,11 +19,28 @@ namespace hal::periphery {
     }  // namespace detail
 
     template<typename UartNr, uart_mcu<UartNr> MCU>
-    requires(MCU::vendor_information::vendors == info::vendors::STM) class uart {
+    requires(hal::info::vendor_information<MCU>::vendor == info::vendors::STM) class uart {
        private:
+        static inline constexpr auto uart_registers = hal::address<typename MCU::UART, UartNr>;
         using uart_detail = typename detail::stm_mcu_mapper<MCU, detail::uart_component>::mapper<UartNr>;
+        using uart_type = MCU::UART;
 
        public:
         uart() = delete;
+
+        static void printc(char value) { uart_registers()->tdr.template set_value<0>(value); }
+
+        template<auto BufSize, typename... Args>
+        static void printf(const char *format, Args &&... args) {
+            char buf[BufSize];
+
+            const auto print_num = snprintf(buf, BufSize, format, args...);
+
+            for (auto i = 0; i < print_num; ++i) {
+                while (!uart_registers()->isr.template get_value<uart_type::ISR::TXFNF>())
+                    ;
+                uart_registers()->tdr.template set_value<0>(buf[i]);
+            }
+        }
     };
 }  // namespace hal::periphery

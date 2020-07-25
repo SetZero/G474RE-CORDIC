@@ -72,6 +72,8 @@ namespace hal::stm::stm32g4 {
                 RTOIE = 26
             };
 
+            enum class ISR : uint8_t { TXFNF = 0, NOTHING, NOTHING2 };
+
             control_register<UART, CR, uint32_t> cr1;
             control_register<UART, CR, uint32_t> cr2;
             control_register<UART, CR, uint32_t> cr3;
@@ -79,14 +81,19 @@ namespace hal::stm::stm32g4 {
             control_register<UART, uint8_t> gtpr;
             control_register<UART, uint8_t> rtor;
             control_register<UART, uint8_t> rqr;
-            control_register<UART, uint8_t> isr;
+            register_desc<volatile uint32_t, register_entry_desc<ISR::TXFNF, bool, bit_pos<7u>, access_mode::read_only>,
+                          register_entry_desc<ISR::NOTHING, reserved_type, bit_range<0u, 6u>, access_mode::no_access>,
+                          register_entry_desc<ISR::NOTHING2, reserved_type, bit_range<8u, 31u>>>
+                isr;
             control_register<UART, uint8_t> icr;
             control_register<UART, uint8_t> rdr;
-            control_register<UART, uint8_t> tdr;
+            register_desc<volatile uint32_t, register_entry_desc<0, uint8_t, bit_range<0u, 7u>>,
+                          register_entry_desc<1, uint8_t, bit_range<8u, 31u>, access_mode::no_access>>
+                tdr;
             control_register<UART, uint8_t> presc;
 
             template<typename N>
-            struct adress;
+            struct address;
         } __attribute__((packed));
 
         // TODO: structure this better somehow
@@ -246,12 +253,12 @@ namespace hal::stm::stm32g4 {
     };
 
     template<>
-    struct mcu_info::UART::adress<uart_nr::one> {
+    struct mcu_info::UART::address<uart_nr::one> {
         static constexpr inline uintptr_t value = 0x40013800;
     };
 
     template<>
-    struct mcu_info::UART::adress<uart_nr::two> {
+    struct mcu_info::UART::address<uart_nr::two> {
         static constexpr inline uintptr_t value = 0x40004400;
     };
 

@@ -199,7 +199,7 @@ void init_lpuart() {
     memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
     memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 10u);           //  no parity
     memory(LPUART_BASE + LPUART_CR2) &= ~(0b11u << 12u);        // 1 stop bit
-    memory(LPUART_BASE + LPUART_BRR) = 16'000'000u / (115200);  // 9600 baud
+    memory(LPUART_BASE + LPUART_BRR) = 16'000'000u / (115200);  // 115200 baud
     memory(LPUART_BASE + LPUART_CR1) |= (1u << 0u);             // enable uart
     memory(LPUART_BASE + LPUART_CR1) |= (1u << 3u);             // enable tx
     // memory(LPUART_BASE + LPUART_CR1) |= (1u << 2u);             // enable rx
@@ -236,7 +236,7 @@ void init_uart() {
     }
     memory(base_addr + UART_CR1) &= ~(1u << 28u);           //  1 Start bit, 8 Data bits, n Stop bit
     memory(base_addr + UART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
-    memory(base_addr + UART_BRR) = 16'000'000u / (115200);  // 9600 baud
+    memory(base_addr + UART_BRR) = 16'000'000u / (115200);  // 115200 baud
     memory(base_addr + UART_CR2) &= ~(0b11u << 12u);        // 9600 baud
     memory(base_addr + UART_CR3) = 0;
     memory(base_addr + UART_CR1) |= (1u << 0u);  // enable uart
@@ -251,7 +251,7 @@ void init_uart() {
  */
 int main() {
     using port_a = hal::periphery::gpio<mcu_ns::A, mcu_ns::mcu_info>;
-    // using uart_one = hal::periphery::uart<mcu_ns::uart_nr::one, mcu_ns::mcu_info>;
+    using uart_two = hal::periphery::uart<mcu_ns::uart_nr::two, mcu_ns::mcu_info>;
     // SystemClock_Config();
     // memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
     hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
@@ -292,15 +292,18 @@ int main() {
 
     while (true) {
         // memory(UART_BASE + UART_TDR) = 'A' + chr;
-        memory(UART2_BASE + UART_TDR) = 'A' + chr;
+        // memory(UART2_BASE + UART_TDR) = world[chr];
+
+        uart_two::printf<256>("[%d]:%s \n", chr, "hello world");
+
         // memory(LPUART_BASE + LPUART_TDR) = 'U';
-        chr = (chr + 1) % 26;
         port_a::on<5>();
         // memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
-        delay_ms(500);
+        delay_ms(250);
         // memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
         port_a::off<5>();
-        delay_ms(500);
+        delay_ms(250);
+        chr = (chr + 1) % 10;
         /*//while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
         int16_t rdeg = deg - 180;
         op.arg1(angle<precision::q1_31>{degrees{rdeg}});
