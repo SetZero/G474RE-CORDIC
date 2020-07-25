@@ -114,3 +114,7 @@ struct bool_pack;
 template<bool... bs>
 static inline constexpr bool all_true = std::is_same_v<bool_pack<bs..., true>, bool_pack<true, bs...>>;
 
+void delay_ms(uint32_t n) {
+    for (; n > 0; n--)
+        for (uint32_t i = 0; i < 3195; i++) asm("nop");
+}

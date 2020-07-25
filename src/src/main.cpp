@@ -103,11 +103,6 @@ static constexpr inline auto UART_TDR [[gnu::unused]] = 0x28;
 
 [[nodiscard]] inline uint32_t &memory(const uint32_t loc) { return *reinterpret_cast<uint32_t *>(loc); }
 
-void delay_ms(uint32_t n) {
-    for (; n > 0; n--)
-        for (uint32_t i = 0; i < 3195; i++) asm("nop");
-}
-
 /***** TIMER ******/
 enum class CR1_DIR : uint32_t {
     DIR_UP = (0u << 4u),
@@ -276,16 +271,15 @@ int main() {
 
     using namespace hal::cordic;
 
-    // using cc = cordic_config<precision::q1_31>;
-
-    // cordic c{hal::address<hal::stm::stm32g4::peripherals::CORDIC, 0>()};
+    using cc = cordic_config<precision::q1_31>;
+    cordic c{hal::address<hal::stm::stm32g4::mcu_info::CORDIC, mcu_ns::cordic_nr::one>()};
 
     // memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (10 * 2u));
     // memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (10 * 2u));
 
-    // operation<cc, operation_type::single, functions::cosine> op;
+    operation<cc, operation_type::single, functions::cosine> op;
 
-    // int16_t deg = 0;
+    int16_t deg = 0;
     uint8_t chr = 0;
 
     port_a::set_port_mode<gpio_values::modes::OUTPUT, 5>();
@@ -294,7 +288,7 @@ int main() {
         // memory(UART_BASE + UART_TDR) = 'A' + chr;
         // memory(UART2_BASE + UART_TDR) = world[chr];
 
-        uart_two::printf<256>("[%d]:%s \n", chr, "hello world");
+        // uart_two::printf<256>("[%d]:%s \n", chr, "hello world");
 
         // memory(LPUART_BASE + LPUART_TDR) = 'U';
         port_a::on<5>();
@@ -304,17 +298,17 @@ int main() {
         port_a::off<5>();
         delay_ms(250);
         chr = (chr + 1) % 10;
-        /*//while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
+        //while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
         int16_t rdeg = deg - 180;
         op.arg1(angle<precision::q1_31>{degrees{rdeg}});
         auto result = c.calculate(op);
 
         q1_31 q = result.result();
 
-        volatile auto float_val = static_cast<float>(q);
-        memory(TIM2_BASE + TIMER_CCR) = static_cast<uint32_t>((float_val + 1) * 0.5f * 26667);
+        auto float_val = static_cast<double>(q);
+        uart_two::printf<256>("cos(%d) * 1000 = %d \r\n", rdeg, static_cast<int>(float_val * 1000));
         deg = (deg + 1) % 360;
         delay_ms(50);
-        memory(LPUART_BASE + 0x20) |= (1u << 2u);*/
+        // memory(LPUART_BASE + 0x20) |= (1u << 2u);
     }
 }

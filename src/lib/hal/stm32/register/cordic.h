@@ -119,18 +119,19 @@ namespace hal::stm::stm32g4::cordic {
         template<functions mode>
         void inline set_function_mode() {
             // Make sure only one function is set
-            hw_register = (hw_register & ~(static_cast<uint32_t>(0xF))) | static_cast<uint32_t>(mode);
+            hw_register = hw_register & (~static_cast<uint32_t>(0xF) | static_cast<uint32_t>(mode));
         }
 
         /* (10:8) SCALE: [number 2^n/2^-n] */
         void inline set_scale(uint8_t scale) {
-            hw_register = (hw_register & ~(static_cast<uint32_t>(0x7) << 8)) | static_cast<uint32_t>(scale & 0x7) << 8;
+            hw_register =
+                hw_register & ((~(static_cast<uint32_t>(0x7) << 8)) | (static_cast<uint32_t>(scale & 0x7) << 8));
         }
 
         /* (7:4) Precision: [number 1 - 15] */
         void inline set_precision(uint8_t precision) {
-            hw_register = (hw_register & ~(static_cast<uint32_t>(0xF) << 4)) | static_cast<uint32_t>(precision & 0xF)
-                                                                                   << 4;
+            hw_register =
+                hw_register & ((~static_cast<uint32_t>(0xF) << 4) | (static_cast<uint32_t>(precision & 0xF) << 4));
         }
 
        private:
@@ -172,4 +173,4 @@ namespace hal::stm::stm32g4::cordic {
         volatile uint32_t hw_register;
     } __attribute__((packed));
 
-}  // namespace HAL::STM::Cordic
+}  // namespace hal::stm::stm32g4::cordic

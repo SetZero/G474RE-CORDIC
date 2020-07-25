@@ -94,7 +94,7 @@ namespace hal::cordic {
             m_spec_cordic->csr.set_result_size(config::precision);
             m_spec_cordic->csr.set_argument_amount(cordic_control_register_type::result_amount::TWO_REGISTER_VALUE);
             m_spec_cordic->csr.set_result_amount(cordic_control_register_type::result_amount::TWO_REGISTER_VALUE);
-            m_spec_cordic->csr.set_precision(uint8_t(3));
+            m_spec_cordic->csr.set_precision(uint8_t(10));
             m_spec_cordic->csr.set_scale(uint8_t(0));
             m_spec_cordic->csr.enable_dma_write_channel(false);
             m_spec_cordic->csr.enable_dma_read_channel(false);
