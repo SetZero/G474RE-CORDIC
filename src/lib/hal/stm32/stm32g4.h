@@ -28,6 +28,10 @@ namespace hal::stm::stm32g4 {
         struct four {};
     }  // namespace uart_nr
 
+    namespace cordic_nr {
+        struct one {};
+    }  // namespace cordic_nr
+
     struct mcu_info {
         struct base_address {
             static constexpr inline uintptr_t value = 0x40021000;
@@ -108,7 +112,7 @@ namespace hal::stm::stm32g4 {
             wdata_register_type wdata;
             rdata_register_type rdata;
 
-            template<auto N>
+            template<typename N>
             struct address;
         } __attribute__((packed));
 
@@ -263,7 +267,7 @@ namespace hal::stm::stm32g4 {
     };
 
     template<>
-    struct mcu_info::CORDIC::address<0> {
+    struct mcu_info::CORDIC::address<cordic_nr::one> {
         static constexpr inline uintptr_t value = 0x40020C00;
     };
 

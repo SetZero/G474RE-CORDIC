@@ -7,8 +7,8 @@ set(SOURCES
     src/main.cpp)
 
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
-set_target_properties(${PROJECT_NAME}.elf PROPERTIES CXX_STANDARD 20 C_STANDARD 11)
 target_link_libraries(${PROJECT_NAME}.elf hal_lib)
+set_target_properties(${PROJECT_NAME}.elf PROPERTIES CXX_STANDARD 20 C_STANDARD 11)
 
 target_compile_definitions(${PROJECT_NAME}.elf PUBLIC STM32G474xx)
 target_include_directories(${PROJECT_NAME}.elf PUBLIC src)

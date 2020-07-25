@@ -19,3 +19,11 @@ target_compile_options(utils_tests PUBLIC -Werror -Wall -Wextra -Wpedantic -Wsha
 target_compile_options(utils_tests PUBLIC -fconcepts)
 set_property(TARGET utils_tests PROPERTY CXX_STANDARD 20)
 set_property(TARGET utils_tests PROPERTY C_STANDARD 11)
+
+add_executable(cordic_tests cordic_type_tests.cpp)
+add_test(NAME cordic_tests_exe COMMAND cordic_tests)
+target_link_libraries(cordic_tests PUBLIC hal_lib)
+target_compile_options(cordic_tests PUBLIC -Werror -Wall -Wextra -Wpedantic -Wshadow)
+target_compile_options(cordic_tests PUBLIC -fconcepts)
+set_property(TARGET cordic_tests PROPERTY CXX_STANDARD 20)
+set_property(TARGET cordic_tests PROPERTY C_STANDARD 11)

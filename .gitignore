@@ -19,5 +19,6 @@ src/cmake-build-debug
 src/.idea
 /src/lib/behaviour_tests/
 
-!/src/lib/behaviour_tests/*cpp
+!/src/lib/behaviour_tests/*.cpp
+!/src/lib/behaviour_tests/cordic_type_tests.cpp
 !/src/lib/behaviour_tests/CMakeLists.txt
