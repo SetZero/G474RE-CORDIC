@@ -8,10 +8,6 @@
 #include <hal/gpio.h>
 
 namespace hal::stm::stm32g4 {
-    /*template<typename MCU, typename PIN>
-    concept specialized_mcu = requires() {
-        requires stm_mcu<typename MCU::base_mcu, PIN>;
-    };*/
 
     namespace detail {
         using base_mcu = mcu_info;

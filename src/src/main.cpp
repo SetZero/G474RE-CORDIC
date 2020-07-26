@@ -23,6 +23,7 @@
 #include "hal/uart.h"
 
 namespace mcu_ns = hal::stm::stm32g4;
+using used_mcu = hal::stm::stm32g4::g474re;
 namespace gpio_values = hal::periphery::gpio_values;
 
 /* REGISTER BASE ADDRESSES */
@@ -207,16 +208,15 @@ void init_lpuart() {
 /***** UART *****/
 template<auto txpin, auto rxpin, typename uart>
 void init_uart_pin() {
-    using port_a = hal::periphery::gpio<mcu_ns::A, mcu_ns::mcu_info>;
+    using port_a = hal::periphery::gpio<mcu_ns::A, used_mcu>;
 
     // enable GPIO clock
     hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
         ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOA>();
 
     // alternative function mode
-    using specialized_mcu = hal::stm::stm32g4::g474re;
-    constexpr auto af_tx = specialized_mcu::find_af<mcu_ns::A, txpin, uart, mcu_ns::mcu_info::UART::uart_pin_types::TX>();
-    constexpr auto af_rx = specialized_mcu::find_af<mcu_ns::A, rxpin, uart, mcu_ns::mcu_info::UART::uart_pin_types::RX>();
+    constexpr auto af_tx = used_mcu::find_af<mcu_ns::A, txpin, uart, mcu_ns::mcu_info::UART::uart_pin_types::TX>();
+    constexpr auto af_rx = used_mcu::find_af<mcu_ns::A, rxpin, uart, mcu_ns::mcu_info::UART::uart_pin_types::RX>();
     port_a::set_alternative_function<af_tx, txpin>();
     port_a::set_alternative_function<af_rx, rxpin>();
 
@@ -251,7 +251,7 @@ void init_uart() {
  */
 int main() {
     using namespace hal::cordic;
-    using port_a = hal::periphery::gpio<mcu_ns::A, mcu_ns::mcu_info>;
+    using port_a = hal::periphery::gpio<mcu_ns::A, used_mcu>;
     using uart_two = hal::periphery::uart<mcu_ns::uart_nr::two, mcu_ns::mcu_info>;
     using cordic_one = hal::cordic::cordic<mcu_ns::cordic_nr::one, mcu_ns::mcu_info>;
     // SystemClock_Config();

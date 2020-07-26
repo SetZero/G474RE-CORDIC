@@ -83,9 +83,10 @@ namespace hal::periphery {
 
     }  // namespace detail
 
-    template<typename gpio_port, gpio_mcu<gpio_port> mcu>
-    requires(hal::info::vendor_information<mcu>::vendor == info::vendors::STM) class gpio {
+    template<typename gpio_port, specialized_mcu<gpio_port> used_mcu>
+    requires(hal::info::vendor_information<typename used_mcu::base_mcu>::vendor == info::vendors::STM) class gpio {
        private:
+        using mcu = used_mcu::base_mcu;
         static inline constexpr auto port = hal::address<typename mcu::GPIO, gpio_port>;
         using mcu_detail = typename detail::stm_mcu_mapper<mcu, detail::gpio_component>::mapper<gpio_port>;
 
@@ -124,6 +125,12 @@ namespace hal::periphery {
         static void set_alternative_function() {
             set_port_mode<gpio_values::modes::ALTERNATIVE_FUNCTION, io...>();
             port()->afr.template add<mcu_detail::af_mapper[af], io...>();
+        }
+
+        template<typename function_number, auto function, typename decltype(port()->afr)::value_type io>
+        static void set_alternative_function() {
+            set_port_mode<gpio_values::modes::ALTERNATIVE_FUNCTION, io>();
+            port()->afr.template add<used_mcu::template find_af<gpio_port, io, function_number, function>, io>();
         }
     };
 }  // namespace hal::periphery
