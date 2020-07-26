@@ -245,8 +245,10 @@ void init_uart() {
  * @retval int
  */
 int main() {
+    using namespace hal::cordic;
     using port_a = hal::periphery::gpio<mcu_ns::A, mcu_ns::mcu_info>;
     using uart_two = hal::periphery::uart<mcu_ns::uart_nr::two, mcu_ns::mcu_info>;
+    using cordic_one = hal::cordic::cordic<mcu_ns::cordic_nr::one, mcu_ns::mcu_info>;
     // SystemClock_Config();
     // memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
     hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
@@ -269,27 +271,18 @@ int main() {
     init_uart_pin<2u, 3u>();
     init_uart<UART2_BASE>();
 
-    using namespace hal::cordic;
-
     using cc = cordic_config<precision::q1_31>;
-    cordic c{hal::address<hal::stm::stm32g4::mcu_info::CORDIC, mcu_ns::cordic_nr::one>()};
+    operation<cc, operation_type::single, functions::cosine> op;
 
     // memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (10 * 2u));
     // memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (10 * 2u));
 
-    operation<cc, operation_type::single, functions::cosine> op;
 
-    int16_t deg = 0;
-    uint8_t chr = 0;
+    int deg = 0;
 
     port_a::set_port_mode<gpio_values::modes::OUTPUT, 5>();
 
     while (true) {
-        // memory(UART_BASE + UART_TDR) = 'A' + chr;
-        // memory(UART2_BASE + UART_TDR) = world[chr];
-
-        // uart_two::printf<256>("[%d]:%s \n", chr, "hello world");
-
         // memory(LPUART_BASE + LPUART_TDR) = 'U';
         port_a::on<5>();
         // memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
@@ -297,11 +290,10 @@ int main() {
         // memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
         port_a::off<5>();
         delay_ms(250);
-        chr = (chr + 1) % 10;
         //while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
         int16_t rdeg = deg - 180;
         op.arg1(angle<precision::q1_31>{degrees{rdeg}});
-        auto result = c.calculate(op);
+        auto result = cordic_one::calculate(op);
 
         q1_31 q = result.result();
 
