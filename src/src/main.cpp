@@ -19,6 +19,7 @@
 #include "hal/cordic_types.h"
 #include "hal/gpio.h"
 #include "hal/stm32/stm32g4.h"
+#include "hal/stm32/stm32g4/stm32g474re.h"
 #include "hal/uart.h"
 
 namespace mcu_ns = hal::stm::stm32g4;
@@ -204,7 +205,7 @@ void init_lpuart() {
 /****************/
 
 /***** UART *****/
-template<auto txpin, auto rxpin>
+template<auto txpin, auto rxpin, typename uart>
 void init_uart_pin() {
     using port_a = hal::periphery::gpio<mcu_ns::A, mcu_ns::mcu_info>;
 
@@ -213,7 +214,11 @@ void init_uart_pin() {
         ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOA>();
 
     // alternative function mode
-    port_a::set_alternative_function<gpio_values::alternative_function::AF7, txpin, rxpin>();
+    using specialized_mcu = hal::stm::stm32g4::g474re;
+    constexpr auto af_tx = specialized_mcu::find_af<mcu_ns::A, txpin, uart, mcu_ns::mcu_info::UART::uart_pin_types::TX>();
+    constexpr auto af_rx = specialized_mcu::find_af<mcu_ns::A, rxpin, uart, mcu_ns::mcu_info::UART::uart_pin_types::RX>();
+    port_a::set_alternative_function<af_tx, txpin>();
+    port_a::set_alternative_function<af_rx, rxpin>();
 
     // Set GPIO (txpin/rxpin) speed +  push/pull
     port_a::set_speed<gpio_values::speed::VERY_HIGH_SPEED, txpin, rxpin>();
@@ -265,10 +270,10 @@ int main() {
     // init_lpuart_pin();
     // init_lpuart();
 
-    init_uart_pin<9u, 10u>();
+    init_uart_pin<9u, 10u, mcu_ns::uart_nr::one>();
     init_uart<UART_BASE>();
 
-    init_uart_pin<2u, 3u>();
+    init_uart_pin<2u, 3u, mcu_ns::uart_nr::two>();
     init_uart<UART2_BASE>();
 
     using cc = cordic_config<precision::q1_31>;

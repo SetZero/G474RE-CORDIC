@@ -66,6 +66,10 @@ namespace hal::stm::stm32g4 {
         struct UART final {
             UART() = delete;
 
+            enum class uart_pin_types {
+                CTS, RTS, TX, RX, CK
+            };
+
             enum class CR : uint32_t {
                 RXFFIE = 31,
                 TXFEIE = 30,
