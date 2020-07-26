@@ -44,6 +44,11 @@ concept mcu_with_vendor_info = requires {
                    hal::info::vendors>;  // vendors must be a vendor :P
 };
 
+template<typename MCU, typename PIN>
+concept specialized_mcu = requires() {
+    requires stm_mcu<typename MCU::base_mcu, PIN>;
+};
+
 namespace hal::periphery {
     namespace detail {
         template<mcu_with_vendor_info MCU, typename Component>
