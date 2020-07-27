@@ -16,9 +16,9 @@ namespace hal::cordic {
         square_root
     };
 
-    enum struct nargs : uint8_t { one, two };
+    enum struct nargs : uint8_t { one = 1, two = 2 };
 
-    enum struct nres : uint8_t { one, two };
+    enum struct nres : uint8_t { one = 1, two = 2 };
 
     enum class operation_type { single, pipeline };
 
@@ -150,10 +150,11 @@ namespace hal::cordic {
         using thiz_type = operation<Config, operation_type::single, functions::arctangent>;
         using result_type =
             operation_result<typename config_type::qtype, operation_type::single, functions::arctangent>;
-        // TODO create bounds type
-        using argument_type = typename config_type::scaled_qtype<scales<Detail::normal_bounds, std::integer_sequence<unsigned int, 0, 1, 2, 3, 4, 5, 6, 7>>>;
 
-        static inline constexpr auto num_args = nargs::two;
+        using argument_type = typename config_type::scaled_qtype<
+            scales<Detail::normal_bounds, std::integer_sequence<unsigned int, 0, 1, 2, 3, 4, 5, 6, 7>>>;
+
+        static inline constexpr auto num_args = nargs::one;
 
         thiz_type &arg1(const argument_type &arg) {
             m_arg = arg;
@@ -275,6 +276,25 @@ namespace hal::cordic {
        private:
         ResultType m_result;
         ResultType m_secondary_result;
+    };
+
+    template<typename ResultType>
+    class operation_result<ResultType, operation_type::single, functions::arctangent> final {
+       public:
+        using result_type = ResultType;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::arctangent>;
+
+        static inline constexpr auto num_res = nres::one;
+
+        thiz_type &result(ResultType result) {
+            m_result = result;
+            return *this;
+        }
+
+        result_type result() const { return m_result; }
+
+       private:
+        ResultType m_result;
     };
 
 }  // namespace hal::cordic

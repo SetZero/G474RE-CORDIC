@@ -35,20 +35,43 @@ namespace hal::cordic {
             cordic_register()->csr.enable_dma_read_channel(false);
             cordic_register()->csr.enable_interrupts(false);
 
-            cordic_register()->wdata.write_arg(op.arg1());
-            cordic_register()->wdata.write_arg(op.arg2());
-
-            while (!cordic_register()->csr.is_ready())
-                ;
+            write_args(op);
 
             op_result result{};
-            result.result(cordic_register()->rdata.template read_arg<typename config::qtype>());
-            // TODO: deal differently with second result somehow
-            result.secondary_result(cordic_register()->rdata.template read_arg<typename config::qtype>());
+            read_res<op_result>(result, static_cast<uint8_t>(op.scale()));
 
             return result;
         }
 
        private:
+        template<typename OperationType, std::enable_if_t<static_cast<int>(OperationType::num_args) == 2, int> = 0>
+        static void write_args(const OperationType &op) {
+            cordic_register()->wdata.write_arg(op.arg1());
+            cordic_register()->wdata.write_arg(op.arg2());
+        }
+
+        template<typename OperationType, std::enable_if_t<static_cast<int>(OperationType::num_args) == 1, int> = 0>
+        static void write_args(const OperationType &op) {
+            cordic_register()->wdata.write_arg(op.arg1());
+        }
+
+        template<typename OperationResultType,
+                 std::enable_if_t<static_cast<int>(OperationResultType::num_res) == 2, int> = 0>
+        static void read_res(OperationResultType &result, uint8_t scale) {
+            using result_type = typename OperationResultType::result_type;
+            while (!cordic_register()->csr.is_ready())
+                ;
+            result.result(cordic_register()->rdata.template read_arg<result_type>(scale));
+            result.secondary_result(cordic_register()->rdata.template read_arg<result_type>(scale));
+        }
+
+        template<typename OperationResultType,
+                 std::enable_if_t<static_cast<int>(OperationResultType::num_res) == 1, int> = 0>
+        static void read_res(OperationResultType &result, uint8_t scale) {
+            using result_type = typename OperationResultType::result_type;
+            while (!cordic_register()->csr.is_ready())
+                ;
+            result.result(cordic_register()->rdata.template read_arg<result_type>(scale));
+        }
     };
 }  // namespace hal::cordic

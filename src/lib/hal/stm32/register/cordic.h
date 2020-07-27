@@ -163,8 +163,8 @@ namespace hal::stm::stm32g4::cordic {
         cordic_register &operator=(cordic_register &&) = delete;
 
         template<typename qtype>
-        [[nodiscard]] qtype read_arg() {
-            return qtype(hw_register);
+        [[nodiscard]] qtype read_arg(uint8_t scale = 0) {
+            return qtype(hw_register, scale);
         }
 
        private:

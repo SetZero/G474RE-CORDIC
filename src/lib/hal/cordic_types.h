@@ -78,7 +78,7 @@ namespace Detail {
         template<typename T>
         constexpr void set_to_value(T value) {
             m_scale = scales_lookup::find_smallest_scale(value);
-            value *= static_cast<T>(std::pow(2, -m_scale));
+            value *= static_cast<T>(std::pow(2.0, -m_scale));
             value = std::clamp<T>(value, lower_bound, upper_bound);
             m_value = static_cast<type>(std::round(value * static_cast<type>(std::pow(2, fractional_bit))));
         }
@@ -90,6 +90,7 @@ namespace Detail {
             set_to_value(value);
         }
 
+        // TODO: own type to initialize with fixed integer, otherwise when calling constructor with a regular integer, meant as normal number this can be error prone
         template<typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
         constexpr explicit q_number(T value, uint8_t scale = 0) {
             m_value = value;
