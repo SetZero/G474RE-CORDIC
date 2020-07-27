@@ -215,8 +215,8 @@ void init_uart_pin() {
         ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOA>();
 
     // alternative function mode
-    constexpr auto af_tx = used_mcu::find_af<mcu_ns::A, txpin, uart, mcu_ns::mcu_info::UART::uart_pin_types::TX>();
-    constexpr auto af_rx = used_mcu::find_af<mcu_ns::A, rxpin, uart, mcu_ns::mcu_info::UART::uart_pin_types::RX>();
+    constexpr auto af_tx = used_mcu::find_af<mcu_ns::A, txpin, uart, used_mcu::uart::uart_pin_types::TX>();
+    constexpr auto af_rx = used_mcu::find_af<mcu_ns::A, rxpin, uart, used_mcu::uart::uart_pin_types::RX>();
     port_a::set_alternative_function<af_tx, txpin>();
     port_a::set_alternative_function<af_rx, rxpin>();
 

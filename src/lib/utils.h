@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <tuple>
 #include <utility>
+#include <type_traits>
 
 template<auto bit, typename T>
 void set_bit(T value) {
