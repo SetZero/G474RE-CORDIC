@@ -29,6 +29,9 @@ namespace hal::cordic {
        public:
         using qtype = Detail::precision_to_type<P>;
 
+        template<typename ScaleType>
+        using scaled_qtype = Detail::precision_to_type_with_add<P, Detail::normal_fixed_range, ScaleType>;
+
         static inline constexpr auto precision = P;
         static inline constexpr auto calculation_precision = A;
     };
@@ -101,7 +104,7 @@ namespace hal::cordic {
 
         static inline constexpr auto num_args = nargs::two;
 
-        thiz_type &arg(const vec2f<config_type::precision> &v) {
+        thiz_type &arg(const vec2<config_type::precision> &v) {
             m_v = v;
             return *this;
         }
@@ -113,7 +116,7 @@ namespace hal::cordic {
         auto scale() const { return 0u; }
 
        private:
-        vec2f<config_type::precision> m_v{};
+        vec2<config_type::precision> m_v{};
     };
 
     template<typename Config>
@@ -125,7 +128,7 @@ namespace hal::cordic {
 
         static inline constexpr auto num_args = nargs::two;
 
-        thiz_type &arg(const vec2f<config_type::precision> &v) {
+        thiz_type &arg(const vec2<config_type::precision> &v) {
             m_v = v;
             return *this;
         }
@@ -137,7 +140,32 @@ namespace hal::cordic {
         auto scale() const { return 0u; }
 
        private:
-        vec2f<config_type::precision> m_v{};
+        vec2<config_type::precision> m_v{};
+    };
+
+    template<typename Config>
+    class operation<Config, operation_type::single, functions::arctangent> final {
+       public:
+        using config_type = Config;
+        using thiz_type = operation<Config, operation_type::single, functions::arctangent>;
+        using result_type =
+            operation_result<typename config_type::qtype, operation_type::single, functions::arctangent>;
+        // TODO create bounds type
+        using argument_type = typename config_type::scaled_qtype<scales<Detail::normal_bounds, std::integer_sequence<unsigned int, 0, 1, 2, 3, 4, 5, 6, 7>>>;
+
+        static inline constexpr auto num_args = nargs::two;
+
+        thiz_type &arg1(const argument_type &arg) {
+            m_arg = arg;
+            return *this;
+        }
+
+        auto arg1() const { return m_arg; }
+
+        auto scale() const { return m_arg.scale(); }
+
+       private:
+        argument_type m_arg{};
     };
 
     // TODO: add multiple results
