@@ -34,9 +34,14 @@ namespace hal {
             hw_register = (static_cast<value_type>(v) | ...);
         }
 
-        template<byte_type F>
+        template<byte_type... F>
         void inline add() {
-            hw_register = hw_register | static_cast<value_type>(F);
+            hw_register = hw_register | (static_cast<value_type>(F) | ...);
+        }
+
+        template<byte_type... F>
+        void inline clear() {
+            hw_register = hw_register & ~(static_cast<value_type>(F) & ...);
         }
 
        private:

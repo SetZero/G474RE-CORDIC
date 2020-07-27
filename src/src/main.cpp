@@ -221,8 +221,8 @@ void init_uart_pin() {
     port_a::set_alternative_function<af_rx, rxpin>();
 
     // Set GPIO (txpin/rxpin) speed +  push/pull
-    //port_a::set_speed<gpio_values::speed::VERY_HIGH_SPEED, txpin, rxpin>();
-    //port_a::set_type<gpio_values::type::PUSH_PULL, txpin, rxpin>();
+    port_a::set_speed<gpio_values::speed::VERY_HIGH_SPEED, txpin, rxpin>();
+    port_a::set_type<gpio_values::type::PUSH_PULL, txpin, rxpin>();
 }
 
 template<auto base_addr>
@@ -272,12 +272,12 @@ int main() {
 
     using txpin = port_a::pin<2>;
     using rxpin = port_a::pin<3>;
-    uart_two::init<txpin, rxpin, 9600>();
+    uart_two::init<txpin, rxpin, 9600, 8, 0>();
 
     init_uart_pin<9u, 10u, mcu_ns::uart_nr::one>();
     init_uart<UART_BASE>();
 
-    init_uart_pin<2u, 3u, mcu_ns::uart_nr::two>();
+    //init_uart_pin<2u, 3u, mcu_ns::uart_nr::two>();
     init_uart<UART2_BASE>();
 
     using cc = cordic_config<precision::q1_31>;
