@@ -1,5 +1,5 @@
 //
-// Created by Sebastian on 14.07.2020.
+// Created on 14.07.2020.
 //
 
 #pragma once
