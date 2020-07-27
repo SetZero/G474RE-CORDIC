@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hal/stm32/stm32g4.h>
+
 #include <concepts>
 
 #include "hal_info.h"
@@ -33,10 +34,9 @@ namespace hal::periphery {
         uart() = delete;
 
         template<gpio_pin TXPin, gpio_pin RXPin, auto Baudrate, auto DataBits = 8, auto StopBits = 0>
-        requires(DataBits >= 7 && DataBits <= 9 && StopBits >= 0 && StopBits <= 2)
-        static void init() {
+        requires(DataBits >= 7 && DataBits <= 9 && StopBits >= 0 && StopBits <= 2) static void init() {
             uart_registers()->cr1.template set_value<MCU::UART::CR::UE>(false);
-            //TODO: Fixme
+            // TODO: Fixme
             hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()->ahb2.add<MCU::AHBENR::AHB2ENR::GPIOA>();
 
             TXPin::template set_alternative_function<UartNr, UsedMCU::uart::uart_pin_types::TX>();
@@ -52,10 +52,10 @@ namespace hal::periphery {
             hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
                 ->apb11.add<hal::stm::stm32g4::mcu_info::APBENR::APB1ENR1::USART2EN>();
 
-            if constexpr(DataBits == 7) {
+            if constexpr (DataBits == 7) {
                 uart_registers()->cr1.template set_value<MCU::UART::CR::M1>(false);
                 uart_registers()->cr1.template set_value<MCU::UART::CR::M0>(false);
-            } else if(DataBits == 8) {
+            } else if (DataBits == 8) {
                 uart_registers()->cr1.template set_value<MCU::UART::CR::M1>(true);
                 uart_registers()->cr1.template set_value<MCU::UART::CR::M0>(false);
             } else {
