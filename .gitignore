@@ -6,6 +6,7 @@
 !.gitignore
 !.clang-format
 !src
+!doc
 !toolchains
 !CMakeLists.txt
 !build.sh

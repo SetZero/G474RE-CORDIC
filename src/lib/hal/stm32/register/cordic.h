@@ -57,7 +57,6 @@ namespace hal::stm::stm32g4::cordic {
             func_mapper_pair{hal::cordic::functions::natural_logarithm, functions::natural_logarithm},
             func_mapper_pair{hal::cordic::functions::square_root, functions::square_root}};
 
-        // TODO: add remaining types
         template<hal::cordic::functions func>
         static constexpr auto map_function() {
             return func_mapper[func];
@@ -119,19 +118,19 @@ namespace hal::stm::stm32g4::cordic {
         template<functions mode>
         void inline set_function_mode() {
             // Make sure only one function is set
-            hw_register = hw_register & (~static_cast<uint32_t>(0xF) | static_cast<uint32_t>(mode));
+            hw_register = (hw_register & ~static_cast<uint32_t>(0xF)) | static_cast<uint32_t>(mode);
         }
 
         /* (10:8) SCALE: [number 2^n/2^-n] */
         void inline set_scale(uint8_t scale) {
             hw_register =
-                hw_register & ((~(static_cast<uint32_t>(0x7) << 8)) | (static_cast<uint32_t>(scale & 0x7) << 8));
+                (hw_register & (~(static_cast<uint32_t>(0x7) << 8))) | (static_cast<uint32_t>(scale & 0x7) << 8);
         }
 
         /* (7:4) Precision: [number 1 - 15] */
         void inline set_precision(uint8_t precision) {
             hw_register =
-                hw_register & ((~static_cast<uint32_t>(0xF) << 4) | (static_cast<uint32_t>(precision & 0xF) << 4));
+                (hw_register & (~(static_cast<uint32_t>(0xF) << 4))) | (static_cast<uint32_t>(precision & 0xF) << 4);
         }
 
        private:

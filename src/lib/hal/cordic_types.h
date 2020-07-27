@@ -104,7 +104,7 @@ class modulus {
     constexpr explicit modulus(const T &value) {
         if (value >= 1) {
             m_scale = value * Detail::float_type<p>(1.5);
-            m_value = value * std::pow(m_scale, -1);
+            m_value = value / m_scale;
         } else {
             m_value = value;
         }

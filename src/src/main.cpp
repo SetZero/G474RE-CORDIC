@@ -278,10 +278,10 @@ int main() {
 
     using cc = cordic_config<precision::q1_31>;
     operation<cc, operation_type::single, functions::cosine> op;
+    operation<cc, operation_type::single, functions::sine> op2;
 
     // memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (10 * 2u));
     // memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (10 * 2u));
-
 
     int deg = 0;
 
@@ -295,15 +295,15 @@ int main() {
         // memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
         port_a::off<5>();
         delay_ms(250);
-        //while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
+        // while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
         int16_t rdeg = deg - 180;
         op.arg1(angle<precision::q1_31>{degrees{rdeg}});
-        auto result = cordic_one::calculate(op);
+        op2.arg1(angle<precision::q1_31>{degrees{rdeg}});
 
-        q1_31 q = result.result();
-
-        auto float_val = static_cast<double>(q);
-        uart_two::printf<256>("cos(%d) * 1000 = %d \r\n", rdeg, static_cast<int>(float_val * 1000));
+        auto float_val = static_cast<double>(cordic_one::calculate(op).result());
+        auto float_val2 = static_cast<double>(cordic_one::calculate(op2).result());
+        uart_two::printf<256>("cos(%d) * 1000 = %d sin(%d) * 1000 = %d \r\n", rdeg, static_cast<int>(float_val * 1000),
+                              rdeg, static_cast<int>(float_val2 * 1000));
         deg = (deg + 1) % 360;
         delay_ms(50);
         // memory(LPUART_BASE + 0x20) |= (1u << 2u);
