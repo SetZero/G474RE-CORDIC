@@ -41,7 +41,7 @@ namespace hal::cordic {
             typename operation<config, type, function>::result_type result{};
             result.result(cordic_register()->rdata.template read_arg<typename config::qtype>());
             // TODO: deal differently with second result somehow
-            volatile auto res [[gnu::unused]] = cordic_register()->rdata.template read_arg<typename config::qtype>();
+            result.secondary_result(cordic_register()->rdata.template read_arg<typename config::qtype>());
 
             return result;
         }
