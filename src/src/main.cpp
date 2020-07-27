@@ -304,27 +304,33 @@ int main() {
         delay_ms(250);
         // while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
         int16_t rdeg = deg - 180;
+        // int atanval = rdeg / 2;
+        decltype(op4)::argument_type op4_arg{rdeg / 2.0f};
         op.arg1(angle<precision::q1_31>{degrees{rdeg}});
         op2.arg1(angle<precision::q1_31>{degrees{rdeg}});
-        op4.arg1(decltype(op4)::argument_type{0.0f});
+        op4.arg1(op4_arg);
 
         auto float_val = static_cast<float>(cordic_one::calculate(op).result());
         auto float_val2 = static_cast<float>(cordic_one::calculate(op2).result());
+        // auto float_op_val = static_cast<float>(op4_arg);
         vec2<precision::q1_31> v{x_coord{float_val}, y_coord{float_val2}};
         op3.arg(v);
         op5.arg(v);
 
-        auto float_val3 = static_cast<double>(cordic_one::calculate(op3).result()) *
-                          M_PI;  // One has to multiply with M_PI to get the result in radians
-        auto float_val4 = static_cast<double>(cordic_one::calculate(op5).result());
+        auto float_val3 = static_cast<float>(cordic_one::calculate(op3).result()) *
+                          static_cast<float>(M_PI);  // One has to multiply with M_PI to get the result in radians
+        auto float_val4 = static_cast<float>(cordic_one::calculate(op5).result());
+        auto float_val5 = static_cast<float>(cordic_one::calculate(op4).result());
         uart_two::printf<256>(
             "cos(%d) * 1000 = %d sin(%d) * 1000 = %d atan2(%d * 1000, %d * 1000) = %d * 10000000 == %d * 10000000 "
-            "len(vec) == %d * 1000 "
-            "\r\n",
+            "len(vec) == %d * 1000, scale = %d, value = %d "
+            "atan = %d real_atan = %d \r\n",
             rdeg, static_cast<int>(float_val * 1000), rdeg, static_cast<int>(float_val2 * 1000),
             static_cast<int>((float)v.y() * 1000), static_cast<int>((float)v.x() * 1000),
             static_cast<int>(float_val3 * 10000000), static_cast<int>(std::atan2(float_val2, float_val) * 10000000),
-            static_cast<int>(float_val4 * 1000));
+            static_cast<int>(float_val4 * 1000), op4_arg.scale(), static_cast<int>(static_cast<float>(op4_arg) * 1000),
+            static_cast<int>(float_val5 * static_cast<float>(M_PI) * 100000),
+            static_cast<int>(std::atan(rdeg / 2.0f) * 100000));
         deg = (deg + 1) % 360;
         delay_ms(50);
         // memory(LPUART_BASE + 0x20) |= (1u << 2u);
