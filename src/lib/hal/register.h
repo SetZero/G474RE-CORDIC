@@ -222,7 +222,8 @@ namespace hal {
         template<enum_type Function>
         requires(!std::is_same_v<data_type<Function>, reserved_type> && amode<Function> != access_mode::read_only &&
                  amode<Function> != access_mode::no_access) void set_value(data_type<Function> value) {
-            std::bitset<std::min<std::size_t>(sizeof(value) * CHAR_BIT, 64u)> set(value);
+            std::bitset<std::min<std::size_t>(sizeof(value) * CHAR_BIT, 64u)> set(
+                static_cast<integral_equivalent<decltype(value)>>(value));
             using current_description = get_type_to_function<Function>;
 
             m_register = set_bits<decayed_register_type>(set, m_register,

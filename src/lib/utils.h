@@ -119,3 +119,21 @@ void delay_ms(uint32_t n) {
     for (; n > 0; n--)
         for (uint32_t i = 0; i < 3195; i++) asm("nop");
 }
+
+namespace Detail {
+    template<typename T, bool is_enum>
+    struct integral_equivalent;
+
+    template<typename T>
+    struct integral_equivalent<T, false> {
+        using type = T;
+    };
+
+    template<typename T>
+    struct integral_equivalent<T, true> {
+        using type = std::underlying_type_t<T>;
+    };
+}
+
+template<typename T>
+using integral_equivalent = typename Detail::integral_equivalent<T, std::is_enum_v<T>>::type;

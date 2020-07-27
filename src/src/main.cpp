@@ -194,7 +194,7 @@ void init_lpuart() {
     // memory(LPUART_BASE + LPUART_CR1) |= (1u << 29u);            // enable fifo
     // memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 28u);           //  1 Start bit, 8 Data bits, n Stop bit
     // memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
-    memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 10u);           //  no parity
+    //memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 10u);           //  no parity
     memory(LPUART_BASE + LPUART_CR2) &= ~(0b11u << 12u);        // 1 stop bit
     memory(LPUART_BASE + LPUART_BRR) = 16'000'000u / (115200);  // 115200 baud
     memory(LPUART_BASE + LPUART_CR1) |= (1u << 0u);             // enable uart
@@ -272,7 +272,7 @@ int main() {
 
     using txpin = port_a::pin<2>;
     using rxpin = port_a::pin<3>;
-    uart_two::init<txpin, rxpin, 9600, 8, 0>();
+    uart_two::init<txpin, rxpin, 9600, 8>();
 
     // init_uart_pin<9u, 10u, mcu_ns::uart_nr::one>();
     // init_uart<UART_BASE>();
