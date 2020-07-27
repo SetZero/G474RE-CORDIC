@@ -221,8 +221,8 @@ void init_uart_pin() {
     port_a::set_alternative_function<af_rx, rxpin>();
 
     // Set GPIO (txpin/rxpin) speed +  push/pull
-    port_a::set_speed<gpio_values::speed::VERY_HIGH_SPEED, txpin, rxpin>();
-    port_a::set_type<gpio_values::type::PUSH_PULL, txpin, rxpin>();
+    //port_a::set_speed<gpio_values::speed::VERY_HIGH_SPEED, txpin, rxpin>();
+    //port_a::set_type<gpio_values::type::PUSH_PULL, txpin, rxpin>();
 }
 
 template<auto base_addr>
@@ -269,6 +269,10 @@ int main() {
     // init_uart();
     // init_lpuart_pin();
     // init_lpuart();
+
+    using txpin = port_a::pin<2>;
+    using rxpin = port_a::pin<3>;
+    uart_two::init<txpin, rxpin, 9600>();
 
     init_uart_pin<9u, 10u, mcu_ns::uart_nr::one>();
     init_uart<UART_BASE>();

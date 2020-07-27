@@ -1,5 +1,7 @@
 #pragma once
 
+#include <hal/stm32/stm32g4.h>
+
 #include "hal_info.h"
 
 namespace hal::periphery {
@@ -29,9 +31,19 @@ namespace hal::periphery {
        public:
         uart() = delete;
 
-        template<typename RXPin, typename TXPin, auto Baudrate>
+        template<gpio_pin TXPin, gpio_pin RXPin, auto Baudrate>
         static void init() {
+            //TODO: Fixme
+            //hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()->ahb2.add<MCU::AHBENR::AHB2ENR::GPIOA>();
 
+            TXPin::template set_alternative_function<UartNr, UsedMCU::uart::uart_pin_types::TX>();
+            RXPin::template set_alternative_function<UartNr, UsedMCU::uart::uart_pin_types::RX>();
+
+            TXPin::template set_speed<gpio_values::speed::VERY_HIGH_SPEED>();
+            RXPin::template set_speed<gpio_values::speed::VERY_HIGH_SPEED>();
+
+            TXPin::template set_type<gpio_values::type::PUSH_PULL>();
+            RXPin::template set_type<gpio_values::type::PUSH_PULL>();
         }
 
         static void printc(char value) { uart_registers()->tdr.template set_value<0>(value); }

@@ -12,6 +12,13 @@ concept gpio_mcu = stm_mcu<MCU, PIN>;
 
 // TODO: Variadic Template Version
 namespace hal::periphery {
+    template<typename Pin>
+    concept gpio_pin = requires {
+        {Pin::on()};
+        {Pin::off()};
+        {Pin::get()};
+    };
+
     namespace gpio_values {
         enum class modes { OUTPUT, INPUT, ALTERNATIVE_FUNCTION, ANALOG };  // TODO: Remove direct access to AF
         enum class type { PUSH_PULL = 0, OPEN_DRAIN = 1 };
@@ -130,7 +137,9 @@ namespace hal::periphery {
         template<typename function_number, auto function, typename decltype(port()->afr)::value_type io>
         static void set_alternative_function() {
             set_port_mode<gpio_values::modes::ALTERNATIVE_FUNCTION, io>();
-            port()->afr.template add<used_mcu::template find_af<gpio_port, io, function_number, function>, io>();
+            port()
+                ->afr.template add<
+                    mcu_detail::af_mapper[used_mcu::template find_af<gpio_port, io, function_number, function>], io>();
         }
 
         template<auto io>
@@ -140,13 +149,9 @@ namespace hal::periphery {
                 gpio<gpio_port, used_mcu>::set_port_mode<gpio_mode, io>();
             }
 
-            static void on() {
-                gpio<gpio_port, used_mcu>::on<io>();
-            }
+            static void on() { gpio<gpio_port, used_mcu>::on<io>(); }
 
-            static void off() {
-                gpio<gpio_port, used_mcu>::off<io>();
-            }
+            static void off() { gpio<gpio_port, used_mcu>::off<io>(); }
 
             static auto get() { return (*port()->idr) & (1 << io); }
 
