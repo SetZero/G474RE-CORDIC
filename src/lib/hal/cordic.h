@@ -1,15 +1,15 @@
 #pragma once
 
+#include "hal/cordic/cordic_operations.h"
 #include "hal/cordic_types.h"
 #include "hal/hal_info.h"
 #include "hal/register.h"
-#include "hal/cordic/cordic_operations.h"
 
 template<typename MCU, typename PIN>
 concept cordic_mcu = stm_mcu<MCU, PIN>;
 
 namespace hal::cordic {
-        template<typename CordicNr, cordic_mcu<CordicNr> mcu>
+    template<typename CordicNr, cordic_mcu<CordicNr> mcu>
     class cordic {
        public:
         static inline constexpr auto cordic_register = hal::address<typename mcu::CORDIC, CordicNr>;
@@ -27,7 +27,7 @@ namespace hal::cordic {
             cordic_register()->csr.set_argument_amount(cordic_control_register_type::result_amount::TWO_REGISTER_VALUE);
             cordic_register()->csr.set_result_amount(cordic_control_register_type::result_amount::TWO_REGISTER_VALUE);
             cordic_register()->csr.set_precision(static_cast<uint8_t>(config::calculation_precision));
-            cordic_register()->csr.set_scale(uint8_t(0));
+            cordic_register()->csr.set_scale(uint8_t(op.scale()));
             cordic_register()->csr.enable_dma_write_channel(false);
             cordic_register()->csr.enable_dma_read_channel(false);
             cordic_register()->csr.enable_interrupts(false);
@@ -40,6 +40,7 @@ namespace hal::cordic {
 
             typename operation<config, type, function>::result_type result{};
             result.result(cordic_register()->rdata.template read_arg<typename config::qtype>());
+            // TODO: deal differently with second result somehow
             volatile auto res [[gnu::unused]] = cordic_register()->rdata.template read_arg<typename config::qtype>();
 
             return result;
