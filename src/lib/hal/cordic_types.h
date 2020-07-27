@@ -122,6 +122,46 @@ class modulus {
     Detail::float_type<p> m_scale{1.0};
 };
 
+struct x_coord {
+    float value = 0;
+};
+
+struct y_coord {
+    float value = 0;
+};
+
+x_coord operator"" _x(long double value) { return x_coord{static_cast<float>(value)}; }
+
+y_coord operator"" _y(long double value) { return y_coord{static_cast<float>(value)}; }
+
+template<precision p>
+class vec2f {
+   public:
+    using type = Detail::precision_to_type<p>;
+
+    constexpr vec2f(const x_coord &x = 0.0_x, const y_coord &y = 0.0_y) {
+        if (std::fabs(x.value) >= 1.0f || std::fabs(y.value) >= 1.0f) {
+            m_soft_scale = std::max<decltype(x.value)>(std::fabs(x.value), std::fabs(y.value)) * 1.15f;
+            m_x = x.value / m_soft_scale;
+            m_y = y.value / m_soft_scale;
+        } else {
+            m_x = x.value;
+            m_y = y.value;
+        }
+    }
+
+    constexpr auto x() const { return m_x; }
+
+    constexpr auto y() const { return m_y; }
+
+    constexpr auto soft_scale() const { return m_soft_scale; }
+
+   private:
+    q1_31 m_x;
+    q1_31 m_y;
+    float m_soft_scale = 1.0f;
+};
+
 // TODO: maybe add valid range to this class (as type for example)
 template<precision p>
 class hyperbolic_angle {
