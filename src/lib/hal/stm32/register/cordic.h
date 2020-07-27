@@ -76,41 +76,41 @@ namespace hal::stm::stm32g4::cordic {
         };
 
         /* (31) RRDY: [boolean] */
-        [[nodiscard]] bool is_ready() const { return is_flag_set<cordic_control_bits::ready_flag>(hw_register); }
+        [[nodiscard]] bool is_ready() const { return is_flag_set<cordic_control_bits::ready_flag>(&hw_register); }
 
         /* ARGSIZE: [option: 16bit / 32bit] */
         void inline set_argument_size(precision size) {
-            set_bit_flag<cordic_control_bits::argsize_flag>(hw_register, size == precision::q1_15);
+            set_bit_flag<cordic_control_bits::argsize_flag>(&hw_register, size == precision::q1_15);
         }
 
         /* RESSIZE: [option: 16bit / 32bit] */
         void inline set_result_size(precision size) {
-            set_bit_flag<cordic_control_bits::ressize_flag>(hw_register, size == precision::q1_15);
+            set_bit_flag<cordic_control_bits::ressize_flag>(&hw_register, size == precision::q1_15);
         }
 
         /* NARGS: [option: one / two 32bit values] */
         void inline set_argument_amount(result_amount size) {
-            set_bit_flag<cordic_control_bits::nargs_flag>(hw_register, size == result_amount::TWO_REGISTER_VALUE);
+            set_bit_flag<cordic_control_bits::nargs_flag>(&hw_register, size == result_amount::TWO_REGISTER_VALUE);
         }
 
         /* (19) NRES: [option: one 32bit or two 16bit / two 32bit] */
         void inline set_result_amount(result_amount size) {
-            set_bit_flag<cordic_control_bits::nres_flag>(hw_register, size == result_amount::TWO_REGISTER_VALUE);
+            set_bit_flag<cordic_control_bits::nres_flag>(&hw_register, size == result_amount::TWO_REGISTER_VALUE);
         }
 
         /* (18) DMAWEN: [boolean] */
         void inline enable_dma_write_channel(bool enable) {
-            set_bit_flag<cordic_control_bits::dma_write_enable_flag>(hw_register, enable);
+            set_bit_flag<cordic_control_bits::dma_write_enable_flag>(&hw_register, enable);
         }
 
         /* (17) dma: [boolean] */
         void inline enable_dma_read_channel(bool enable) {
-            set_bit_flag<cordic_control_bits::dma_read_enable_flag>(hw_register, enable);
+            set_bit_flag<cordic_control_bits::dma_read_enable_flag>(&hw_register, enable);
         }
 
         /* (16) interrupts: [boolean] */
         void inline enable_interrupts(bool enable) {
-            set_bit_flag<cordic_control_bits::interrupt_enable_flag>(hw_register, enable);
+            set_bit_flag<cordic_control_bits::interrupt_enable_flag>(&hw_register, enable);
         }
 
         // TODO: test this

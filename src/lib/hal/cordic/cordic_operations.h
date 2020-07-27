@@ -18,7 +18,7 @@ namespace hal::cordic {
 
     enum class operation_type { single, pipeline };
 
-    enum class cordic_algorithm_precision : uint8_t { normal = 14u };
+    enum class cordic_algorithm_precision : uint8_t { normal = 6u };
 
     template<precision P, cordic_algorithm_precision A = cordic_algorithm_precision::normal>
     class cordic_config final {
@@ -106,6 +106,28 @@ namespace hal::cordic {
         vec2f<config_type::precision> m_v{};
     };
 
+    template<typename Config>
+    class operation<Config, operation_type::single, functions::modulus> final {
+       public:
+        using config_type = Config;
+        using thiz_type = operation<Config, operation_type::single, functions::modulus>;
+        using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::modulus>;
+
+        thiz_type &arg(const vec2f<config_type::precision> &v) {
+            m_v = v;
+            return *this;
+        }
+
+        auto arg1() const { return m_v.x(); }
+
+        auto arg2() const { return m_v.y(); }
+
+        auto scale() const { return 0u; }
+
+       private:
+        vec2f<config_type::precision> m_v{};
+    };
+
     // TODO: add multiple results
     template<typename ResultType>
     class operation_result<ResultType, operation_type::single, functions::cosine> final {
@@ -118,10 +140,18 @@ namespace hal::cordic {
             return *this;
         }
 
+        thiz_type &secondary_result(ResultType result) {
+            m_secondary_result = result;
+            return *this;
+        }
+
         result_type result() const { return m_result; }
+
+        result_type secondary_result() const { return m_secondary_result; }
 
        private:
         ResultType m_result;
+        ResultType m_secondary_result;
     };
 
     template<typename ResultType>
@@ -135,10 +165,18 @@ namespace hal::cordic {
             return *this;
         }
 
+        thiz_type &secondary_result(ResultType result) {
+            m_secondary_result = result;
+            return *this;
+        }
+
         result_type result() const { return m_result; }
+
+        result_type secondary_result() const { return m_secondary_result; }
 
        private:
         ResultType m_result;
+        ResultType m_secondary_result;
     };
 
     template<typename ResultType>
@@ -152,10 +190,43 @@ namespace hal::cordic {
             return *this;
         }
 
+        thiz_type &secondary_result(ResultType result) {
+            m_secondary_result = result;
+            return *this;
+        }
+
         result_type result() const { return m_result; }
+
+        result_type secondary_result() const { return m_secondary_result; }
 
        private:
         ResultType m_result;
+        ResultType m_secondary_result;
+    };
+
+    template<typename ResultType>
+    class operation_result<ResultType, operation_type::single, functions::modulus> final {
+       public:
+        using result_type = ResultType;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::modulus>;
+
+        thiz_type &result(ResultType result) {
+            m_result = result;
+            return *this;
+        }
+
+        thiz_type &secondary_result(ResultType result) {
+            m_secondary_result = result;
+            return *this;
+        }
+
+        result_type result() const { return m_result; }
+
+        result_type secondary_result() const { return m_secondary_result; }
+
+       private:
+        ResultType m_result;
+        ResultType m_secondary_result;
     };
 
 }  // namespace hal::cordic
