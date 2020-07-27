@@ -6,7 +6,7 @@ namespace hal::periphery {
 
     // TODO: add real uart concept
     template<typename MCU, typename PIN>
-    concept uart_mcu = stm_mcu<MCU, PIN>;
+    concept uart_mcu = specialized_mcu<MCU, PIN>;
 
     namespace detail {
         struct uart_component {};
@@ -18,15 +18,21 @@ namespace hal::periphery {
         };
     }  // namespace detail
 
-    template<typename UartNr, uart_mcu<UartNr> MCU>
-    requires(hal::info::vendor_information<MCU>::vendor == info::vendors::STM) class uart {
+    template<typename UartNr, uart_mcu<UartNr> UsedMCU>
+    requires(hal::info::vendor_information<typename UsedMCU::base_mcu>::vendor == info::vendors::STM) class uart {
        private:
+        using MCU = UsedMCU::base_mcu;
         static inline constexpr auto uart_registers = hal::address<typename MCU::UART, UartNr>;
         using uart_detail = typename detail::stm_mcu_mapper<MCU, detail::uart_component>::mapper<UartNr>;
         using uart_type = MCU::UART;
 
        public:
         uart() = delete;
+
+        template<typename RXPin, typename TXPin, auto Baudrate>
+        static void init() {
+
+        }
 
         static void printc(char value) { uart_registers()->tdr.template set_value<0>(value); }
 

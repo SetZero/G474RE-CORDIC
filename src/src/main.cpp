@@ -252,7 +252,7 @@ void init_uart() {
 int main() {
     using namespace hal::cordic;
     using port_a = hal::periphery::gpio<mcu_ns::A, used_mcu>;
-    using uart_two = hal::periphery::uart<mcu_ns::uart_nr::two, mcu_ns::mcu_info>;
+    using uart_two = hal::periphery::uart<mcu_ns::uart_nr::two, used_mcu>;
     using cordic_one = hal::cordic::cordic<mcu_ns::cordic_nr::one, mcu_ns::mcu_info>;
     // SystemClock_Config();
     // memory(RCC_BASE + RCC_AHB2ENR) |= 1u;
@@ -290,11 +290,11 @@ int main() {
 
     while (true) {
         // memory(LPUART_BASE + LPUART_TDR) = 'U';
-        port_a::on<5>();
+        port_a::pin<5>::on();
         // memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << 5u);
         delay_ms(250);
         // memory(GPIO_A_BASE + GPIO_X_BSRR) = (1u << (5u + 16));
-        port_a::off<5>();
+        port_a::pin<5>::off();
         delay_ms(250);
         // while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
         int16_t rdeg = deg - 180;

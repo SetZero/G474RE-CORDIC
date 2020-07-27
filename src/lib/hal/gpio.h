@@ -132,5 +132,43 @@ namespace hal::periphery {
             set_port_mode<gpio_values::modes::ALTERNATIVE_FUNCTION, io>();
             port()->afr.template add<used_mcu::template find_af<gpio_port, io, function_number, function>, io>();
         }
+
+        template<auto io>
+        struct pin {
+            template<gpio_values::modes gpio_mode>
+            static void set_port_mode() {
+                gpio<gpio_port, used_mcu>::set_port_mode<gpio_mode, io>();
+            }
+
+            static void on() {
+                gpio<gpio_port, used_mcu>::on<io>();
+            }
+
+            static void off() {
+                gpio<gpio_port, used_mcu>::off<io>();
+            }
+
+            static auto get() { return (*port()->idr) & (1 << io); }
+
+            template<gpio_values::type gpio_type>
+            static void set_type() {
+                gpio<gpio_port, used_mcu>::set_type<gpio_type, io>();
+            }
+
+            template<gpio_values::speed gpio_speed>
+            static void set_speed() {
+                gpio<gpio_port, used_mcu>::set_speed<gpio_speed, io>();
+            }
+
+            template<gpio_values::alternative_function af>
+            static void set_alternative_function() {
+                gpio<gpio_port, used_mcu>::set_alternative_function<af, io>();
+            }
+
+            template<typename function_number, auto function>
+            static void set_alternative_function() {
+                gpio<gpio_port, used_mcu>::set_alternative_function<function_number, function, io>();
+            }
+        };
     };
 }  // namespace hal::periphery
