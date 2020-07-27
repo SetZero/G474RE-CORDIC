@@ -9,6 +9,7 @@
 
 #include "hal/cordic.h"
 #include "hal/cordic_types.h"
+#include "hal/cordic/cordic_operations.h"
 #include "utils.h"
 
 namespace hal::stm::stm32g4::cordic {
@@ -62,8 +63,6 @@ namespace hal::stm::stm32g4::cordic {
             return func_mapper[func];
         }
 
-        enum class result_amount { ONE_REGISTER_VALUE, TWO_REGISTER_VALUE };
-
         enum class cordic_control_bits : uint8_t {
             ready_flag = 31,
             argsize_flag = 22,
@@ -89,13 +88,13 @@ namespace hal::stm::stm32g4::cordic {
         }
 
         /* NARGS: [option: one / two 32bit values] */
-        void inline set_argument_amount(result_amount size) {
-            set_bit_flag<cordic_control_bits::nargs_flag>(&hw_register, size == result_amount::TWO_REGISTER_VALUE);
+        void inline set_argument_amount(hal::cordic::nargs size) {
+            set_bit_flag<cordic_control_bits::nargs_flag>(&hw_register, size == hal::cordic::nargs::two);
         }
 
         /* (19) NRES: [option: one 32bit or two 16bit / two 32bit] */
-        void inline set_result_amount(result_amount size) {
-            set_bit_flag<cordic_control_bits::nres_flag>(&hw_register, size == result_amount::TWO_REGISTER_VALUE);
+        void inline set_result_amount(hal::cordic::nres size) {
+            set_bit_flag<cordic_control_bits::nres_flag>(&hw_register, size == hal::cordic::nres::two);
         }
 
         /* (18) DMAWEN: [boolean] */
