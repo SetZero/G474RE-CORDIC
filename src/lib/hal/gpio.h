@@ -137,9 +137,11 @@ namespace hal::periphery {
         template<typename function_number, auto function, typename decltype(port()->afr)::value_type io>
         static void set_alternative_function() {
             set_port_mode<gpio_values::modes::ALTERNATIVE_FUNCTION, io>();
-            port()
-                ->afr.template add<
-                    mcu_detail::af_mapper[used_mcu::template find_af<gpio_port, io, function_number, function>], io>();
+
+            static constexpr auto value_to_map =
+                used_mcu::template find_af<gpio_port, io, function_number, function>();
+
+            port()->afr.template add<mcu_detail::af_mapper[value_to_map], io>();
         }
 
         template<auto io>
