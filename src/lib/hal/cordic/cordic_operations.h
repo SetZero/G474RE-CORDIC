@@ -16,6 +16,10 @@ namespace hal::cordic {
         square_root
     };
 
+    enum struct nargs : uint8_t { one, two };
+
+    enum struct nres : uint8_t { one, two };
+
     enum class operation_type { single, pipeline };
 
     enum class cordic_algorithm_precision : uint8_t { normal = 6u };
@@ -44,6 +48,8 @@ namespace hal::cordic {
         using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::cosine>;
         using angle_type = angle<config_type::precision>;
 
+        static inline constexpr auto num_args = nargs::two;
+
         thiz_type &arg1(angle_type angle) {
             m_angle = angle;
             return *this;
@@ -68,6 +74,8 @@ namespace hal::cordic {
         using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::sine>;
         using angle_type = angle<config_type::precision>;
 
+        static inline constexpr auto num_args = nargs::two;
+
         thiz_type &arg1(angle_type angle) {
             m_angle = angle;
             return *this;
@@ -91,6 +99,8 @@ namespace hal::cordic {
         using thiz_type = operation<Config, operation_type::single, functions::phase>;
         using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::phase>;
 
+        static inline constexpr auto num_args = nargs::two;
+
         thiz_type &arg(const vec2f<config_type::precision> &v) {
             m_v = v;
             return *this;
@@ -113,6 +123,8 @@ namespace hal::cordic {
         using thiz_type = operation<Config, operation_type::single, functions::modulus>;
         using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::modulus>;
 
+        static inline constexpr auto num_args = nargs::two;
+
         thiz_type &arg(const vec2f<config_type::precision> &v) {
             m_v = v;
             return *this;
@@ -134,6 +146,8 @@ namespace hal::cordic {
        public:
         using result_type = ResultType;
         using thiz_type = operation_result<ResultType, operation_type::single, functions::cosine>;
+
+        static inline constexpr auto num_res = nres::two;
 
         thiz_type &result(ResultType result) {
             m_result = result;
@@ -160,6 +174,8 @@ namespace hal::cordic {
         using result_type = ResultType;
         using thiz_type = operation_result<ResultType, operation_type::single, functions::sine>;
 
+        static inline constexpr auto num_res = nres::two;
+
         thiz_type &result(ResultType result) {
             m_result = result;
             return *this;
@@ -185,6 +201,8 @@ namespace hal::cordic {
         using result_type = ResultType;
         using thiz_type = operation_result<ResultType, operation_type::single, functions::phase>;
 
+        static inline constexpr auto num_res = nres::two;
+
         thiz_type &result(ResultType result) {
             m_result = result;
             return *this;
@@ -209,6 +227,8 @@ namespace hal::cordic {
        public:
         using result_type = ResultType;
         using thiz_type = operation_result<ResultType, operation_type::single, functions::modulus>;
+
+        static inline constexpr auto num_res = nres::two;
 
         thiz_type &result(ResultType result) {
             m_result = result;

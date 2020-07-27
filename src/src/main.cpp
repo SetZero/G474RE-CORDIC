@@ -279,7 +279,7 @@ int main() {
     using cc = cordic_config<precision::q1_31>;
     operation<cc, operation_type::single, functions::cosine> op;
     operation<cc, operation_type::single, functions::sine> op2;
-    operation<cc, operation_type::single, functions::modulus> op3;
+    operation<cc, operation_type::single, functions::phase> op3;
 
     // memory(GPIO_A_BASE + GPIO_X_MODER) &= ~(0b11u << (10 * 2u));
     // memory(GPIO_A_BASE + GPIO_X_MODER) |= (0b1u << (10 * 2u));
@@ -306,14 +306,14 @@ int main() {
         vec2f<precision::q1_31> v{x_coord{float_val}, y_coord{float_val2}};
         op3.arg(v);
 
-        auto float_val3 = static_cast<double>(cordic_one::calculate(op3).secondary_result()) *
+        auto float_val3 = static_cast<double>(cordic_one::calculate(op3).result()) *
                           M_PI;  // One has to multiply with M_PI to get the result in radians
         uart_two::printf<256>(
-            "cos(%d) * 1000 = %d sin(%d) * 1000 = %d atan2(%d * 1000, %d * 1000) = %d * 1000 == %d * 1000 ? "
+            "cos(%d) * 1000 = %d sin(%d) * 1000 = %d atan2(%d * 1000, %d * 1000) = %d * 10000000 == %d * 10000000 ? "
             "\r\n",
             rdeg, static_cast<int>(float_val * 1000), rdeg, static_cast<int>(float_val2 * 1000),
             static_cast<int>((float)v.y() * 1000), static_cast<int>((float)v.x() * 1000),
-            static_cast<int>(float_val3 * 1000), static_cast<int>(std::atan2(float_val2, float_val) * 1000));
+            static_cast<int>(float_val3 * 10000000), static_cast<int>(std::atan2(float_val2, float_val) * 10000000));
         deg = (deg + 1) % 360;
         delay_ms(50);
         // memory(LPUART_BASE + 0x20) |= (1u << 2u);
