@@ -39,7 +39,7 @@ namespace hal::cordic {
 
     enum class operation_type { single, pipeline };
 
-    enum class cordic_algorithm_precision : uint8_t { normal = 6u };
+    enum class cordic_algorithm_precision : uint8_t { normal = 3u };
 
     template<typename config, operation_type Type, functions Function>
     class operation final {};
@@ -213,6 +213,10 @@ namespace hal::cordic {
             Detail::range{.upper_bound = 3.0f - std::numeric_limits<float>::min(), .lower_bound = 1.0f, .scale = 2},
             Detail::range{.upper_bound = 7.0f - std::numeric_limits<float>::min(), .lower_bound = 3.0f, .scale = 3},
             Detail::range{.upper_bound = 9.35f, .lower_bound = 7.0f, .scale = 4}};
+
+        static inline constexpr std::array<float, 4> prepared_inversed_scales{
+            1.0f / constexpr_pow(2.0f, 1u), 1.0f / constexpr_pow(2.0f, 2u), 1.0f / constexpr_pow(2.0f, 3u),
+            1.0f / constexpr_pow(2.0f, 4u)};
     };
 
     template<typename Config>
@@ -231,6 +235,9 @@ namespace hal::cordic {
             Detail::range{.upper_bound = 0.75f - std::numeric_limits<float>::min(), .lower_bound = 0.027f, .scale = 0},
             Detail::range{.upper_bound = 1.75f - std::numeric_limits<float>::min(), .lower_bound = 0.75f, .scale = 1},
             Detail::range{.upper_bound = 2.341f, .lower_bound = 1.75f, .scale = 2}};
+
+        static inline constexpr std::array<float, 3> prepared_inversed_scales{
+            1.0f / constexpr_pow(2.0f, 0u), 1.0f / constexpr_pow(2.0f, 1u), 1.0f / constexpr_pow(2.0f, 2u)};
     };
 
     template<typename Config>

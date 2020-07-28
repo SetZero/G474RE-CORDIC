@@ -11,6 +11,21 @@
 
 #include "hal/hal_info.h"
 
+template<typename T, typename T2>
+requires(std::unsigned_integral<T2>)
+constexpr auto constexpr_pow(T lhs, T2 rhs) {
+    if (rhs == 0) {
+        return T(1);
+    }
+
+    auto result = lhs;
+    for (T2 i = 1; i < rhs; ++i) {
+        result *= lhs;
+    }
+
+    return result;
+}
+
 template<auto bit, typename T>
 void set_bit(T *value) {
     *value = *value | (1u << static_cast<uint8_t>(bit));

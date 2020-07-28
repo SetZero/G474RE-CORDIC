@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "utils.h"
+
 enum struct precision : uint8_t { q1_15, q1_31 };
 
 namespace Detail {
@@ -40,18 +42,41 @@ struct scales<bounds, std::integer_sequence<decltype(FirstInt), FirstInt, Ints..
                              .scale = scale};
     }
 
+    static inline constexpr float calc_scale(unsigned int scale) { return constexpr_pow(2.0f, scale); }
+
+    static inline constexpr float calc_inverse_scale(unsigned int scale) {
+        return static_cast<float>(1.0f / calc_scale(scale));
+    }
+
     static inline constexpr std::array ranges{calc_range(FirstInt), calc_range(Ints)...};
+
+    static inline constexpr std::array<float, sizeof...(Ints) + 1> prepared_inversed_scales{
+        calc_inverse_scale(FirstInt), calc_inverse_scale(Ints)...};
+
+    static inline constexpr std::array<float, sizeof...(Ints) + 1> prepared_scales{calc_scale(FirstInt),
+                                                                                   calc_scale(Ints)...};
 };
 
 template<typename ScalesType>
-static inline constexpr auto find_smallest_scale(float value) {
-    for (const auto &current_range : ScalesType::ranges) {
-        if (current_range.contains(value)) {
-            return current_range.scale;
+static inline constexpr auto find_smallest_scale_index(float value) {
+    for (auto i = 0u; i < ScalesType::ranges.size() - 1; ++i) {
+        if (ScalesType::ranges[i].contains(value)) {
+            return i;
         }
     }
 
-    return ScalesType::ranges[ScalesType::ranges.size() - 1].scale;
+    return ScalesType::ranges.size() - 1;
+}
+
+template<typename ScalesType>
+static inline constexpr auto find_scale_index(uint8_t scale) {
+    for (auto i = 0u; i < ScalesType::ranges.size() - 1; ++i) {
+        if (ScalesType::ranges[i].scale == scale) {
+            return i;
+        }
+    }
+
+    return ScalesType::ranges.size() - 1;
 }
 
 enum class fixed_point_type : uint32_t {};
@@ -76,15 +101,20 @@ namespace Detail {
         static inline constexpr auto lower_bound = allowed_range::lower_bound;
         static inline constexpr auto upper_bound = allowed_range::upper_bound;
 
+        static inline constexpr auto two_raised_by_fractional_bit =
+            constexpr_pow<uint32_t, decltype(fractional_bit)>(2, fractional_bit);
+        static inline constexpr auto two_raised_by_negative_fractional_bit =
+            1.0f / static_cast<float>(two_raised_by_fractional_bit);
+
         static_assert(integer_bit >= 0, "There has to be at least one bit for the sign in this implementation");
 
        private:
-        template<typename T>
-        constexpr void set_to_value(T value) {
-            m_scale = find_smallest_scale<scales_lookup>(value);
-            value *= static_cast<T>(std::pow(2.0, -m_scale));
-            value = std::clamp<T>(value, lower_bound, upper_bound);
-            m_value = static_cast<type>(std::round(value * static_cast<type>(std::pow(2, fractional_bit))));
+        constexpr void set_to_value(float value) {
+            const auto scale_index = find_smallest_scale_index<scales_lookup>(value);
+            m_scale = scales_lookup::ranges[scale_index].scale;
+            value *= scales_lookup::prepared_inversed_scales[scale_index];
+            value = std::clamp<float>(value, lower_bound, upper_bound);
+            m_value = static_cast<type>(std::round(value * two_raised_by_fractional_bit));
         }
 
        public:
@@ -116,8 +146,8 @@ namespace Detail {
 
         template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
         constexpr explicit operator T() const {
-            return static_cast<type>(m_value) * static_cast<T>(powf(2.0f, -fractional_bit)) *
-                   static_cast<T>(std::pow(2, m_scale)) * m_soft_scale;
+            return static_cast<type>(m_value) * two_raised_by_negative_fractional_bit * static_cast<T>(1 << m_scale) *
+                   m_soft_scale;
         }
 
         template<typename T, std::enable_if_t<sizeof(T) >= sizeof(type) && std::is_unsigned_v<T>, int> = 0>
@@ -131,6 +161,7 @@ namespace Detail {
 
        private:
         type m_value = 0;
+        size_t m_scale_index = 0;
         uint8_t m_scale = 0;
         float m_soft_scale = 1.0f;
     };
