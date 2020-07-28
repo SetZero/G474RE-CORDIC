@@ -191,10 +191,10 @@ void init_lpuart_pin() {
 void init_lpuart() {
     hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
         ->apb12.add<hal::stm::stm32g4::mcu_info::APBENR::APB1ENR2::LPUART1EN>();
-    // memory(LPUART_BASE + LPUART_CR1) |= (1u << 29u);            // enable fifo
-    // memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 28u);           //  1 Start bit, 8 Data bits, n Stop bit
-    // memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
-    //memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 10u);           //  no parity
+    memory(LPUART_BASE + LPUART_CR1) |= (1u << 29u);            // enable fifo
+    memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 28u);           //  1 Start bit, 8 Data bits, n Stop bit
+    memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
+    memory(LPUART_BASE + LPUART_CR1) &= ~(1u << 10u);           //  no parity
     memory(LPUART_BASE + LPUART_CR2) &= ~(0b11u << 12u);        // 1 stop bit
     memory(LPUART_BASE + LPUART_BRR) = 16'000'000u / (115200);  // 115200 baud
     memory(LPUART_BASE + LPUART_CR1) |= (1u << 0u);             // enable uart
@@ -227,17 +227,17 @@ void init_uart_pin() {
 
 template<auto base_addr>
 void init_uart() {
-    if constexpr (base_addr == UART_BASE) {
+    /*if constexpr (base_addr == UART_BASE) {
         hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
             ->apb2.add<hal::stm::stm32g4::mcu_info::APBENR::APB2ENR::USART1EN>();
     } else {
         hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
             ->apb11.add<hal::stm::stm32g4::mcu_info::APBENR::APB1ENR1::USART2EN>();
-    }
+    }*/
     memory(base_addr + UART_CR1) &= ~(1u << 28u);           //  1 Start bit, 8 Data bits, n Stop bit
     memory(base_addr + UART_CR1) &= ~(1u << 12u);           //  1 Start bit, 8 Data bits, n Stop bit
-    memory(base_addr + UART_BRR) = 16'000'000u / (115200);  // 115200 baud
     memory(base_addr + UART_CR2) &= ~(0b11u << 12u);        // 9600 baud
+    memory(base_addr + UART_BRR) = 16'000'000u / (115200);  // 115200 baud
     memory(base_addr + UART_CR3) = 0;
     memory(base_addr + UART_CR1) |= (1u << 0u);  // enable uart
     memory(base_addr + UART_CR1) |= (1u << 3u);  // enable tx
@@ -272,7 +272,7 @@ int main() {
 
     using txpin = port_a::pin<2>;
     using rxpin = port_a::pin<3>;
-    uart_two::init<txpin, rxpin, 9600, 8>();
+    uart_two::init<txpin, rxpin, 9600>();
 
     // init_uart_pin<9u, 10u, mcu_ns::uart_nr::one>();
     // init_uart<UART_BASE>();
