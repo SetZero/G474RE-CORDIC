@@ -1,15 +1,15 @@
 #pragma once
 
-#include <hal/hal_info.h>
-
 #include <algorithm>
 #include <array>
 #include <climits>
 #include <concepts>
 #include <cstdint>
 #include <tuple>
-#include <utility>
 #include <type_traits>
+#include <utility>
+
+#include "hal/hal_info.h"
 
 template<auto bit, typename T>
 void set_bit(T *value) {
@@ -133,7 +133,7 @@ namespace Detail {
     struct integral_equivalent<T, true> {
         using type = std::underlying_type_t<T>;
     };
-}
+}  // namespace Detail
 
 template<typename T>
 using integral_equivalent = typename Detail::integral_equivalent<T, std::is_enum_v<T>>::type;

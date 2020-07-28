@@ -164,7 +164,7 @@ namespace hal::stm::stm32g4::cordic {
 
         template<typename qtype>
         [[nodiscard]] qtype read_arg(uint8_t scale = 0) {
-            return qtype(hw_register, scale);
+            return qtype(fixed_point_type{hw_register}, scale);
         }
 
        private:
