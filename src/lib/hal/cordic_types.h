@@ -263,6 +263,8 @@ class vec2 {
             m_soft_scale = std::max<decltype(x.value)>(std::fabs(x.value), std::fabs(y.value)) * 1.15f;
             m_x = x.value / m_soft_scale;
             m_y = y.value / m_soft_scale;
+            m_x.soft_scale(m_soft_scale);
+            m_y.soft_scale(m_soft_scale);
         } else {
             m_x = x.value;
             m_y = y.value;

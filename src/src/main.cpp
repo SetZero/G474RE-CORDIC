@@ -107,15 +107,15 @@ int main() {
         auto fixed_val9 = cordic_one::calculate(op9).result();
         auto fixed_val10 = cordic_one::calculate(op10).result();
 
-        auto float_val3 = static_cast<float>(fixed_val3);
-        auto float_val4 = static_cast<float>(fixed_val4);
-        auto float_val5 = static_cast<float>(fixed_val5);
-        auto float_val6 = static_cast<float>(fixed_val6);
-        auto float_val7 = static_cast<float>(fixed_val7);
-        auto float_val8 = static_cast<float>(fixed_val8);
-        auto float_val9 = static_cast<float>(fixed_val9);
-        auto float_val10 = static_cast<float>(fixed_val10);
-        auto cordic_timer = static_cast<int>(get_counter_value());
+        volatile auto float_val3 = static_cast<float>(fixed_val3);
+        volatile auto float_val4 = static_cast<float>(fixed_val4);
+        volatile auto float_val5 = static_cast<float>(fixed_val5);
+        volatile auto float_val6 = static_cast<float>(fixed_val6);
+        volatile auto float_val7 = static_cast<float>(fixed_val7);
+        volatile auto float_val8 = static_cast<float>(fixed_val8);
+        volatile auto float_val9 = static_cast<float>(fixed_val9);
+        volatile auto float_val10 = static_cast<float>(fixed_val10);
+        volatile auto cordic_timer = static_cast<int>(get_counter_value());
 
         reset_counter();
         volatile auto v1 [[gnu::unused]] = std::cos(rdeg);
