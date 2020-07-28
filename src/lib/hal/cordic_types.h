@@ -22,6 +22,11 @@ namespace Detail {
         static inline constexpr float target_range_upper_bound = 1.0f;
         static inline constexpr float target_range_lower_bound = -1.0f;
     };
+
+    struct hyperbolic_bounds {
+        static inline constexpr float target_range_upper_bound = 0.559f;
+        static inline constexpr float target_range_lower_bound = -0.559f;
+    };
 }  // namespace Detail
 
 template<typename bounds, typename IndexType, auto... Ints>

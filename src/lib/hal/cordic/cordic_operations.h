@@ -1,7 +1,8 @@
 #pragma once
 
-#include "hal/cordic_types.h"
 #include <cmath>
+
+#include "hal/cordic_types.h"
 
 namespace hal::cordic {
     enum struct functions : uint8_t {
@@ -170,7 +171,58 @@ namespace hal::cordic {
         argument_type m_arg{};
     };
 
-    // TODO: add multiple results
+    template<typename Config>
+    class operation<Config, operation_type::single, functions::hyperbolic_cosine> final {
+       public:
+        using config_type = Config;
+        using thiz_type = operation<Config, operation_type::single, functions::hyperbolic_cosine>;
+        using result_type =
+            operation_result<typename config_type::qtype, operation_type::single, functions::hyperbolic_cosine>;
+
+        using argument_type = typename config_type::scaled_qtype<
+            scales<Detail::hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
+
+        static inline constexpr auto num_args = nargs::one;
+
+        thiz_type &arg(const argument_type &arg) {
+            m_arg = arg;
+            return *this;
+        }
+
+        auto arg1() const { return m_arg; }
+
+        auto scale() const { return m_arg.scale(); }
+
+       private:
+        argument_type m_arg{};
+    };
+
+    template<typename Config>
+    class operation<Config, operation_type::single, functions::hyperbolic_sine> final {
+       public:
+        using config_type = Config;
+        using thiz_type = operation<Config, operation_type::single, functions::hyperbolic_sine>;
+        using result_type =
+            operation_result<typename config_type::qtype, operation_type::single, functions::hyperbolic_sine>;
+
+        using argument_type = typename config_type::scaled_qtype<
+            scales<Detail::hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
+
+        static inline constexpr auto num_args = nargs::one;
+
+        thiz_type &arg(const argument_type &arg) {
+            m_arg = arg;
+            return *this;
+        }
+
+        auto arg1() const { return m_arg; }
+
+        auto scale() const { return m_arg.scale(); }
+
+       private:
+        argument_type m_arg{};
+    };
+
     template<typename ResultType>
     class operation_result<ResultType, operation_type::single, functions::cosine> final {
        public:
@@ -298,6 +350,60 @@ namespace hal::cordic {
 
        private:
         ResultType m_result;
+    };
+
+    template<typename ResultType>
+    class operation_result<ResultType, operation_type::single, functions::hyperbolic_cosine> final {
+       public:
+        using result_type = ResultType;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::hyperbolic_cosine>;
+
+        static inline constexpr auto num_res = nres::two;
+
+        thiz_type &result(ResultType result) {
+            m_result = result;
+            return *this;
+        }
+
+        thiz_type &secondary_result(ResultType result) {
+            m_secondary_result = result;
+            return *this;
+        }
+
+        result_type result() const { return m_result; }
+
+        result_type secondary_result() const { return m_secondary_result; }
+
+       private:
+        ResultType m_result;
+        ResultType m_secondary_result;
+    };
+
+    template<typename ResultType>
+    class operation_result<ResultType, operation_type::single, functions::hyperbolic_sine> final {
+       public:
+        using result_type = ResultType;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::hyperbolic_sine>;
+
+        static inline constexpr auto num_res = nres::two;
+
+        thiz_type &result(ResultType result) {
+            m_result = result;
+            return *this;
+        }
+
+        thiz_type &secondary_result(ResultType result) {
+            m_secondary_result = result;
+            return *this;
+        }
+
+        result_type result() const { return m_result; }
+
+        result_type secondary_result() const { return m_secondary_result; }
+
+       private:
+        ResultType m_result;
+        ResultType m_secondary_result;
     };
 
 }  // namespace hal::cordic
