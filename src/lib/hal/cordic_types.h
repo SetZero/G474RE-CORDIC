@@ -53,7 +53,10 @@ struct scales<bounds, std::integer_sequence<decltype(FirstInt), FirstInt, Ints..
     }
 };
 
+enum class fixed_point_type : uint32_t {};
+
 namespace Detail {
+
     template<uint8_t all_bits>
     using internal_type = std::conditional_t<
         (all_bits <= 8), int8_t,
@@ -90,23 +93,30 @@ namespace Detail {
             set_to_value(value);
         }
 
-        // TODO: own type to initialize with fixed integer, otherwise when calling constructor with a regular integer, meant as normal number this can be error prone
-        template<typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+        template<typename T, std::enable_if_t<std::is_same_v<T, fixed_point_type>, int> = 0>
         constexpr explicit q_number(T value, uint8_t scale = 0) {
-            m_value = value;
+            m_value = static_cast<decltype(m_value)>(value);
             m_scale = scale;
         }
 
         template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
-        q_number &operator=(T value) {
+        constexpr q_number &operator=(T value) {
             set_to_value(value);
+
+            return *this;
+        }
+
+        template<typename T>
+        constexpr q_number &soft_scale(T soft_scale) {
+            m_soft_scale = static_cast<T>(soft_scale);
 
             return *this;
         }
 
         template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
         constexpr explicit operator T() const {
-            return static_cast<type>(m_value) * static_cast<T>(powf(2.0f, -fractional_bit)) * static_cast<T>(std::pow(2, m_scale));
+            return static_cast<type>(m_value) * static_cast<T>(powf(2.0f, -fractional_bit)) *
+                   static_cast<T>(std::pow(2, m_scale)) * m_soft_scale;
         }
 
         template<typename T, std::enable_if_t<sizeof(T) >= sizeof(type) && std::is_unsigned_v<T>, int> = 0>
@@ -116,9 +126,12 @@ namespace Detail {
 
         constexpr auto scale() const { return m_scale; }
 
+        constexpr auto soft_scale() const { return m_soft_scale; }
+
        private:
         type m_value = 0;
         uint8_t m_scale = 0;
+        float m_soft_scale = 1.0f;
     };
 
 }  // namespace Detail

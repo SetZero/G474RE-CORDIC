@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hal/cordic_types.h"
+#include <cmath>
 
 namespace hal::cordic {
     enum struct functions : uint8_t {
@@ -234,6 +235,7 @@ namespace hal::cordic {
 
         thiz_type &result(ResultType result) {
             m_result = result;
+            m_result.soft_scale(M_PI);
             return *this;
         }
 
@@ -266,6 +268,7 @@ namespace hal::cordic {
 
         thiz_type &secondary_result(ResultType result) {
             m_secondary_result = result;
+            m_secondary_result.soft_scale(M_PI);
             return *this;
         }
 

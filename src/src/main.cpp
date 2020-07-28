@@ -317,8 +317,7 @@ int main() {
         op3.arg(v);
         op5.arg(v);
 
-        auto float_val3 = static_cast<float>(cordic_one::calculate(op3).result()) *
-                          static_cast<float>(M_PI);  // One has to multiply with M_PI to get the result in radians
+        auto float_val3 = static_cast<float>(cordic_one::calculate(op3).result());
         auto float_val4 = static_cast<float>(cordic_one::calculate(op5).result());
         auto float_val5 = static_cast<float>(cordic_one::calculate(op4).result());
         uart_two::printf<256>(
