@@ -84,7 +84,7 @@ namespace hal::cordic {
         static inline constexpr auto num_args = args_type::num_args;
         static inline constexpr auto function = Function;
 
-        using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::cosine>;
+        using result_type = operation_result<typename config_type::qtype, operation_type::single, Function>;
 
         thiz_type &arg1(const typename args_type::first_arg_type &arg1) {
             m_args.m_arg1 = arg1;
@@ -153,11 +153,7 @@ namespace hal::cordic {
             general_operation<Config, operation_type::single, functions::hyperbolic_cosine,
                               general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
 
-        // Preset modulus to 1.0f
-        static inline constexpr auto create() {
-            type res{};
-            return res;
-        }
+        static inline constexpr auto create() { return type{}; }
     };
 
     template<typename Config>
@@ -169,11 +165,7 @@ namespace hal::cordic {
             general_operation<Config, operation_type::single, functions::hyperbolic_sine,
                               general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
 
-        // Preset modulus to 1.0f
-        static inline constexpr auto create() {
-            type res{};
-            return res;
-        }
+        static inline constexpr auto create() { return type{}; }
     };
 
     template<typename Config>
@@ -185,11 +177,7 @@ namespace hal::cordic {
             general_operation<Config, operation_type::single, functions::arctanh, general_operation_args<argument_type>,
                               general_operation_res<typename Config::qtype>>;
 
-        // Preset modulus to 1.0f
-        static inline constexpr auto create() {
-            type res{};
-            return res;
-        }
+        static inline constexpr auto create() { return type{}; }
     };
 
     template<typename Config>
@@ -198,14 +186,39 @@ namespace hal::cordic {
             scales<Detail::normal_bounds, std::integer_sequence<unsigned int, 0, 1, 2, 3, 4, 5, 6, 7>>>;
 
         using type =
-            general_operation<Config, operation_type::single, functions::arctangent, general_operation_args<argument_type>,
-                              general_operation_res<typename Config::qtype>>;
+            general_operation<Config, operation_type::single, functions::arctangent,
+                              general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
 
-        // Preset modulus to 1.0f
-        static inline constexpr auto create() {
-            type res{};
-            return res;
+        static inline constexpr auto create() { return type{}; }
+    };
+
+    struct natural_logarithm_scales {
+        static inline constexpr std::array ranges{
+            Detail::range{.upper_bound = 1.0f - std::numeric_limits<float>::min(), .lower_bound = 0.107f, .scale = 1},
+            Detail::range{.upper_bound = 3.0f - std::numeric_limits<float>::min(), .lower_bound = 1.0f, .scale = 2},
+            Detail::range{.upper_bound = 7.0f - std::numeric_limits<float>::min(), .lower_bound = 3.0f, .scale = 3},
+            Detail::range{.upper_bound = 9.35f, .lower_bound = 7.0f, .scale = 4}};
+
+        static inline constexpr auto find_smallest_scale(float value) {
+            for (const auto &current_range : ranges) {
+                if (current_range.contains(value)) {
+                    return current_range.scale;
+                }
+            }
+
+            return ranges[ranges.size() - 1].scale;
         }
+    };
+
+    template<typename Config>
+    struct create_op_helper<Config, functions::natural_logarithm> {
+        using argument_type = typename Config::scaled_qtype<natural_logarithm_scales>;
+
+        using type =
+            general_operation<Config, operation_type::single, functions::natural_logarithm,
+                              general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
+
+        static inline constexpr auto create() { return type{}; }
     };
 
     template<typename Config, functions Function>
@@ -456,6 +469,27 @@ namespace hal::cordic {
 
         thiz_type &result(ResultType result) {
             m_result = result;
+            return *this;
+        }
+
+        result_type result() const { return m_result; }
+
+       private:
+        ResultType m_result;
+    };
+
+    template<typename ResultType>
+    class operation_result<ResultType, operation_type::single, functions::natural_logarithm> final {
+       public:
+        using result_type = ResultType;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::natural_logarithm>;
+
+        static inline constexpr auto num_res = nres::one;
+
+        thiz_type &result(ResultType result) {
+            m_result = result;
+            m_result.soft_scale(2);
+
             return *this;
         }
 

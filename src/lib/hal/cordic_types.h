@@ -32,6 +32,11 @@ namespace Detail {
         static inline constexpr float target_range_upper_bound = 0.403f;
         static inline constexpr float target_range_lower_bound = -0.403f;
     };
+
+    struct nat_log_bounds {
+        static inline constexpr float target_range_upper_bound = 0.875f;
+        static inline constexpr float target_range_lower_bound = 0.054f;
+    };
 }  // namespace Detail
 
 template<typename bounds, typename IndexType, auto... Ints>
@@ -118,7 +123,7 @@ namespace Detail {
 
         template<typename T>
         constexpr q_number &soft_scale(T soft_scale) {
-            m_soft_scale = static_cast<T>(soft_scale);
+            m_soft_scale = static_cast<decltype(m_soft_scale)>(soft_scale);
 
             return *this;
         }
