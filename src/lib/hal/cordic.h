@@ -15,14 +15,14 @@ namespace hal::cordic {
         static inline constexpr auto cordic_register = hal::address<typename mcu::CORDIC, CordicNr>;
         using cordic_control_register_type = std::remove_pointer_t<decltype(cordic_register()->csr)>;
 
-        template<typename config, operation_type type, functions function>
-        static typename operation<config, type, function>::result_type calculate(
-            const operation<config, type, function> &op) {
+        template<typename OperationType>
+        static constexpr auto calculate(const OperationType &op) {
             using op_type = std::decay_t<decltype(op)>;
+            using config = typename op_type::config_type;
             using op_result = typename op_type::result_type;
 
             cordic_register()
-                ->csr.template set_function_mode<cordic_control_register_type::template map_function<function>()>();
+                ->csr.template set_function_mode<cordic_control_register_type::template map_function<op_type::function>()>();
 
             // TODO: configure this differently, maybe most efficient, always use one register value, when q1_15 is used
             cordic_register()->csr.set_argument_size(config::precision);

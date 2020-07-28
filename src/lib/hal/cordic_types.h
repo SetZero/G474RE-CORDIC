@@ -27,6 +27,11 @@ namespace Detail {
         static inline constexpr float target_range_upper_bound = 0.559f;
         static inline constexpr float target_range_lower_bound = -0.559f;
     };
+
+    struct hyperbolic_atan_bounds {
+        static inline constexpr float target_range_upper_bound = 0.403f;
+        static inline constexpr float target_range_lower_bound = -0.403f;
+    };
 }  // namespace Detail
 
 template<typename bounds, typename IndexType, auto... Ints>
@@ -190,7 +195,7 @@ class ranged_angle {
     template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     constexpr explicit ranged_angle(const T &value) : m_value(value / static_cast<T>(M_PI)) {}
 
-    constexpr ranged_angle(degrees d) : m_value(Detail::float_type<p>(d) / Detail::float_type<p>(180.0)) {}
+    constexpr ranged_angle(degrees d = degrees{0}) : m_value(Detail::float_type<p>(d) / Detail::float_type<p>(180.0)) {}
 
     template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
     constexpr explicit operator T() const {
@@ -199,6 +204,13 @@ class ranged_angle {
 
     // TODO: add output to degrees
     constexpr explicit operator type() const { return m_value; }
+
+    constexpr auto scale() const { return m_value.scale(); }
+
+    template<typename T>
+    auto fixed_point_value() const {
+        return m_value.template fixed_point_value<T>();
+    }
 
    private:
     type m_value;
