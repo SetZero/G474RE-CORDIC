@@ -18,16 +18,11 @@ namespace Detail {
         constexpr inline auto contains(float value) const { return upper_bound > value && lower_bound < value; }
     };
 
-    struct normal_bounds {
-        static inline constexpr float target_range_upper_bound = 1.0f;
-        static inline constexpr float target_range_lower_bound = -1.0f;
-    };
-
-    struct hyperbolic_bounds {
-        static inline constexpr float target_range_upper_bound = 0.559f;
-        static inline constexpr float target_range_lower_bound = -0.559f;
-    };
 }  // namespace Detail
+struct normal_bounds {
+    static inline constexpr float target_range_upper_bound = 1.0f;
+    static inline constexpr float target_range_lower_bound = -1.0f;
+};
 
 template<typename bounds, typename IndexType, auto... Ints>
 struct scales {};
@@ -46,17 +41,18 @@ struct scales<bounds, std::integer_sequence<decltype(FirstInt), FirstInt, Ints..
     }
 
     static inline constexpr std::array ranges{calc_range(FirstInt), calc_range(Ints)...};
-
-    static inline constexpr auto find_smallest_scale(float value) {
-        for (const auto &current_range : ranges) {
-            if (current_range.contains(value)) {
-                return current_range.scale;
-            }
-        }
-
-        return ranges[ranges.size() - 1].scale;
-    }
 };
+
+template<typename ScalesType>
+static inline constexpr auto find_smallest_scale(float value) {
+    for (const auto &current_range : ScalesType::ranges) {
+        if (current_range.contains(value)) {
+            return current_range.scale;
+        }
+    }
+
+    return ScalesType::ranges[ScalesType::ranges.size() - 1].scale;
+}
 
 enum class fixed_point_type : uint32_t {};
 
@@ -85,7 +81,7 @@ namespace Detail {
        private:
         template<typename T>
         constexpr void set_to_value(T value) {
-            m_scale = scales_lookup::find_smallest_scale(value);
+            m_scale = find_smallest_scale<scales_lookup>(value);
             value *= static_cast<T>(std::pow(2.0, -m_scale));
             value = std::clamp<T>(value, lower_bound, upper_bound);
             m_value = static_cast<type>(std::round(value * static_cast<type>(std::pow(2, fractional_bit))));
@@ -113,7 +109,7 @@ namespace Detail {
 
         template<typename T>
         constexpr q_number &soft_scale(T soft_scale) {
-            m_soft_scale = static_cast<T>(soft_scale);
+            m_soft_scale = static_cast<decltype(m_soft_scale)>(soft_scale);
 
             return *this;
         }
@@ -141,7 +137,7 @@ namespace Detail {
 
 }  // namespace Detail
 
-using normal_scales = scales<Detail::normal_bounds, std::integer_sequence<unsigned int, 0>>;
+using normal_scales = scales<normal_bounds, std::integer_sequence<unsigned int, 0>>;
 
 template<uint8_t integer_bit, uint8_t fractional_bit, typename bounds = Detail::normal_fixed_range,
          typename allowed_scales = normal_scales>
@@ -190,7 +186,7 @@ class ranged_angle {
     template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     constexpr explicit ranged_angle(const T &value) : m_value(value / static_cast<T>(M_PI)) {}
 
-    constexpr ranged_angle(degrees d) : m_value(Detail::float_type<p>(d) / Detail::float_type<p>(180.0)) {}
+    constexpr ranged_angle(degrees d = degrees{0}) : m_value(Detail::float_type<p>(d) / Detail::float_type<p>(180.0)) {}
 
     template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
     constexpr explicit operator T() const {
@@ -199,6 +195,13 @@ class ranged_angle {
 
     // TODO: add output to degrees
     constexpr explicit operator type() const { return m_value; }
+
+    constexpr auto scale() const { return m_value.scale(); }
+
+    template<typename T>
+    auto fixed_point_value() const {
+        return m_value.template fixed_point_value<T>();
+    }
 
    private:
     type m_value;

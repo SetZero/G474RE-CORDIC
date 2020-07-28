@@ -18,6 +18,21 @@ namespace hal::cordic {
         square_root
     };
 
+    struct hyperbolic_bounds {
+        static inline constexpr float target_range_upper_bound = 0.559f;
+        static inline constexpr float target_range_lower_bound = -0.559f;
+    };
+
+    struct hyperbolic_atan_bounds {
+        static inline constexpr float target_range_upper_bound = 0.403f;
+        static inline constexpr float target_range_lower_bound = -0.403f;
+    };
+
+    struct nat_log_bounds {
+        static inline constexpr float target_range_upper_bound = 0.875f;
+        static inline constexpr float target_range_lower_bound = 0.054f;
+    };
+
     enum struct nargs : uint8_t { one = 1, two = 2 };
 
     enum struct nres : uint8_t { one = 1, two = 2 };
@@ -25,6 +40,12 @@ namespace hal::cordic {
     enum class operation_type { single, pipeline };
 
     enum class cordic_algorithm_precision : uint8_t { normal = 6u };
+
+    template<typename config, operation_type Type, functions Function>
+    class operation final {};
+
+    template<typename ResultType, operation_type Type, functions Function>
+    class operation_result final {};
 
     template<precision P, cordic_algorithm_precision A = cordic_algorithm_precision::normal>
     class cordic_config final {
@@ -38,64 +59,195 @@ namespace hal::cordic {
         static inline constexpr auto calculation_precision = A;
     };
 
-    template<typename config, operation_type Type, functions Function>
-    class operation final {};
+    template<typename FirstArgType, typename SecondArgType = void>
+    struct general_operation_args final {
+        using first_arg_type = FirstArgType;
+        using second_arg_type = SecondArgType;
 
-    template<typename ResultType, operation_type Type, functions Function>
-    class operation_result final {};
+        static inline constexpr nargs num_args = nargs::two;
+        first_arg_type m_arg1;
+        second_arg_type m_arg2;
+    };
 
-    // TODO: consider renaming functions to set args (angle and modulus in this case)
-    template<typename Config>
-    class operation<Config, operation_type::single, functions::cosine> final {
+    template<typename FirstArgType>
+    struct general_operation_args<FirstArgType, void> final {
+        using first_arg_type = FirstArgType;
+        using second_arg_type = void;
+
+        static inline constexpr nargs num_args = nargs::one;
+
+        first_arg_type m_arg1;
+    };
+
+    template<typename FirstResType, typename SecondResType = void>
+    struct general_operation_res final {
+        using first_res_type = FirstResType;
+        using second_res_type = SecondResType;
+
+        static inline constexpr uint8_t num_res = 1 + !std::is_same_v<SecondResType, void>;
+    };
+
+    template<typename Config, operation_type Type, functions Function, typename GeneralOperationArgs,
+             typename GeneralOperationResult>
+    class general_operation final {
        public:
         using config_type = Config;
-        using thiz_type = operation<Config, operation_type::single, functions::cosine>;
-        using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::cosine>;
-        using angle_type = angle<config_type::precision>;
+        using thiz_type = general_operation<Config, Type, Function, GeneralOperationArgs, GeneralOperationResult>;
+        using args_type = GeneralOperationArgs;
+        using res_type = GeneralOperationResult;
 
-        static inline constexpr auto num_args = nargs::two;
+        static inline constexpr auto num_args = args_type::num_args;
+        static inline constexpr auto function = Function;
 
-        thiz_type &arg1(angle_type angle) {
-            m_angle = angle;
+        using result_type = operation_result<typename config_type::qtype, operation_type::single, Function>;
+
+        thiz_type &arg1(const typename args_type::first_arg_type &arg1) {
+            m_args.m_arg1 = arg1;
             return *this;
         }
 
-        auto arg1() const { return static_cast<typename config_type::qtype>(m_angle); }
-
-        auto arg2() const { return m_modulus; }
-
-        auto scale() const { return 0u; }
-
-       private:
-        angle_type m_angle{0.0f};
-        typename config_type::qtype m_modulus{1.0f};
-    };
-
-    template<typename Config>
-    class operation<Config, operation_type::single, functions::sine> final {
-       public:
-        using config_type = Config;
-        using thiz_type = operation<Config, operation_type::single, functions::sine>;
-        using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::sine>;
-        using angle_type = angle<config_type::precision>;
-
-        static inline constexpr auto num_args = nargs::two;
-
-        thiz_type &arg1(angle_type angle) {
-            m_angle = angle;
+        template<typename T, std::enable_if_t<!std::is_convertible_v<T, typename args_type::second_arg_type> ||
+                                                  std::is_same_v<T, typename args_type::second_arg_type>,
+                                              int> = 0>
+        thiz_type &arg2(const T &value) {
+            m_args.m_arg2 = value;
             return *this;
         }
 
-        auto arg1() const { return static_cast<typename config_type::qtype>(m_angle); }
+        constexpr auto arg1() const { return m_args.m_arg1; }
 
-        auto arg2() const { return m_modulus; }
+        constexpr auto arg2() const { return m_args.m_arg2; }
 
-        auto scale() const { return 0u; }
+        constexpr uint8_t scale() const { return m_args.m_arg1.scale(); }
 
        private:
-        angle_type m_angle{0.0f};
-        typename config_type::qtype m_modulus{1.0f};
+        args_type m_args;
     };
+
+    template<typename Config, functions Function>
+    struct create_op_helper {
+        using type = operation<Config, operation_type::single, Function>;
+
+        static inline constexpr auto create() { return type{}; }
+    };
+
+    template<typename Config>
+    struct create_op_helper<Config, functions::cosine> {
+        using type = general_operation<Config, operation_type::single, functions::cosine,
+                                       general_operation_args<angle<Config::precision>, typename Config::qtype>,
+                                       general_operation_res<typename Config::qtype>>;
+
+        // Preset modulus to 1.0f
+        static inline constexpr auto create() {
+            type res{};
+            res.arg2(typename Config::qtype{1.0f});
+            return res;
+        }
+    };
+
+    template<typename Config>
+    struct create_op_helper<Config, functions::sine> {
+        using type = general_operation<Config, operation_type::single, functions::sine,
+                                       general_operation_args<angle<Config::precision>, typename Config::qtype>,
+                                       general_operation_res<typename Config::qtype>>;
+
+        // Preset modulus to 1.0f
+        static inline constexpr auto create() {
+            type res{};
+            res.arg2(typename Config::qtype{1.0f});
+            return res;
+        }
+    };
+
+    template<typename Config>
+    struct create_op_helper<Config, functions::hyperbolic_cosine> {
+        using argument_type =
+            typename Config::scaled_qtype<scales<hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
+
+        using type =
+            general_operation<Config, operation_type::single, functions::hyperbolic_cosine,
+                              general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
+
+        static inline constexpr auto create() { return type{}; }
+    };
+
+    template<typename Config>
+    struct create_op_helper<Config, functions::hyperbolic_sine> {
+        using argument_type =
+            typename Config::scaled_qtype<scales<hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
+
+        using type =
+            general_operation<Config, operation_type::single, functions::hyperbolic_sine,
+                              general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
+
+        static inline constexpr auto create() { return type{}; }
+    };
+
+    template<typename Config>
+    struct create_op_helper<Config, functions::arctanh> {
+        using argument_type =
+            typename Config::scaled_qtype<scales<hyperbolic_atan_bounds, std::integer_sequence<unsigned int, 1>>>;
+
+        using type =
+            general_operation<Config, operation_type::single, functions::arctanh, general_operation_args<argument_type>,
+                              general_operation_res<typename Config::qtype>>;
+
+        static inline constexpr auto create() { return type{}; }
+    };
+
+    template<typename Config>
+    struct create_op_helper<Config, functions::arctangent> {
+        using argument_type = typename Config::scaled_qtype<
+            scales<normal_bounds, std::integer_sequence<unsigned int, 0, 1, 2, 3, 4, 5, 6, 7>>>;
+
+        using type =
+            general_operation<Config, operation_type::single, functions::arctangent,
+                              general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
+
+        static inline constexpr auto create() { return type{}; }
+    };
+
+    struct natural_logarithm_scales {
+        static inline constexpr std::array ranges{
+            Detail::range{.upper_bound = 1.0f - std::numeric_limits<float>::min(), .lower_bound = 0.107f, .scale = 1},
+            Detail::range{.upper_bound = 3.0f - std::numeric_limits<float>::min(), .lower_bound = 1.0f, .scale = 2},
+            Detail::range{.upper_bound = 7.0f - std::numeric_limits<float>::min(), .lower_bound = 3.0f, .scale = 3},
+            Detail::range{.upper_bound = 9.35f, .lower_bound = 7.0f, .scale = 4}};
+    };
+
+    template<typename Config>
+    struct create_op_helper<Config, functions::natural_logarithm> {
+        using argument_type = typename Config::scaled_qtype<natural_logarithm_scales>;
+
+        using type =
+            general_operation<Config, operation_type::single, functions::natural_logarithm,
+                              general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
+
+        static inline constexpr auto create() { return type{}; }
+    };
+
+    struct sqrt_scales {
+        static inline constexpr std::array ranges{
+            Detail::range{.upper_bound = 0.75f - std::numeric_limits<float>::min(), .lower_bound = 0.027f, .scale = 0},
+            Detail::range{.upper_bound = 1.75f - std::numeric_limits<float>::min(), .lower_bound = 0.75f, .scale = 1},
+            Detail::range{.upper_bound = 2.341f, .lower_bound = 1.75f, .scale = 2}};
+    };
+
+    template<typename Config>
+    struct create_op_helper<Config, functions::square_root> {
+        using argument_type = typename Config::scaled_qtype<sqrt_scales>;
+
+        using type =
+            general_operation<Config, operation_type::single, functions::square_root,
+                              general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
+
+        static inline constexpr auto create() { return type{}; }
+    };
+
+    template<typename Config, functions Function>
+    static inline constexpr auto create_cordic_operation() {
+        return create_op_helper<Config, Function>::create();
+    }
 
     template<typename Config>
     class operation<Config, operation_type::single, functions::phase> final {
@@ -104,6 +256,7 @@ namespace hal::cordic {
         using thiz_type = operation<Config, operation_type::single, functions::phase>;
         using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::phase>;
 
+        static inline constexpr auto function = functions::phase;
         static inline constexpr auto num_args = nargs::two;
 
         thiz_type &arg(const vec2<config_type::precision> &v) {
@@ -128,6 +281,7 @@ namespace hal::cordic {
         using thiz_type = operation<Config, operation_type::single, functions::modulus>;
         using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::modulus>;
 
+        static inline constexpr auto function = functions::modulus;
         static inline constexpr auto num_args = nargs::two;
 
         thiz_type &arg(const vec2<config_type::precision> &v) {
@@ -143,84 +297,6 @@ namespace hal::cordic {
 
        private:
         vec2<config_type::precision> m_v{};
-    };
-
-    template<typename Config>
-    class operation<Config, operation_type::single, functions::arctangent> final {
-       public:
-        using config_type = Config;
-        using thiz_type = operation<Config, operation_type::single, functions::arctangent>;
-        using result_type =
-            operation_result<typename config_type::qtype, operation_type::single, functions::arctangent>;
-
-        using argument_type = typename config_type::scaled_qtype<
-            scales<Detail::normal_bounds, std::integer_sequence<unsigned int, 0, 1, 2, 3, 4, 5, 6, 7>>>;
-
-        static inline constexpr auto num_args = nargs::one;
-
-        thiz_type &arg1(const argument_type &arg) {
-            m_arg = arg;
-            return *this;
-        }
-
-        auto arg1() const { return m_arg; }
-
-        auto scale() const { return m_arg.scale(); }
-
-       private:
-        argument_type m_arg{};
-    };
-
-    template<typename Config>
-    class operation<Config, operation_type::single, functions::hyperbolic_cosine> final {
-       public:
-        using config_type = Config;
-        using thiz_type = operation<Config, operation_type::single, functions::hyperbolic_cosine>;
-        using result_type =
-            operation_result<typename config_type::qtype, operation_type::single, functions::hyperbolic_cosine>;
-
-        using argument_type = typename config_type::scaled_qtype<
-            scales<Detail::hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
-
-        static inline constexpr auto num_args = nargs::one;
-
-        thiz_type &arg(const argument_type &arg) {
-            m_arg = arg;
-            return *this;
-        }
-
-        auto arg1() const { return m_arg; }
-
-        auto scale() const { return m_arg.scale(); }
-
-       private:
-        argument_type m_arg{};
-    };
-
-    template<typename Config>
-    class operation<Config, operation_type::single, functions::hyperbolic_sine> final {
-       public:
-        using config_type = Config;
-        using thiz_type = operation<Config, operation_type::single, functions::hyperbolic_sine>;
-        using result_type =
-            operation_result<typename config_type::qtype, operation_type::single, functions::hyperbolic_sine>;
-
-        using argument_type = typename config_type::scaled_qtype<
-            scales<Detail::hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
-
-        static inline constexpr auto num_args = nargs::one;
-
-        thiz_type &arg(const argument_type &arg) {
-            m_arg = arg;
-            return *this;
-        }
-
-        auto arg1() const { return m_arg; }
-
-        auto scale() const { return m_arg.scale(); }
-
-       private:
-        argument_type m_arg{};
     };
 
     template<typename ResultType>
@@ -404,6 +480,65 @@ namespace hal::cordic {
        private:
         ResultType m_result;
         ResultType m_secondary_result;
+    };
+
+    template<typename ResultType>
+    class operation_result<ResultType, operation_type::single, functions::arctanh> final {
+       public:
+        using result_type = ResultType;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::arctanh>;
+
+        static inline constexpr auto num_res = nres::one;
+
+        thiz_type &result(ResultType result) {
+            m_result = result;
+            return *this;
+        }
+
+        result_type result() const { return m_result; }
+
+       private:
+        ResultType m_result;
+    };
+
+    template<typename ResultType>
+    class operation_result<ResultType, operation_type::single, functions::natural_logarithm> final {
+       public:
+        using result_type = ResultType;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::natural_logarithm>;
+
+        static inline constexpr auto num_res = nres::one;
+
+        thiz_type &result(ResultType result) {
+            m_result = result;
+            m_result.soft_scale(2);
+
+            return *this;
+        }
+
+        result_type result() const { return m_result; }
+
+       private:
+        ResultType m_result;
+    };
+
+    template<typename ResultType>
+    class operation_result<ResultType, operation_type::single, functions::square_root> final {
+       public:
+        using result_type = ResultType;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::square_root>;
+
+        static inline constexpr auto num_res = nres::one;
+
+        thiz_type &result(ResultType result) {
+            m_result = result;
+            return *this;
+        }
+
+        result_type result() const { return m_result; }
+
+       private:
+        ResultType m_result;
     };
 
 }  // namespace hal::cordic
