@@ -18,26 +18,11 @@ namespace Detail {
         constexpr inline auto contains(float value) const { return upper_bound > value && lower_bound < value; }
     };
 
-    struct normal_bounds {
-        static inline constexpr float target_range_upper_bound = 1.0f;
-        static inline constexpr float target_range_lower_bound = -1.0f;
-    };
-
-    struct hyperbolic_bounds {
-        static inline constexpr float target_range_upper_bound = 0.559f;
-        static inline constexpr float target_range_lower_bound = -0.559f;
-    };
-
-    struct hyperbolic_atan_bounds {
-        static inline constexpr float target_range_upper_bound = 0.403f;
-        static inline constexpr float target_range_lower_bound = -0.403f;
-    };
-
-    struct nat_log_bounds {
-        static inline constexpr float target_range_upper_bound = 0.875f;
-        static inline constexpr float target_range_lower_bound = 0.054f;
-    };
 }  // namespace Detail
+struct normal_bounds {
+    static inline constexpr float target_range_upper_bound = 1.0f;
+    static inline constexpr float target_range_lower_bound = -1.0f;
+};
 
 template<typename bounds, typename IndexType, auto... Ints>
 struct scales {};
@@ -151,7 +136,7 @@ namespace Detail {
 
 }  // namespace Detail
 
-using normal_scales = scales<Detail::normal_bounds, std::integer_sequence<unsigned int, 0>>;
+using normal_scales = scales<normal_bounds, std::integer_sequence<unsigned int, 0>>;
 
 template<uint8_t integer_bit, uint8_t fractional_bit, typename bounds = Detail::normal_fixed_range,
          typename allowed_scales = normal_scales>

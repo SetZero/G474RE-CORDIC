@@ -18,6 +18,21 @@ namespace hal::cordic {
         square_root
     };
 
+    struct hyperbolic_bounds {
+        static inline constexpr float target_range_upper_bound = 0.559f;
+        static inline constexpr float target_range_lower_bound = -0.559f;
+    };
+
+    struct hyperbolic_atan_bounds {
+        static inline constexpr float target_range_upper_bound = 0.403f;
+        static inline constexpr float target_range_lower_bound = -0.403f;
+    };
+
+    struct nat_log_bounds {
+        static inline constexpr float target_range_upper_bound = 0.875f;
+        static inline constexpr float target_range_lower_bound = 0.054f;
+    };
+
     enum struct nargs : uint8_t { one = 1, two = 2 };
 
     enum struct nres : uint8_t { one = 1, two = 2 };
@@ -147,7 +162,7 @@ namespace hal::cordic {
     template<typename Config>
     struct create_op_helper<Config, functions::hyperbolic_cosine> {
         using argument_type =
-            typename Config::scaled_qtype<scales<Detail::hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
+            typename Config::scaled_qtype<scales<hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
 
         using type =
             general_operation<Config, operation_type::single, functions::hyperbolic_cosine,
@@ -159,7 +174,7 @@ namespace hal::cordic {
     template<typename Config>
     struct create_op_helper<Config, functions::hyperbolic_sine> {
         using argument_type =
-            typename Config::scaled_qtype<scales<Detail::hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
+            typename Config::scaled_qtype<scales<hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
 
         using type =
             general_operation<Config, operation_type::single, functions::hyperbolic_sine,
@@ -171,7 +186,7 @@ namespace hal::cordic {
     template<typename Config>
     struct create_op_helper<Config, functions::arctanh> {
         using argument_type = typename Config::scaled_qtype<
-            scales<Detail::hyperbolic_atan_bounds, std::integer_sequence<unsigned int, 1>>>;
+            scales<hyperbolic_atan_bounds, std::integer_sequence<unsigned int, 1>>>;
 
         using type =
             general_operation<Config, operation_type::single, functions::arctanh, general_operation_args<argument_type>,
@@ -183,7 +198,7 @@ namespace hal::cordic {
     template<typename Config>
     struct create_op_helper<Config, functions::arctangent> {
         using argument_type = typename Config::scaled_qtype<
-            scales<Detail::normal_bounds, std::integer_sequence<unsigned int, 0, 1, 2, 3, 4, 5, 6, 7>>>;
+            scales<normal_bounds, std::integer_sequence<unsigned int, 0, 1, 2, 3, 4, 5, 6, 7>>>;
 
         using type =
             general_operation<Config, operation_type::single, functions::arctangent,
