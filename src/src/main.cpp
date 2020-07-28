@@ -310,9 +310,9 @@ int main() {
         float hyperbolic_argument = rdeg / 180.0f;
         float hyperbolic_argument_atan = rdeg / 370.0f;
         // int atanval = rdeg / 2;
-        decltype(op4)::argument_type op4_arg{rdeg / 2.0f};
-        decltype(op6)::argument_type op6_arg{hyperbolic_argument};
-        decltype(op8)::argument_type op8_arg{hyperbolic_argument_atan};
+        decltype(op4)::args_type::first_arg_type op4_arg{rdeg / 2.0f};
+        decltype(op6)::args_type::first_arg_type op6_arg{hyperbolic_argument};
+        decltype(op8)::args_type::first_arg_type op8_arg{hyperbolic_argument_atan};
 
         op.arg1(angle<precision::q1_31>{degrees{rdeg}});
         op2.arg1(angle<precision::q1_31>{degrees{rdeg}});
@@ -324,9 +324,9 @@ int main() {
         vec2<precision::q1_31> v{x_coord{float_val}, y_coord{float_val2}};
         op3.arg(v);
         op5.arg(v);
-        op6.arg(op6_arg);
-        op7.arg(op6_arg);
-        op8.arg(op8_arg);
+        op6.arg1(op6_arg);
+        op7.arg1(op6_arg);
+        op8.arg1(op8_arg);
 
         auto float_val3 = static_cast<float>(cordic_one::calculate(op3).result());
         auto float_val4 = static_cast<float>(cordic_one::calculate(op5).result());

@@ -144,6 +144,70 @@ namespace hal::cordic {
         }
     };
 
+    template<typename Config>
+    struct create_op_helper<Config, functions::hyperbolic_cosine> {
+        using argument_type =
+            typename Config::scaled_qtype<scales<Detail::hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
+
+        using type =
+            general_operation<Config, operation_type::single, functions::hyperbolic_cosine,
+                              general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
+
+        // Preset modulus to 1.0f
+        static inline constexpr auto create() {
+            type res{};
+            return res;
+        }
+    };
+
+    template<typename Config>
+    struct create_op_helper<Config, functions::hyperbolic_sine> {
+        using argument_type =
+            typename Config::scaled_qtype<scales<Detail::hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
+
+        using type =
+            general_operation<Config, operation_type::single, functions::hyperbolic_sine,
+                              general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
+
+        // Preset modulus to 1.0f
+        static inline constexpr auto create() {
+            type res{};
+            return res;
+        }
+    };
+
+    template<typename Config>
+    struct create_op_helper<Config, functions::arctanh> {
+        using argument_type = typename Config::scaled_qtype<
+            scales<Detail::hyperbolic_atan_bounds, std::integer_sequence<unsigned int, 1>>>;
+
+        using type =
+            general_operation<Config, operation_type::single, functions::arctanh, general_operation_args<argument_type>,
+                              general_operation_res<typename Config::qtype>>;
+
+        // Preset modulus to 1.0f
+        static inline constexpr auto create() {
+            type res{};
+            return res;
+        }
+    };
+
+    template<typename Config>
+    struct create_op_helper<Config, functions::arctangent> {
+        using argument_type = typename Config::scaled_qtype<
+            scales<Detail::normal_bounds, std::integer_sequence<unsigned int, 0, 1, 2, 3, 4, 5, 6, 7>>>;
+
+        using type =
+            general_operation<Config, operation_type::single, functions::arctangent, general_operation_args<argument_type>,
+                              general_operation_res<typename Config::qtype>>;
+
+        // Preset modulus to 1.0f
+        static inline constexpr auto create() {
+            type res{};
+            return res;
+        }
+    };
+
     template<typename Config, functions Function>
     static inline constexpr auto create_cordic_operation() {
         return create_op_helper<Config, Function>::create();
@@ -197,113 +261,6 @@ namespace hal::cordic {
 
        private:
         vec2<config_type::precision> m_v{};
-    };
-
-    template<typename Config>
-    class operation<Config, operation_type::single, functions::arctangent> final {
-       public:
-        using config_type = Config;
-        using thiz_type = operation<Config, operation_type::single, functions::arctangent>;
-        using result_type =
-            operation_result<typename config_type::qtype, operation_type::single, functions::arctangent>;
-
-        using argument_type = typename config_type::scaled_qtype<
-            scales<Detail::normal_bounds, std::integer_sequence<unsigned int, 0, 1, 2, 3, 4, 5, 6, 7>>>;
-
-        static inline constexpr auto function = functions::arctangent;
-        static inline constexpr auto num_args = nargs::one;
-
-        thiz_type &arg1(const argument_type &arg) {
-            m_arg = arg;
-            return *this;
-        }
-
-        auto arg1() const { return m_arg; }
-
-        auto scale() const { return m_arg.scale(); }
-
-       private:
-        argument_type m_arg{};
-    };
-
-    template<typename Config>
-    class operation<Config, operation_type::single, functions::hyperbolic_cosine> final {
-       public:
-        using config_type = Config;
-        using thiz_type = operation<Config, operation_type::single, functions::hyperbolic_cosine>;
-        using result_type =
-            operation_result<typename config_type::qtype, operation_type::single, functions::hyperbolic_cosine>;
-
-        using argument_type = typename config_type::scaled_qtype<
-            scales<Detail::hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
-
-        static inline constexpr auto function = functions::hyperbolic_cosine;
-        static inline constexpr auto num_args = nargs::one;
-
-        thiz_type &arg(const argument_type &arg) {
-            m_arg = arg;
-            return *this;
-        }
-
-        auto arg1() const { return m_arg; }
-
-        auto scale() const { return m_arg.scale(); }
-
-       private:
-        argument_type m_arg{};
-    };
-
-    template<typename Config>
-    class operation<Config, operation_type::single, functions::hyperbolic_sine> final {
-       public:
-        using config_type = Config;
-        using thiz_type = operation<Config, operation_type::single, functions::hyperbolic_sine>;
-        using result_type =
-            operation_result<typename config_type::qtype, operation_type::single, functions::hyperbolic_sine>;
-
-        using argument_type = typename config_type::scaled_qtype<
-            scales<Detail::hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
-
-        static inline constexpr auto function = functions::hyperbolic_sine;
-        static inline constexpr auto num_args = nargs::one;
-
-        thiz_type &arg(const argument_type &arg) {
-            m_arg = arg;
-            return *this;
-        }
-
-        auto arg1() const { return m_arg; }
-
-        auto scale() const { return m_arg.scale(); }
-
-       private:
-        argument_type m_arg{};
-    };
-
-    template<typename Config>
-    class operation<Config, operation_type::single, functions::arctanh> final {
-       public:
-        using config_type = Config;
-        using thiz_type = operation<Config, operation_type::single, functions::arctanh>;
-        using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::arctanh>;
-
-        using argument_type = typename config_type::scaled_qtype<
-            scales<Detail::hyperbolic_atan_bounds, std::integer_sequence<unsigned int, 1>>>;
-
-        static inline constexpr auto function = functions::arctanh;
-        static inline constexpr auto num_args = nargs::one;
-
-        thiz_type &arg(const argument_type &arg) {
-            m_arg = arg;
-            return *this;
-        }
-
-        auto arg1() const { return m_arg; }
-
-        auto scale() const { return m_arg.scale(); }
-
-       private:
-        argument_type m_arg{};
     };
 
     template<typename ResultType>
