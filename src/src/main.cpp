@@ -94,8 +94,6 @@ int main() {
         op9.arg1(decltype(op9)::args_type::first_arg_type{nat_log_arg});
         op10.arg1(decltype(op10)::args_type::first_arg_type{sqrt_arg});
 
-        delay_ms(1000);
-
         reset_counter();
         auto float_val3 = static_cast<float>(cordic_one::calculate(op3).result());
         auto float_val4 = static_cast<float>(cordic_one::calculate(op5).result());
@@ -105,6 +103,10 @@ int main() {
         auto float_val8 = static_cast<float>(cordic_one::calculate(op8).result());
         auto float_val9 = static_cast<float>(cordic_one::calculate(op9).result());
         auto float_val10 = static_cast<float>(cordic_one::calculate(op10).result());
+        uart_two::printf<512>("Timer: %d us\r\n", static_cast<int>(get_counter_value()));
+
+        reset_counter();
+        delay_ms(60);
         uart_two::printf<512>("Timer: %d us\r\n", static_cast<int>(get_counter_value()));
 
         uart_two::printf<512>(

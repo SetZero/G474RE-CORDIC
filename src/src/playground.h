@@ -109,9 +109,9 @@ enum class CCMR_OC1M : uint32_t {
 enum class UARTCLK : uint32_t { PCLK, SYSCLK, HSI16, LSE }; /* Utils */
 
 /***** TIMER *****/
-[[nodiscard]] inline uint32_t &memory(const uint32_t loc) { return *reinterpret_cast<uint32_t *>(loc); }
+[[nodiscard]] inline volatile uint32_t &memory(const uint32_t loc) { return *reinterpret_cast<volatile uint32_t *>(loc); }
 
-void init_led() {
+/* void init_led() {
     hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
             ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOA>();
     memory(GPIO_A_BASE + GPIO_X_AFRL) |= static_cast<uint32_t>(PA5_AF_L::TIM2_CH1);
@@ -141,38 +141,37 @@ void init_timer() {
 void init_pwm() {
     memory(TIM2_BASE + TIMER_CCMR) |=
             static_cast<uint32_t>(CCMR_OC1M::PWM_MODE_1) | (1u << 11u);  // PWM Mode 1 + OC2PE enable
-}
+}*/
 
 /****** COUNTER ******/
 
-void reset_counter() {
-    memory(RCC_BASE + RCC_APB1RSTR1) |= (1 << 0); // RESET TIMER 2
-    memory(RCC_BASE + RCC_APB1RSTR1) &= ~(1 << 0); // RESET TIMER 2
-    memory(TIM2_BASE + TIMER_EGR) |= (1 << 0); // RESET COUNTER VALUE
+inline void reset_counter() {
+    memory(TIM2_BASE + TIMER_EGR) = memory(TIM2_BASE + TIMER_EGR) | (1 << 0); // RESET COUNTER VALUE
 }
 
-uint32_t& get_counter_value() {
+uint32_t get_counter_value() {
     return  memory(TIM2_BASE + TIMER_CNT);
 }
 
 void init_counter() {
+    memory(TIM2_BASE + TIMER_CR1) = 0x000;
     hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
             ->apb11.add<hal::stm::stm32g4::mcu_info::APBENR::APB1ENR1::TIM2EN>();
 
+    memory(RCC_BASE + RCC_APB1RSTR1) = memory(RCC_BASE + RCC_APB1RSTR1) | (1 << 0); // RESET TIMER 2
+    memory(RCC_BASE + RCC_APB1RSTR1) = memory(RCC_BASE + RCC_APB1RSTR1) & ~(1 << 0); // RESET TIMER 2
     reset_counter();
 
     memory(TIM2_BASE + TIMER_PRESCALER) = 16;      // 16.000.000 / 16 = 1Mhz
-    memory(TIM2_BASE + TIMER_ARR) = 0xFFFF;        // Max Value
+    memory(TIM2_BASE + TIMER_ARR) = 0xFFFFF;        // Max Value
     //memory(TIM2_BASE + TIMER_CCR) = 8889;         // pulse width 8889/26667 == 1/3 of period
     memory(TIM2_BASE + TIMER_CCER) = (1u << 0u);  // CC1E
 
-    memory(TIM2_BASE + TIMER_CR1) |= static_cast<uint32_t>(CR1_DIR::DIR_UP) | static_cast<uint32_t>(CR1_CLKDIV::DIV1) |
-                                     static_cast<uint32_t>(CR1_EN::ENABLE_TIMER) |
-                                     static_cast<uint32_t>(CR1_ARPE::BUFFER_ARR);
+    memory(TIM2_BASE + TIMER_CR1) = memory(TIM2_BASE + TIMER_CR1) | static_cast<uint32_t>(CR1_EN::ENABLE_TIMER);
 }
 
 /***** LPUART *****/
-void init_lpuart_pin() {
+/*void init_lpuart_pin() {
     hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
             ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOA>();
     // Make GPIOA Pin 2,3 (PA2, PA3) alternate-function output
@@ -205,7 +204,7 @@ void init_lpuart() {
     memory(LPUART_BASE + LPUART_CR1) |= (1u << 3u);             // enable tx
     // memory(LPUART_BASE + LPUART_CR1) |= (1u << 2u);             // enable rx
     // memory(RCC_BASE + LPUART1SEL) = static_cast<uint32_t>(UARTCLK::PCLK);
-}
+}*/
 
 /***** UART *****/
 /*template<auto txpin, auto rxpin, typename uart>
