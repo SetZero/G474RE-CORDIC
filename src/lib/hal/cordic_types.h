@@ -41,17 +41,18 @@ struct scales<bounds, std::integer_sequence<decltype(FirstInt), FirstInt, Ints..
     }
 
     static inline constexpr std::array ranges{calc_range(FirstInt), calc_range(Ints)...};
-
-    static inline constexpr auto find_smallest_scale(float value) {
-        for (const auto &current_range : ranges) {
-            if (current_range.contains(value)) {
-                return current_range.scale;
-            }
-        }
-
-        return ranges[ranges.size() - 1].scale;
-    }
 };
+
+template<typename ScalesType>
+static inline constexpr auto find_smallest_scale(float value) {
+    for (const auto &current_range : ScalesType::ranges) {
+        if (current_range.contains(value)) {
+            return current_range.scale;
+        }
+    }
+
+    return ScalesType::ranges[ScalesType::ranges.size() - 1].scale;
+}
 
 enum class fixed_point_type : uint32_t {};
 
@@ -80,7 +81,7 @@ namespace Detail {
        private:
         template<typename T>
         constexpr void set_to_value(T value) {
-            m_scale = scales_lookup::find_smallest_scale(value);
+            m_scale = find_smallest_scale<scales_lookup>(value);
             value *= static_cast<T>(std::pow(2.0, -m_scale));
             value = std::clamp<T>(value, lower_bound, upper_bound);
             m_value = static_cast<type>(std::round(value * static_cast<type>(std::pow(2, fractional_bit))));

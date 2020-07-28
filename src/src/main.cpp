@@ -58,6 +58,7 @@ int main() {
     auto op7 = create_cordic_operation<cc, functions::hyperbolic_sine>();
     auto op8 = create_cordic_operation<cc, functions::arctanh>();
     auto op9 = create_cordic_operation<cc, functions::natural_logarithm>();
+    auto op10 = create_cordic_operation<cc, functions::square_root>();
 
     int deg = 0;
     while (true) {
@@ -70,6 +71,7 @@ int main() {
         float hyperbolic_argument = rdeg / 180.0f;
         float hyperbolic_argument_atan = rdeg / 370.0f;
         float nat_log_arg = 0.2;
+        float sqrt_arg = 2;
         // int atanval = rdeg / 2;
         decltype(op4)::args_type::first_arg_type op4_arg{rdeg / 2.0f};
         decltype(op6)::args_type::first_arg_type op6_arg{hyperbolic_argument};
@@ -89,6 +91,7 @@ int main() {
         op7.arg1(op6_arg);
         op8.arg1(op8_arg);
         op9.arg1(decltype(op9)::args_type::first_arg_type{nat_log_arg});
+        op10.arg1(decltype(op10)::args_type::first_arg_type{sqrt_arg});
 
         auto float_val3 = static_cast<float>(cordic_one::calculate(op3).result());
         auto float_val4 = static_cast<float>(cordic_one::calculate(op5).result());
@@ -97,11 +100,13 @@ int main() {
         auto float_val7 = static_cast<float>(cordic_one::calculate(op7).result());
         auto float_val8 = static_cast<float>(cordic_one::calculate(op8).result());
         auto float_val9 = static_cast<float>(cordic_one::calculate(op9).result());
+        auto float_val10 = static_cast<float>(cordic_one::calculate(op10).result());
         uart_two::printf<512>(
             "cos(%d) * 1000 = %d sin(%d) * 1000 = %d atan2(%d * 1000, %d * 1000) = %d * 10000000 == %d * 10000000 "
             "len(vec) == %d * 1000, scale = %d, value = %d "
             "atan = %d real_atan = %d cosh = %d real_cosh = %d sinh = %d real_sinh = %d atanh = %d real_atanh = %d "
             "logn %d real_logn %d "
+            "sqrt %d real_sqrt %d"
             "\r\n",
             rdeg, static_cast<int>(float_val * 1000), rdeg, static_cast<int>(float_val2 * 1000),
             static_cast<int>((float)v.y() * 1000), static_cast<int>((float)v.x() * 1000),
@@ -116,7 +121,10 @@ int main() {
             static_cast<int>(static_cast<float>(float_val8) * 10000000),
             static_cast<int>(std::atanh(hyperbolic_argument_atan) * 10000000),
             static_cast<int>(static_cast<float>(float_val9) * 10000000),
-            static_cast<int>(std::log(nat_log_arg) * 10000000));
+            static_cast<int>(std::log(nat_log_arg) * 10000000),
+            static_cast<int>(static_cast<float>(float_val10) * 10000000),
+            static_cast<int>(std::sqrt(sqrt_arg) * 10000000)
+            );
         deg = (deg + 1) % 360;
         delay_ms(50);
     }

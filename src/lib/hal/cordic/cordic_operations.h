@@ -185,8 +185,8 @@ namespace hal::cordic {
 
     template<typename Config>
     struct create_op_helper<Config, functions::arctanh> {
-        using argument_type = typename Config::scaled_qtype<
-            scales<hyperbolic_atan_bounds, std::integer_sequence<unsigned int, 1>>>;
+        using argument_type =
+            typename Config::scaled_qtype<scales<hyperbolic_atan_bounds, std::integer_sequence<unsigned int, 1>>>;
 
         using type =
             general_operation<Config, operation_type::single, functions::arctanh, general_operation_args<argument_type>,
@@ -213,16 +213,6 @@ namespace hal::cordic {
             Detail::range{.upper_bound = 3.0f - std::numeric_limits<float>::min(), .lower_bound = 1.0f, .scale = 2},
             Detail::range{.upper_bound = 7.0f - std::numeric_limits<float>::min(), .lower_bound = 3.0f, .scale = 3},
             Detail::range{.upper_bound = 9.35f, .lower_bound = 7.0f, .scale = 4}};
-
-        static inline constexpr auto find_smallest_scale(float value) {
-            for (const auto &current_range : ranges) {
-                if (current_range.contains(value)) {
-                    return current_range.scale;
-                }
-            }
-
-            return ranges[ranges.size() - 1].scale;
-        }
     };
 
     template<typename Config>
@@ -231,6 +221,24 @@ namespace hal::cordic {
 
         using type =
             general_operation<Config, operation_type::single, functions::natural_logarithm,
+                              general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
+
+        static inline constexpr auto create() { return type{}; }
+    };
+
+    struct sqrt_scales {
+        static inline constexpr std::array ranges{
+            Detail::range{.upper_bound = 0.75f - std::numeric_limits<float>::min(), .lower_bound = 0.027f, .scale = 0},
+            Detail::range{.upper_bound = 1.75f - std::numeric_limits<float>::min(), .lower_bound = 0.75f, .scale = 1},
+            Detail::range{.upper_bound = 2.341f, .lower_bound = 1.75f, .scale = 2}};
+    };
+
+    template<typename Config>
+    struct create_op_helper<Config, functions::square_root> {
+        using argument_type = typename Config::scaled_qtype<sqrt_scales>;
+
+        using type =
+            general_operation<Config, operation_type::single, functions::square_root,
                               general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
 
         static inline constexpr auto create() { return type{}; }
@@ -505,6 +513,25 @@ namespace hal::cordic {
             m_result = result;
             m_result.soft_scale(2);
 
+            return *this;
+        }
+
+        result_type result() const { return m_result; }
+
+       private:
+        ResultType m_result;
+    };
+
+    template<typename ResultType>
+    class operation_result<ResultType, operation_type::single, functions::square_root> final {
+       public:
+        using result_type = ResultType;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::square_root>;
+
+        static inline constexpr auto num_res = nres::one;
+
+        thiz_type &result(ResultType result) {
+            m_result = result;
             return *this;
         }
 
