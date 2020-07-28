@@ -34,18 +34,28 @@ endif()
 if (USE_HARDWARE_FLOAT)
     target_compile_options(${PROJECT_NAME}.elf PUBLIC -mfloat-abi=hard -mfpu=fpv4-sp-d16)
     target_compile_definitions(${PROJECT_NAME}.elf PUBLIC ARM_MATH_CM4 ARM_MATH_MATRIX_CHECK ARM_MATH_ROUNDING __FPU_PRESENT=1)
+
+    set_target_properties( ${PROJECT_NAME}.elf
+      PROPERTIES
+      LINK_FLAGS
+      "-T ${CMAKE_CURRENT_SOURCE_DIR}/${LINKER_SCRIPT} \
+       -mthumb \
+       -mcpu=cortex-m4 \
+       -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
+       -Wl,--gc-sections,--print-memory-usage \
+       -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map")
 else()
     target_compile_options(${PROJECT_NAME}.elf PUBLIC -mfloat-abi=soft)
-endif()
+    set_target_properties( ${PROJECT_NAME}.elf
+      PROPERTIES
+      LINK_FLAGS
+      "-T ${CMAKE_CURRENT_SOURCE_DIR}/${LINKER_SCRIPT} \
+       -mthumb \
+       -mcpu=cortex-m4 \
+       -Wl,--gc-sections,--print-memory-usage \
+       -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map")
 
-set_target_properties( ${PROJECT_NAME}.elf
-  PROPERTIES
-  LINK_FLAGS
-  "-T ${CMAKE_CURRENT_SOURCE_DIR}/${LINKER_SCRIPT} \
-   -mthumb \
-   -mcpu=cortex-m4 \
-   -Wl,--gc-sections,--print-memory-usage \
-   -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map")
+endif()
 
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
 set(BIN_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin)

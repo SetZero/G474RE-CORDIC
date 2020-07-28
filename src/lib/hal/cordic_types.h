@@ -112,7 +112,7 @@ namespace Detail {
         constexpr void set_to_value(float value) {
             const auto scale_index = find_smallest_scale_index<scales_lookup>(value);
             m_scale = scales_lookup::ranges[scale_index].scale;
-            value *= scales_lookup::prepared_inversed_scales[scale_index];
+            value *= static_cast<decltype(value)>(scales_lookup::prepared_inversed_scales[scale_index]);
             value = std::clamp<float>(value, lower_bound, upper_bound);
             m_value = static_cast<type>(std::round(value * two_raised_by_fractional_bit));
         }
@@ -146,8 +146,8 @@ namespace Detail {
 
         template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
         constexpr explicit operator T() const {
-            return static_cast<type>(m_value) * two_raised_by_negative_fractional_bit * static_cast<T>(1 << m_scale) *
-                   m_soft_scale;
+            return m_value * static_cast<T>(two_raised_by_negative_fractional_bit) * static_cast<T>(1 << m_scale) *
+                   static_cast<T>(m_soft_scale);
         }
 
         template<typename T, std::enable_if_t<sizeof(T) >= sizeof(type) && std::is_unsigned_v<T>, int> = 0>
@@ -242,11 +242,11 @@ template<precision p>
 using angle = ranged_angle<p, Detail::normal_fixed_range>;
 
 struct x_coord {
-    float value = 0;
+    double value = 0;
 };
 
 struct y_coord {
-    float value = 0;
+    double value = 0;
 };
 
 x_coord operator"" _x(long double value) { return x_coord{static_cast<float>(value)}; }
@@ -259,13 +259,13 @@ class vec2 {
     using type = Detail::precision_to_type<p>;
 
     constexpr vec2(const x_coord &x = 0.0_x, const y_coord &y = 0.0_y) {
-        if (std::fabs(x.value) >= 1.0f || std::fabs(y.value) >= 1.0f) {
-            m_soft_scale = std::max<decltype(x.value)>(std::fabs(x.value), std::fabs(y.value)) * 1.15f;
-            m_x = x.value / m_soft_scale;
-            m_y = y.value / m_soft_scale;
+        if (std::fabs(x.value) >= 1.0 || std::fabs(y.value) >= 1.0) {
+            m_soft_scale = std::max<decltype(x.value)>(std::fabs(x.value), std::fabs(y.value)) * 1.15;
+            m_x = static_cast<float>(x.value) / m_soft_scale;
+            m_y = static_cast<float>(y.value) / m_soft_scale;
         } else {
-            m_x = x.value;
-            m_y = y.value;
+            m_x = static_cast<float>(x.value);
+            m_y = static_cast<float>(y.value);
         }
     }
 
