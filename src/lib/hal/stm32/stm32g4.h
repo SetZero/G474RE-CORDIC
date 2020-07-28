@@ -66,11 +66,9 @@ namespace hal::stm::stm32g4 {
         struct UART final {
             UART() = delete;
 
-            enum class uart_pin_types {
-                CTS, RTS, TX, RX, CK
-            };
+            enum class uart_pin_types { CTS, RTS, TX, RX, CK };
 
-            enum class CR : uint32_t {
+            /*enum class CR : uint32_t {
                 RXFFIE = 31,
                 TXFEIE = 30,
                 FIFOEN = 29,
@@ -78,12 +76,113 @@ namespace hal::stm::stm32g4 {
                 M0 = 12,
                 EOBIE = 27,
                 RTOIE = 26
-            };
+            };*/
 
             enum class ISR : uint8_t { TXFNF = 0, NOTHING, NOTHING2 };
+            enum class CR : uint32_t {
+                UE = 0,
+                UESM,
+                RE,
+                TE,
+                IDLEIE,
+                RXNEIE,
+                TCIE,
+                TXEIE,
+                PEIE,
+                PS,
+                PCE,
+                WAKE,
+                M0,
+                MME,
+                CMIE,
+                OVER8,
+                DEDT,
+                DEAT,
+                RTOIE,
+                EOBIE,
+                M1,
+                FIFOEN,
+                RESERVED
+            };
 
-            control_register<UART, CR, uint32_t> cr1;
-            control_register<UART, CR, uint32_t> cr2;
+
+            enum class CR2 : uint32_t {
+                SLVEN = 0,
+                DIS_NSS,
+                ADDM7,
+                LBDL,
+                LBDIE,
+                LBCL,
+                CPHA,
+                CPOL,
+                CLKEN,
+                STOP,
+                LINEN,
+                SWAP,
+                RXINV,
+                TXINV,
+                DATAINV,
+                MSBFIRST,
+                ABREN,
+                ABRMOD,
+                RTOEN,
+                ADD,
+                RESERVED,
+                RESERVED2,
+            };
+
+            enum class parity { EVEN = 0, ODD };
+
+            register_desc<volatile uint32_t, register_entry_desc<CR::UE, bool, bit_pos<0u>, access_mode::read_write>,
+                          register_entry_desc<CR::UESM, bool, bit_pos<1u>, access_mode::read_write>,
+                          register_entry_desc<CR::RE, bool, bit_pos<2u>, access_mode::read_write>,
+                          register_entry_desc<CR::TE, bool, bit_pos<3u>, access_mode::read_write>,
+                          register_entry_desc<CR::IDLEIE, bool, bit_pos<4u>, access_mode::read_write>,
+                          register_entry_desc<CR::RXNEIE, bool, bit_pos<5u>, access_mode::read_write>,
+                          register_entry_desc<CR::TCIE, bool, bit_pos<6u>, access_mode::read_write>,
+                          register_entry_desc<CR::TXEIE, bool, bit_pos<7u>, access_mode::read_write>,
+                          register_entry_desc<CR::PEIE, bool, bit_pos<8u>, access_mode::read_write>,
+                          register_entry_desc<CR::PS, parity, bit_pos<9u>, access_mode::read_write>,
+                          register_entry_desc<CR::PCE, bool, bit_pos<10u>, access_mode::read_write>,
+                          register_entry_desc<CR::WAKE, bool, bit_pos<11u>, access_mode::read_write>,
+                          register_entry_desc<CR::M0, bool, bit_pos<12u>, access_mode::read_write>,
+                          register_entry_desc<CR::MME, bool, bit_pos<13u>, access_mode::read_write>,
+                          register_entry_desc<CR::CMIE, bool, bit_pos<14u>, access_mode::read_write>,
+                          register_entry_desc<CR::OVER8, bool, bit_pos<15u>, access_mode::read_write>,
+                          register_entry_desc<CR::DEDT, uint8_t, bit_range<16u, 20u>, access_mode::read_write>,
+                          register_entry_desc<CR::DEAT, uint8_t, bit_range<21u, 25u>, access_mode::read_write>,
+                          register_entry_desc<CR::RTOIE, bool, bit_pos<26u>, access_mode::read_write>,
+                          register_entry_desc<CR::EOBIE, bool, bit_pos<27u>, access_mode::read_write>,
+                          register_entry_desc<CR::M1, bool, bit_pos<28u>, access_mode::read_write>,
+                          register_entry_desc<CR::FIFOEN, bool, bit_pos<29u>, access_mode::read_write>,
+                          register_entry_desc<CR::RESERVED, reserved_type, bit_range<30u, 31u>, access_mode::no_access>>
+                cr1;
+
+            enum class stop { STOP_1 = 0, STOP_0_5 = 1, STOP_2 = 2, STOP_1_5 = 3 };
+            enum class auto_baud_mode { START_BIT = 0, FALLING_EDGE = 1, x7F = 2, x55 = 3 };
+            register_desc<volatile uint32_t, register_entry_desc<CR2::SLVEN, bool, bit_pos<0u>, access_mode::read_write>,
+                register_entry_desc<CR2::RESERVED, reserved_type, bit_range<1u, 2u>, access_mode::no_access>,
+                register_entry_desc<CR2::DIS_NSS, bool, bit_pos<3u>, access_mode::read_write>,
+                register_entry_desc<CR2::ADDM7, bool, bit_pos<4u>, access_mode::read_write>,
+                register_entry_desc<CR2::LBDL, bool, bit_pos<5u>, access_mode::read_write>,
+                register_entry_desc<CR2::LBDIE, bool, bit_pos<6u>, access_mode::read_write>,
+                register_entry_desc<CR2::RESERVED2, reserved_type, bit_pos<7u>, access_mode::no_access>,
+                register_entry_desc<CR2::LBCL, bool, bit_pos<8u>, access_mode::read_write>,
+                register_entry_desc<CR2::CPHA, bool, bit_pos<9u>, access_mode::read_write>,
+                register_entry_desc<CR2::CPOL, bool, bit_pos<10u>, access_mode::read_write>,
+                register_entry_desc<CR2::CLKEN, bool, bit_pos<11u>, access_mode::read_write>,
+                register_entry_desc<CR2::STOP, stop, bit_range<12u, 13u>, access_mode::read_write>,
+                register_entry_desc<CR2::LINEN, bool, bit_pos<14u>, access_mode::read_write>,
+                register_entry_desc<CR2::SWAP, bool, bit_pos<15u>, access_mode::read_write>,
+                register_entry_desc<CR2::RXINV, bool, bit_pos<16u>, access_mode::read_write>,
+                register_entry_desc<CR2::TXINV, bool, bit_pos<17u>, access_mode::read_write>,
+                register_entry_desc<CR2::DATAINV, bool, bit_pos<18u>, access_mode::read_write>,
+                register_entry_desc<CR2::MSBFIRST, bool, bit_pos<19u>, access_mode::read_write>,
+                register_entry_desc<CR2::ABREN, bool, bit_pos<20u>, access_mode::read_write>,
+                register_entry_desc<CR2::ABRMOD, auto_baud_mode, bit_range<21u, 22u>, access_mode::read_write>,
+                register_entry_desc<CR2::RTOEN, bool, bit_pos<23u>, access_mode::read_write>,
+                register_entry_desc<CR2::ADD, uint8_t, bit_range<24u, 31u>, access_mode::read_write>>
+                cr2;
             control_register<UART, CR, uint32_t> cr3;
             control_register<UART, CR, uint32_t> brr;
             control_register<UART, uint8_t> gtpr;

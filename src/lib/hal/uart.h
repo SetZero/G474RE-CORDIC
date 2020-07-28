@@ -2,6 +2,8 @@
 
 #include <hal/stm32/stm32g4.h>
 
+#include <concepts>
+
 #include "hal_info.h"
 
 namespace hal::periphery {
@@ -10,15 +12,29 @@ namespace hal::periphery {
     template<typename MCU, typename PIN>
     concept uart_mcu = specialized_mcu<MCU, PIN>;
 
+    namespace uart_values {
+        enum class stop { STOP_1, STOP_0_5, STOP_2, STOP_1_5 };
+    }
+
     namespace detail {
         struct uart_component {};
 
         template<mcu_with_vendor_info MCU>
         struct stm_mcu_mapper<MCU, uart_component> {
+            using mcu = MCU;
+
             template<typename UartNr>
-            struct mapper {};
+            struct mapper {
+                using stop_mapper_pair = std::pair<uart_values::stop, typename mcu::UART::stop>;
+                static inline constexpr value_mapper stop_mapper{
+                    stop_mapper_pair{uart_values::stop::STOP_1, mcu::UART::stop::STOP_1},
+                    stop_mapper_pair{uart_values::stop::STOP_0_5, mcu::UART::stop::STOP_0_5},
+                    stop_mapper_pair{uart_values::stop::STOP_1_5, mcu::UART::stop::STOP_1_5},
+                    stop_mapper_pair{uart_values::stop::STOP_2, mcu::UART::stop::STOP_2}};
+            };
         };
     }  // namespace detail
+
 
     template<typename UartNr, uart_mcu<UartNr> UsedMCU>
     requires(hal::info::vendor_information<typename UsedMCU::base_mcu>::vendor == info::vendors::STM) class uart {
@@ -31,10 +47,11 @@ namespace hal::periphery {
        public:
         uart() = delete;
 
-        template<gpio_pin TXPin, gpio_pin RXPin, auto Baudrate>
-        static void init() {
-            //TODO: Fixme
-            //hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()->ahb2.add<MCU::AHBENR::AHB2ENR::GPIOA>();
+        template<gpio_pin TXPin, gpio_pin RXPin, auto Baudrate, auto DataBits = 8, uart_values::stop StopBits = uart_values::stop::STOP_1>
+        requires(DataBits >= 7 && DataBits <= 9) static void init() {
+            uart_registers()->cr1.template set_value<MCU::UART::CR::UE>(false);
+            // TODO: Fixme
+            hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()->ahb2.add<MCU::AHBENR::AHB2ENR::GPIOA>();
 
             TXPin::template set_alternative_function<UartNr, UsedMCU::uart::uart_pin_types::TX>();
             RXPin::template set_alternative_function<UartNr, UsedMCU::uart::uart_pin_types::RX>();
@@ -44,6 +61,24 @@ namespace hal::periphery {
 
             TXPin::template set_type<gpio_values::type::PUSH_PULL>();
             RXPin::template set_type<gpio_values::type::PUSH_PULL>();
+
+            // TODO: Changme
+            hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
+                ->apb11.add<hal::stm::stm32g4::mcu_info::APBENR::APB1ENR1::USART2EN>();
+
+            if constexpr (DataBits == 7) {
+                uart_registers()->cr1.template set_value<MCU::UART::CR::M1>(false);
+                uart_registers()->cr1.template set_value<MCU::UART::CR::M0>(false);
+            } else if (DataBits == 8) {
+                uart_registers()->cr1.template set_value<MCU::UART::CR::M1>(true);
+                uart_registers()->cr1.template set_value<MCU::UART::CR::M0>(false);
+            } else {
+                uart_registers()->cr1.template set_value<MCU::UART::CR::M1>(false);
+                uart_registers()->cr1.template set_value<MCU::UART::CR::M0>(true);
+            }
+
+            uart_registers()->cr1.template set_value<MCU::UART::CR::PCE>(false);
+            uart_registers()->cr2.template set_value<MCU::UART::CR2::STOP>(uart_detail::stop_mapper[StopBits]);
         }
 
         static void printc(char value) { uart_registers()->tdr.template set_value<0>(value); }
