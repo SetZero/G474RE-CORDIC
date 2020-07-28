@@ -21,10 +21,9 @@
 #include "hal/stm32/stm32g4.h"
 #include "hal/stm32/stm32g4/stm32g474re.h"
 #include "hal/uart.h"
-#include "playground.h"
 
 namespace mcu_ns = hal::stm::stm32g4;
-using used_mcu = hal::stm::stm32g4::g474re;
+using used_mcu = mcu_ns::g474re;
 namespace gpio_values = hal::periphery::gpio_values;
 
 /**
@@ -32,6 +31,8 @@ namespace gpio_values = hal::periphery::gpio_values;
  * @retval int
  */
 int main() {
+    init_counter();
+
     using namespace hal::cordic;
     using port_a = hal::periphery::gpio<mcu_ns::A, used_mcu>;
     using uart_two = hal::periphery::uart<mcu_ns::uart_nr::two, used_mcu>;
@@ -59,10 +60,10 @@ int main() {
 
     int deg = 0;
     while (true) {
-        port_a::pin<5>::on();
+        /*port_a::pin<5>::on();
         delay_ms(250);
         port_a::pin<5>::off();
-        delay_ms(250);
+        delay_ms(250);*/
         // while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
         int16_t rdeg = deg - 180;
         float hyperbolic_argument = rdeg / 180.0f;
@@ -83,11 +84,16 @@ int main() {
         op6.arg(op6_arg);
         op7.arg(op6_arg);
 
+        delay_ms(1000);
+
+        reset_counter();
         auto float_val3 = static_cast<float>(cordic_one::calculate(op3).result());
         auto float_val4 = static_cast<float>(cordic_one::calculate(op5).result());
         auto float_val5 = static_cast<float>(cordic_one::calculate(op4).result());
         auto float_val6 = static_cast<float>(cordic_one::calculate(op6).result());
         auto float_val7 = static_cast<float>(cordic_one::calculate(op7).result());
+        uart_two::printf<512>("Timer: %d us\r\n", static_cast<int>(get_counter_value()));
+
         uart_two::printf<512>(
             "cos(%d) * 1000 = %d sin(%d) * 1000 = %d atan2(%d * 1000, %d * 1000) = %d * 10000000 == %d * 10000000 "
             "len(vec) == %d * 1000, scale = %d, value = %d "
