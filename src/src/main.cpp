@@ -94,6 +94,10 @@ int main() {
         op9.arg1(decltype(op9)::args_type::first_arg_type{nat_log_arg});
         op10.arg1(decltype(op10)::args_type::first_arg_type{sqrt_arg});
 
+
+        reset_counter();
+        auto overhead_timer = static_cast<int>(get_counter_value());
+
         reset_counter();
         auto float_val3 = static_cast<float>(cordic_one::calculate(op3).result());
         auto float_val4 = static_cast<float>(cordic_one::calculate(op5).result());
@@ -103,11 +107,20 @@ int main() {
         auto float_val8 = static_cast<float>(cordic_one::calculate(op8).result());
         auto float_val9 = static_cast<float>(cordic_one::calculate(op9).result());
         auto float_val10 = static_cast<float>(cordic_one::calculate(op10).result());
-        uart_two::printf<512>("Timer: %d us\r\n", static_cast<int>(get_counter_value()));
+        auto cordic_timer = static_cast<int>(get_counter_value());
 
         reset_counter();
-        delay_ms(60);
-        uart_two::printf<512>("Timer: %d us\r\n", static_cast<int>(get_counter_value()));
+        volatile auto v1 [[gnu::unused]] = std::cos(rdeg);
+        volatile auto v2 [[gnu::unused]] = std::sin(rdeg);
+        volatile auto v3 [[gnu::unused]] = std::atan(rdeg);
+        volatile auto v4 [[gnu::unused]] = std::cosh(rdeg);
+        volatile auto v5 [[gnu::unused]] = std::sinh(rdeg);
+        volatile auto v6 [[gnu::unused]] = std::atanh(rdeg);
+        volatile auto v7 [[gnu::unused]] = std::log(rdeg);
+        volatile auto v8 [[gnu::unused]] = std::sqrt(rdeg);
+        auto gcc_timer = static_cast<int>(get_counter_value());
+
+        uart_two::printf<512>("GCC: %d us vs Cordic: %d\r\n", gcc_timer - overhead_timer, cordic_timer - overhead_timer);
 
         uart_two::printf<512>(
             "cos(%d) * 1000 = %d sin(%d) * 1000 = %d atan2(%d * 1000, %d * 1000) = %d * 10000000 == %d * 10000000 "
