@@ -47,7 +47,7 @@ namespace hal::periphery {
        public:
         uart() = delete;
 
-        template<gpio_pin TXPin, gpio_pin RXPin, auto Baudrate, auto DataBits = 8, uart_values::stop StopBits = uart_values::stop::STOP_1>
+        template<gpio_pin TXPin, gpio_pin RXPin, auto Baudrate = 9600, auto DataBits = 8, uart_values::stop StopBits = uart_values::stop::STOP_1>
         requires(DataBits >= 7 && DataBits <= 9) static void init() {
             uart_registers()->cr1.template set_value<MCU::UART::CR::UE>(false);
             // TODO: Fixme
@@ -66,19 +66,23 @@ namespace hal::periphery {
             hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
                 ->apb11.add<hal::stm::stm32g4::mcu_info::APBENR::APB1ENR1::USART2EN>();
 
-            if constexpr (DataBits == 7) {
+            if constexpr (DataBits == 8) {
                 uart_registers()->cr1.template set_value<MCU::UART::CR::M1>(false);
                 uart_registers()->cr1.template set_value<MCU::UART::CR::M0>(false);
-            } else if (DataBits == 8) {
+            } else if (DataBits == 7) {
                 uart_registers()->cr1.template set_value<MCU::UART::CR::M1>(true);
                 uart_registers()->cr1.template set_value<MCU::UART::CR::M0>(false);
-            } else {
+            } else if (DataBits == 9) {
                 uart_registers()->cr1.template set_value<MCU::UART::CR::M1>(false);
                 uart_registers()->cr1.template set_value<MCU::UART::CR::M0>(true);
             }
 
             uart_registers()->cr1.template set_value<MCU::UART::CR::PCE>(false);
             uart_registers()->cr2.template set_value<MCU::UART::CR2::STOP>(uart_detail::stop_mapper[StopBits]);
+            uart_registers()->brr.template set_value<MCU::UART::BRR::BRR>(16'000'000u / Baudrate);
+
+            uart_registers()->cr1.template set_value<MCU::UART::CR::UE>(true);
+            uart_registers()->cr1.template set_value<MCU::UART::CR::TE>(true);
         }
 
         static void printc(char value) { uart_registers()->tdr.template set_value<0>(value); }

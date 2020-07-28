@@ -105,7 +105,6 @@ namespace hal::stm::stm32g4 {
                 RESERVED
             };
 
-
             enum class CR2 : uint32_t {
                 SLVEN = 0,
                 DIS_NSS,
@@ -130,6 +129,36 @@ namespace hal::stm::stm32g4 {
                 RESERVED,
                 RESERVED2,
             };
+
+            enum class CR3 : uint32_t {
+                EIE = 0,
+                IREN,
+                IRLP,
+                HDSEL,
+                NACK,
+                SCEN,
+                DMAR,
+                DMAT,
+                RTSE,
+                CTSE,
+                CTSIE,
+                ONEBIT,
+                OVRDIS,
+                DDRE,
+                DEM,
+                DEP,
+                SCARCNT,
+                WUS,
+                WUFIE,
+                TXFTIE,
+                TCBGTIE,
+                RXFTCFG,
+                RXFTIE,
+                TXFTCFG,
+                RESERVED
+            };
+
+            enum class BRR : uint32_t { BRR, RESERVED };
 
             enum class parity { EVEN = 0, ODD };
 
@@ -160,7 +189,8 @@ namespace hal::stm::stm32g4 {
 
             enum class stop { STOP_1 = 0, STOP_0_5 = 1, STOP_2 = 2, STOP_1_5 = 3 };
             enum class auto_baud_mode { START_BIT = 0, FALLING_EDGE = 1, x7F = 2, x55 = 3 };
-            register_desc<volatile uint32_t, register_entry_desc<CR2::SLVEN, bool, bit_pos<0u>, access_mode::read_write>,
+            register_desc<
+                volatile uint32_t, register_entry_desc<CR2::SLVEN, bool, bit_pos<0u>, access_mode::read_write>,
                 register_entry_desc<CR2::RESERVED, reserved_type, bit_range<1u, 2u>, access_mode::no_access>,
                 register_entry_desc<CR2::DIS_NSS, bool, bit_pos<3u>, access_mode::read_write>,
                 register_entry_desc<CR2::ADDM7, bool, bit_pos<4u>, access_mode::read_write>,
@@ -183,8 +213,47 @@ namespace hal::stm::stm32g4 {
                 register_entry_desc<CR2::RTOEN, bool, bit_pos<23u>, access_mode::read_write>,
                 register_entry_desc<CR2::ADD, uint8_t, bit_range<24u, 31u>, access_mode::read_write>>
                 cr2;
-            control_register<UART, CR, uint32_t> cr3;
-            control_register<UART, CR, uint32_t> brr;
+
+            enum class wuf { ACTIVE_ON_ADDRESS_MATCH = 0, ACTIVE_ON_START_BIT = 2, ACTIVE_ON_RXNE = 3 };
+            enum class xftcfg {
+                FIFO_EIGHTH_DEPTH = 0b000,
+                FIFO_FOURTH_DEPTH = 0b001,
+                FIFO_HALF_DEPTH = 0b010,
+                FIFO_THREE_QUARTER_DEPTH = 0b011,
+                FIFO_SEVEN_EIGHTHS_DEPTH = 0b100,
+                FIFO_FULL_DEPTH = 0b101
+            };
+            register_desc<volatile uint32_t, register_entry_desc<CR3::EIE, bool, bit_pos<0u>, access_mode::read_write>,
+                          register_entry_desc<CR3::IREN, bool, bit_pos<1u>, access_mode::read_write>,
+                          register_entry_desc<CR3::IRLP, bool, bit_pos<2u>, access_mode::read_write>,
+                          register_entry_desc<CR3::HDSEL, bool, bit_pos<3u>, access_mode::read_write>,
+                          register_entry_desc<CR3::NACK, bool, bit_pos<4u>, access_mode::read_write>,
+                          register_entry_desc<CR3::SCEN, bool, bit_pos<5u>, access_mode::read_write>,
+                          register_entry_desc<CR3::DMAR, bool, bit_pos<6u>, access_mode::read_write>,
+                          register_entry_desc<CR3::DMAT, bool, bit_pos<7u>, access_mode::read_write>,
+                          register_entry_desc<CR3::RTSE, bool, bit_pos<8u>, access_mode::read_write>,
+                          register_entry_desc<CR3::CTSE, bool, bit_pos<9u>, access_mode::read_write>,
+                          register_entry_desc<CR3::CTSIE, bool, bit_pos<10u>, access_mode::read_write>,
+                          register_entry_desc<CR3::ONEBIT, bool, bit_pos<11u>, access_mode::read_write>,
+                          register_entry_desc<CR3::OVRDIS, bool, bit_pos<12u>, access_mode::read_write>,
+                          register_entry_desc<CR3::DDRE, bool, bit_pos<13u>, access_mode::read_write>,
+                          register_entry_desc<CR3::DEM, bool, bit_pos<14u>, access_mode::read_write>,
+                          register_entry_desc<CR3::DEP, bool, bit_pos<15u>, access_mode::read_write>,
+                          register_entry_desc<CR3::RESERVED, reserved_type, bit_pos<16u>, access_mode::no_access>,
+                          register_entry_desc<CR3::SCARCNT, uint8_t, bit_range<17u, 19u>, access_mode::read_write>,
+                          register_entry_desc<CR3::WUS, wuf, bit_range<20u, 21u>, access_mode::read_write>,
+                          register_entry_desc<CR3::WUFIE, bool, bit_pos<22u>, access_mode::read_write>,
+                          register_entry_desc<CR3::TXFTIE, bool, bit_pos<23u>, access_mode::read_write>,
+                          register_entry_desc<CR3::TCBGTIE, bool, bit_pos<24u>, access_mode::read_write>,
+                          register_entry_desc<CR3::RXFTCFG, xftcfg, bit_range<25u, 27u>, access_mode::read_write>,
+                          register_entry_desc<CR3::RXFTIE, bool, bit_pos<28u>, access_mode::read_write>,
+                          register_entry_desc<CR3::TXFTCFG, xftcfg, bit_range<29u, 31u>, access_mode::read_write>>
+                cr3;
+
+            register_desc<volatile uint32_t, register_entry_desc<BRR::BRR, uint16_t, bit_range<0u, 15u>, access_mode::read_write>,
+                register_entry_desc<BRR::RESERVED, reserved_type, bit_range<16u, 31u>, access_mode::no_access>>
+                brr;
+
             control_register<UART, uint8_t> gtpr;
             control_register<UART, uint8_t> rtor;
             control_register<UART, uint8_t> rqr;

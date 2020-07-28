@@ -65,7 +65,7 @@ namespace hal::stm::stm32g4 {
         using gpio = base_mcu::GPIO;
 
         template<typename Port, uint32_t pin, typename function_number, auto function_type>
-        requires(pin < 31) static constexpr af_type find_af() {
+        requires(pin <= 31) static constexpr af_type find_af() {
             return detail::mapper.lookup_type<detail::af_type<Port, pin, function_number, function_type>>();
         }
     };
