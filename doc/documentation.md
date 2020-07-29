@@ -10,8 +10,10 @@ link-citations: true
 nocite: |
     @*
 documentclass: scrartcl
-classoption: a4paper, 13pt
+classoption: a4paper, 12pt
+fontsize: 12pt
 papersize: a4
+titlepage: 1
 toc: 1
 toc-depth: 1
 title-own-page: 1
@@ -49,6 +51,8 @@ Mit dem Zeiger eines primitiven Datentypes auf des Registers, können unsinnige 
 Registern Werte und Teile, die nicht manipuliert werden dürfen.
 Um diese beiden Ziele zu erreichen wurde Datentypen implementiert, welche bei der Umsetzung dieser Ziele helfen sollen.
 
+## Beschreibung eines Registers
+
 ![Beschreibung des Registers in der Dokumentation des Mikrocontrollers](images/cr1desc.png)
 
 In der vorherigen Abbildung ist die Beschreibung eines Registers des Mikrocontrollers abgebildet, wie sie üblicherweise in einer Dokumentation vorkommt.
@@ -59,7 +63,7 @@ nicht verändert werden dürfen. Diese Zusammenhänge wurden in einem Datentyp m
 register_entry_desc<CR::DEDT, uint8_t, bit_range<16u, 20u>, access_mode::read_write>
 ~~~
 
-Dieser Typ beschreibt die Bitpositionen von 16 - 20 einschließlich, dieser Bereich kann gelesen und gesetzt werden.
+Dieser Typ beschreibt die Bitpositionen von 16 - 20 einschließlich, der Bereich kann gelesen und gesetzt werden.
 Weiterhin wird die Funktion mit einem enum Eintrag Beschrieben. So muss jedes einzelne Bit beschrieben werden, ein Konzept stellt dies zur Kompilezeit sicher.
 Für das UART Register CR ergibt sich damit folgender Typ:
 
@@ -90,4 +94,36 @@ register_entry_desc<CR::FIFOEN, bool, bit_pos<29u>>,
 register_entry_desc<CR::RESERVED, reserved_type, bit_range<30u, 31u>>>
 ~~~
 
+Auf diese Weise können auch Register modelliert werden, welche Werte akzeptieren, also keine Steuerungsregister sind.
+Hier muss ebenfalls jedes einzelne Bit beschrieben werden.
 
+~~~{.cpp}
+register_desc<volatile uint32_t, register_entry_desc<0, uint8_t, bit_range<0u, 7u>>,
+                          register_entry_desc<1, uint8_t, bit_range<8u, 31u>, access_mode::no_access>>
+~~~
+
+Bei diesem Register sind nur die ersten 8 Bits beschreibbar.
+
+## Platzierung eines Registers
+
+Wie eingangs erwähnt, sind Register bestimmte Stellen im Speicher. Damit muss die vorherige gezeigte Beschreibung eines Register korrekt platziert werden.
+Oftmals gibt es auch mehrere Register der selben Art, welche nur an anderen Positionen stehen. Daher braucht man eine Lösung die Register an die richtigen Stellen
+im Code zu platzieren.
+
+~~~{.cpp}
+template<typename Component, auto N>
+[[nodiscard]] constexpr inline auto address() {
+    return reinterpret_cast<Component*>(Component::template address<N>::value);
+}
+
+template<typename Component, typename N>
+[[nodiscard]] constexpr inline auto address() {
+    return reinterpret_cast<Component*>(Component::template address<N>::value);
+}
+~~~
+
+Die beiden Methoden werden dann parametrisiert mit der gewünschten Peripherie oder hier Component genannt, mit dem entsprechenden Index.
+Die Funktion greift dafür auf einen zuvor festgelegten Bereich zu und wandelt, diesen in den gewünschten Datentyp um.
+Die Beschreibung dieser Zusammenhänge werden in structs gespeichert, welche den speziellen Mikrocontroller beschreiben, diese wird nachfolgend erläutert
+
+## Beschreibung des Mikrocontroller Aufbaus
