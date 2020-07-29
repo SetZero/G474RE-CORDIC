@@ -15,9 +15,7 @@ namespace hal::periphery {
         static inline constexpr auto cordic_register = hal::address<typename mcu::CORDIC, CordicNr>;
         using cordic_control_register_type = std::remove_pointer_t<decltype(cordic_register()->csr)>;
 
-        static constexpr auto init() {
-            mcu_features<mcu>::template enable_clock<features::hal_features::CORDIC>();
-        }
+        static constexpr auto init() { mcu_features<mcu>::template enable_clock<features::hal_features::CORDIC>(); }
 
         template<typename OperationType>
         static constexpr auto calculate(const OperationType &op) {
@@ -26,7 +24,8 @@ namespace hal::periphery {
             using op_result = typename op_type::result_type;
 
             cordic_register()
-                ->csr.template set_function_mode<cordic_control_register_type::template map_function<op_type::function>()>();
+                ->csr
+                .template set_function_mode<cordic_control_register_type::template map_function<op_type::function>()>();
 
             // TODO: configure this differently, maybe most efficient, always use one register value, when q1_15 is used
             cordic_register()->csr.set_argument_size(config::precision);
@@ -78,4 +77,4 @@ namespace hal::periphery {
             result.result(cordic_register()->rdata.template read_arg<result_type>(scale));
         }
     };
-}  // namespace hal::cordic
+}  // namespace hal::periphery

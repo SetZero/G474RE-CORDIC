@@ -49,7 +49,7 @@ namespace hal::cordic {
     template<typename config, operation_type Type, functions Function>
     class operation final {};
 
-    template<typename ResultType, operation_type Type, functions Function>
+    template<typename ResultType, operation_type Type, functions Function, nres num_result = 1>
     class operation_result final {};
 
     template<precision P, cordic_algorithm_precision A = cordic_algorithm_precision::normal>
@@ -97,7 +97,7 @@ namespace hal::cordic {
     };
 
     template<typename Config, operation_type Type, functions Function, typename GeneralOperationArgs,
-             typename GeneralOperationResult>
+             typename GeneralOperationResult, nres num_res = nres::one>
     class general_operation final {
        public:
         using config_type = Config;
@@ -108,7 +108,7 @@ namespace hal::cordic {
         static inline constexpr auto num_args = args_type::num_args;
         static inline constexpr auto function = Function;
 
-        using result_type = operation_result<typename config_type::qtype, operation_type::single, Function>;
+        using result_type = operation_result<typename config_type::qtype, operation_type::single, Function, num_res>;
 
         thiz_type &arg1(const typename args_type::first_arg_type &arg1) {
             m_args.m_arg1 = arg1;
@@ -270,7 +270,7 @@ namespace hal::cordic {
        public:
         using config_type = Config;
         using thiz_type = operation<Config, operation_type::single, functions::phase>;
-        using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::phase>;
+        using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::phase, nres::one>;
 
         static inline constexpr auto function = functions::phase;
         static inline constexpr auto num_args = nargs::two;
@@ -295,7 +295,7 @@ namespace hal::cordic {
        public:
         using config_type = Config;
         using thiz_type = operation<Config, operation_type::single, functions::modulus>;
-        using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::modulus>;
+        using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::modulus, nres::one>;
 
         static inline constexpr auto function = functions::modulus;
         static inline constexpr auto num_args = nargs::two;
@@ -315,13 +315,13 @@ namespace hal::cordic {
         vec2<config_type::precision> m_v{};
     };
 
-    template<typename ResultType>
-    class operation_result<ResultType, operation_type::single, functions::cosine> final {
+    template<typename ResultType, nres res>
+    class operation_result<ResultType, operation_type::single, functions::cosine, res> final {
        public:
         using result_type = ResultType;
-        using thiz_type = operation_result<ResultType, operation_type::single, functions::cosine>;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::cosine, res>;
 
-        static inline constexpr auto num_res = nres::two;
+        static inline constexpr auto num_res = res;
 
         thiz_type &result(ResultType result) {
             m_result = result;
@@ -342,13 +342,13 @@ namespace hal::cordic {
         ResultType m_secondary_result;
     };
 
-    template<typename ResultType>
-    class operation_result<ResultType, operation_type::single, functions::sine> final {
+    template<typename ResultType, nres res>
+    class operation_result<ResultType, operation_type::single, functions::sine, res> final {
        public:
         using result_type = ResultType;
-        using thiz_type = operation_result<ResultType, operation_type::single, functions::sine>;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::sine, res>;
 
-        static inline constexpr auto num_res = nres::two;
+        static inline constexpr auto num_res = res;
 
         thiz_type &result(ResultType result) {
             m_result = result;
@@ -369,13 +369,13 @@ namespace hal::cordic {
         ResultType m_secondary_result;
     };
 
-    template<typename ResultType>
-    class operation_result<ResultType, operation_type::single, functions::phase> final {
+    template<typename ResultType, nres res>
+    class operation_result<ResultType, operation_type::single, functions::phase, res> final {
        public:
         using result_type = ResultType;
-        using thiz_type = operation_result<ResultType, operation_type::single, functions::phase>;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::phase, res>;
 
-        static inline constexpr auto num_res = nres::two;
+        static inline constexpr auto num_res = res;
 
         thiz_type &result(ResultType result) {
             m_result = result;
@@ -397,13 +397,13 @@ namespace hal::cordic {
         ResultType m_secondary_result;
     };
 
-    template<typename ResultType>
-    class operation_result<ResultType, operation_type::single, functions::modulus> final {
+    template<typename ResultType, nres res>
+    class operation_result<ResultType, operation_type::single, functions::modulus, res> final {
        public:
         using result_type = ResultType;
-        using thiz_type = operation_result<ResultType, operation_type::single, functions::modulus>;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::modulus, res>;
 
-        static inline constexpr auto num_res = nres::two;
+        static inline constexpr auto num_res = res;
 
         thiz_type &result(ResultType result) {
             m_result = result;
@@ -425,13 +425,13 @@ namespace hal::cordic {
         ResultType m_secondary_result;
     };
 
-    template<typename ResultType>
-    class operation_result<ResultType, operation_type::single, functions::arctangent> final {
+    template<typename ResultType, nres res>
+    class operation_result<ResultType, operation_type::single, functions::arctangent, res> final {
        public:
         using result_type = ResultType;
-        using thiz_type = operation_result<ResultType, operation_type::single, functions::arctangent>;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::arctangent, res>;
 
-        static inline constexpr auto num_res = nres::one;
+        static inline constexpr auto num_res = res;
 
         thiz_type &result(ResultType result) {
             m_result = result;
@@ -444,11 +444,38 @@ namespace hal::cordic {
         ResultType m_result;
     };
 
-    template<typename ResultType>
-    class operation_result<ResultType, operation_type::single, functions::hyperbolic_cosine> final {
+    template<typename ResultType, nres res>
+    class operation_result<ResultType, operation_type::single, functions::hyperbolic_cosine, res> final {
        public:
         using result_type = ResultType;
-        using thiz_type = operation_result<ResultType, operation_type::single, functions::hyperbolic_cosine>;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::hyperbolic_cosine, res>;
+
+        static inline constexpr auto num_res = res;
+
+        thiz_type &result(ResultType result) {
+            m_result = result;
+            return *this;
+        }
+
+        thiz_type &secondary_result(ResultType result) {
+            m_secondary_result = result;
+            return *this;
+        }
+
+        result_type result() const { return m_result; }
+
+        result_type secondary_result() const { return m_secondary_result; }
+
+       private:
+        ResultType m_result;
+        ResultType m_secondary_result;
+    };
+
+    template<typename ResultType, nres res>
+    class operation_result<ResultType, operation_type::single, functions::hyperbolic_sine, res> final {
+       public:
+        using result_type = ResultType;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::hyperbolic_sine, res>;
 
         static inline constexpr auto num_res = nres::two;
 
@@ -472,37 +499,10 @@ namespace hal::cordic {
     };
 
     template<typename ResultType>
-    class operation_result<ResultType, operation_type::single, functions::hyperbolic_sine> final {
+    class operation_result<ResultType, operation_type::single, functions::arctanh, nres::one> final {
        public:
         using result_type = ResultType;
-        using thiz_type = operation_result<ResultType, operation_type::single, functions::hyperbolic_sine>;
-
-        static inline constexpr auto num_res = nres::two;
-
-        thiz_type &result(ResultType result) {
-            m_result = result;
-            return *this;
-        }
-
-        thiz_type &secondary_result(ResultType result) {
-            m_secondary_result = result;
-            return *this;
-        }
-
-        result_type result() const { return m_result; }
-
-        result_type secondary_result() const { return m_secondary_result; }
-
-       private:
-        ResultType m_result;
-        ResultType m_secondary_result;
-    };
-
-    template<typename ResultType>
-    class operation_result<ResultType, operation_type::single, functions::arctanh> final {
-       public:
-        using result_type = ResultType;
-        using thiz_type = operation_result<ResultType, operation_type::single, functions::arctanh>;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::arctanh, nres::one>;
 
         static inline constexpr auto num_res = nres::one;
 
@@ -518,10 +518,10 @@ namespace hal::cordic {
     };
 
     template<typename ResultType>
-    class operation_result<ResultType, operation_type::single, functions::natural_logarithm> final {
+    class operation_result<ResultType, operation_type::single, functions::natural_logarithm, nres::one> final {
        public:
         using result_type = ResultType;
-        using thiz_type = operation_result<ResultType, operation_type::single, functions::natural_logarithm>;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::natural_logarithm, nres::one>;
 
         static inline constexpr auto num_res = nres::one;
 
@@ -539,10 +539,10 @@ namespace hal::cordic {
     };
 
     template<typename ResultType>
-    class operation_result<ResultType, operation_type::single, functions::square_root> final {
+    class operation_result<ResultType, operation_type::single, functions::square_root, nres::one> final {
        public:
         using result_type = ResultType;
-        using thiz_type = operation_result<ResultType, operation_type::single, functions::square_root>;
+        using thiz_type = operation_result<ResultType, operation_type::single, functions::square_root, nres::one>;
 
         static inline constexpr auto num_res = nres::one;
 

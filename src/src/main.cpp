@@ -45,14 +45,35 @@ struct gcc_func<hal::cordic::functions::cosine> {
     static inline float (*func)(float) = std::cos;
 };
 
+template<>
+struct gcc_func<hal::cordic::functions::sine> {
+    static inline float (*func)(float) = std::sin;
+};
+
+template<>
+struct gcc_func<hal::cordic::functions::arctanh> {
+    static inline float (*func)(float) = std::atan;
+};
+
+template<hal::cordic::functions Function>
+struct func_input_range {
+    static inline constexpr float lower_value = -1.0f;
+    static inline constexpr float upper_value = 1.0f;
+};
+
+template<>
+struct func_input_range<hal::cordic::functions::arctanh> {
+    static inline constexpr float lower_value = -127.0f;
+    static inline constexpr float upper_value = 127.0f;
+};
+
 template<hal::cordic::functions Function>
 struct func_info {
     static inline constexpr auto func = Function;
+    static inline constexpr auto lower_value = func_input_range<Function>::lower_value;
+    static inline constexpr auto upper_value = func_input_range<Function>::upper_value;
 
     static inline auto gcc_equivalent = gcc_func<Function>::func;
-
-    static inline constexpr float lower_value = -1.0f;
-    static inline constexpr float upper_value = 1.0f;
 };
 
 template<typename BenchmarkType, typename CordicType, hal::cordic::functions Function, uint32_t num_values = 100>
@@ -116,15 +137,16 @@ benchmark_results do_benchmark(const BenchmarkType &benchmark) {
         }
     }
 
-    float complete_result = 0;
+    float total_difference = 0;
     for (auto i = 0u; i < useable_values; ++i) {
-        complete_result += bogus_values[i] * second_bogus_values[i];
+        total_difference += bogus_values[i] - second_bogus_values[(useable_values - 1) - i];
     }
+    total_difference /= static_cast<float>(useable_values);
 
     return benchmark_results{.result_cordic = cordic_setup_results + cordic_calc_results + cordic_convert_results,
                              .result_gcc = gcc_results,
                              .num_runs = useable_values,
-                             .bogus_value = complete_result};
+                             .bogus_value = total_difference};
 }
 
 /**
@@ -152,10 +174,22 @@ int main() {
 
     while (true) {
         auto results = do_benchmark<setup_benchmark_type, cordic_one, functions::cosine, 1000>(b);
-        uart_two::printf<256>("gcc_results: %d, num_runs : %d, complete_value : %d \r\n", results.result_gcc,
-                              results.num_runs, static_cast<int>(results.bogus_value * 10000));
-        uart_two::printf<256>("cordic_results: %d, num_runs : %d, complete_value : %d \r\n", results.result_cordic,
-                              results.num_runs, static_cast<int>(results.bogus_value * 10000));
+        uart_two::printf<256>("cos gcc_results: %d, num_runs : %d, complete_value : %d \r\n", results.result_gcc,
+                              results.num_runs, static_cast<int>(results.bogus_value * 1000));
+        uart_two::printf<256>("cos cordic_results: %d, num_runs : %d, complete_value : %d \r\n", results.result_cordic,
+                              results.num_runs, static_cast<int>(results.bogus_value * 1000));
+
+        results = do_benchmark<setup_benchmark_type, cordic_one, functions::sine, 1000>(b);
+        uart_two::printf<256>("sine gcc_results: %d, num_runs : %d, complete_value : %d \r\n", results.result_gcc,
+                              results.num_runs, static_cast<int>(results.bogus_value * 1000));
+        uart_two::printf<256>("sine cordic_results: %d, num_runs : %d, complete_value : %d \r\n", results.result_cordic,
+                              results.num_runs, static_cast<int>(results.bogus_value * 1000));
+
+        results = do_benchmark<setup_benchmark_type, cordic_one, functions::arctanh, 1000>(b);
+        uart_two::printf<256>("atanh gcc_results: %d, num_runs : %d, complete_value : %d \r\n", results.result_gcc,
+                              results.num_runs, static_cast<int>(results.bogus_value * 1000));
+        uart_two::printf<256>("atanh cordic_results: %d, num_runs : %d, complete_value : %d \r\n",
+                              results.result_cordic, results.num_runs, static_cast<int>(results.bogus_value * 1000));
         delay_ms(1000);
     }
 }
