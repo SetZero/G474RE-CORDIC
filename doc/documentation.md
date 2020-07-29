@@ -127,3 +127,52 @@ Die Funktion greift dafür auf einen zuvor festgelegten Bereich zu und wandelt, 
 Die Beschreibung dieser Zusammenhänge werden in structs gespeichert, welche den speziellen Mikrocontroller beschreiben, diese wird nachfolgend erläutert
 
 ## Beschreibung des Mikrocontroller Aufbaus
+
+Die Beschreibung eines Mikrocontrollers ist die Anzahl und die Art seiner Komponenten.
+Dies kann man mit einem Konzept implementieren, was die Fähigkeiten eines Mikrocontrollers modellieren kann.
+
+~~~{.cpp }
+    template<typename MCU, typename PIN>
+    concept stm_mcu = requires(MCU::GPIO a) {
+    typename MCU::GPIO::template address<PIN>;
+    requires input_register_type<decltype(a.moder)>;
+    requires input_register_type<decltype(a.otyper)>;
+    requires input_register_type<decltype(a.ospeedr)>;
+    requires input_register_type<decltype(a.pupdr)>;
+    requires output_register_type<decltype(a.idr)>;
+    requires input_register_type<decltype(a.bssr_set_io)>;
+    requires input_register_type<decltype(a.bssr_clear_io)>;
+    requires input_register_type<decltype(a.afr)>;
+    requires input_register_type<decltype(a.moder)>;
+};
+~~~
+
+Obiges Beispiel modelliert einen Mikrocontroller mit gpios, damit kann sichergestellt werden, dass eine konkrete Implementierung für GPIOs vorliegt.
+Diese Concepts werden im Zusammenhang mit dem HAL (Hardware-abstraction-layer) verwendet, dieses verallgemeinert eine Implementierung für mehrere Mikrocontroller.
+
+## Hardware Abstraction Layer
+
+### UART
+
+### GPIO
+
+### CORDIC
+
+# CORDIC
+
+In folgendem Abschnitt wird zunächst die konkrete Implementierung vorgestellt, welche die CORDIC Einheit ansteuert.
+Danach wird die Performance dieser Einheit mit den in gcc eingebauten trigonometrischen Funktionen verglichen.
+
+## Konkrete Implementierung der Cordicverwendung und zugehörige Datentypen
+
+Wie eingangs erwähnt liegt die Stärke von C++ vor allem in den Zero-Cost-Abstractions, welche eine Typsicherheit herstellen.
+Für die CORDIC Komponente wurden deswegen eigene Datentypen entworfen die, dies bieten können.
+Die CORDIC Komponente wird benutzt, indem man die gewünschte Einstellungen im Kontrollregister vornimmt,
+dann je nach Anzahl von Argumenten diese nacheinander in die Argumentregister schreibt.
+Nachdem der Algorithmus durchlaufen ist, werden die Ergebnisse je nach Anzahl wieder ausgelesen.
+Die Werte, welche in das Argumentregister geschrieben werden und die Ergebnisse, welche man aus dem Ergebnisregister erhält sind keine Werte, welche man direkt verwenden kann.
+Sie sind in einem Festkomma Format, dabei gibt es zwei Varianten *q1_31* und *q1_15*.
+Die Zahlen bewegen sich somit in einem Interval zwischen -1.0 und 1.0.  Größere Werte müssen durch die Software skaliert werden.
+Auch haben einige Funktionen unterschiedliche Definitionsbereiche, so müssen diese ebenfall in den Datentyp miteinbezogen werden.
+
+## Zeitmessung und Vergleich mit eingebauten Trigonometrischen Funktionen
