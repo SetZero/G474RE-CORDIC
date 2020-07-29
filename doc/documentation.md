@@ -180,6 +180,30 @@ Auch haben einige Funktionen unterschiedliche Definitionsbereiche, so müssen di
 
 ## Zeitmessung und Vergleich mit eingebauten Trigonometrischen Funktionen
 
+Die benötigte Zeit für Berechnungen wird mithilfe eines Timers gemessen. Zum Start der Berechnungen wird dieser zurückgesetzt und am Ende wird er ausgelesen.
+Für solche Zwecke eignet sich sehr gut eine Klasse welche nach dem RAII Konzept arbeitet. Dazu wird die Methode für das zurücksetzen der Zeit im Konstruktur der Klasse ausgerufen.
+Der Destruktor wiederum speichert den zurückgelieferten Wert des Timers in einen übergeben Pointer.
+
+~~~.cpp
+using setup_benchmark_type = benchmark<decltype(&reset_counter), decltype(&get_counter_value)>;
+setup_benchmark_type b(reset_counter, get_counter_value);
+uint32_t result = 0;
+{
+    auto probe = b.create_probe<benchmark_name>(&result);
+    // Do calculations
+
+    // Probe destructor is called at the end of the block
+}
+
+// result has now the value of the timer in it
+~~~
+
+Der Vergleich zwischen Cordic und den eingebauten trigonometrischen Funktionen soll zunächst davon ausgehen, dass man mit Fließkommazahlen rechnen möchte.
+Zum besseren Überblick werden die Zeiten, welche für die Berechnungen mit dem CORDIC benötigt in drei Teile unterteilt:
+    - Dem Berechnen der Eingaben, also der Umrechnung von den Fließkommazahlen in den jeweiligen Typ
+    - Der eigentlichen Berechnung mit der CORDIC Einheit
+    - Dem Umrechnen der Ergebnisse in eine Fließkommazahl
+
 # Fazit
 
 Es konnte gezeigt werden, dass C++ gut verwendet werden kann, um typsichere und effiziente Abstraktionen zu erstellen, die die Komplexität bei der Verwendung von Mikrocontrollern
@@ -189,7 +213,7 @@ mindern kann. Dabei ist nicht nur hilfreich bei der Verwendung der Abstraktionsl
 
 Durch den weiteren Ausbau des Frameworks können die anderen Peripherien des Mikrocontrollers typsicher und einfach verwendet werden.
 Zudem kann diese Bibliothek auf andere Mikrocontroller portiert werden, sodass man eine gemeinsame Schnittstelle verwenden kann.
-Es können weitere Operationen für die q_number Klasse hinzugefügt werden, sodass die etwas teure Umwandlung von FließKommazahlen in Fixed-Kommazahlen
+Es können weitere Operationen für die q_number Klasse hinzugefügt werden, sodass die etwas teure Umwandlung von Fließkommazahlen in Fixed-Kommazahlen
 erspart bleibt und man stattdessen mit den diesem Typen weiter rechnen kann.
 Weiterhin könnte die CORDIC-Einheit im Pipeline Modus gut mit dem ranges feature von C++20 verbunden werden.
 Dadurch kann eine gewohnte API, auch für die CORDIC Einheit verwendet werden kann.
