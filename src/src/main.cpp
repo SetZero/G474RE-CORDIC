@@ -37,8 +37,8 @@ int main() {
     using namespace hal::cordic;
     using port_a = hal::periphery::gpio<mcu_ns::A, used_mcu>;
     using uart_two = hal::periphery::uart<mcu_ns::uart_nr::two, used_mcu>;
-    using cordic_one = hal::cordic::cordic<mcu_ns::cordic_nr::one, mcu_ns::mcu_info>;
-    
+    using cordic_one = hal::periphery::cordic<mcu_ns::cordic_nr::one, mcu_ns::mcu_info>;
+
     cordic_one::init();
 
     using txpin = port_a::pin<2>;

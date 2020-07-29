@@ -8,7 +8,7 @@
 template<typename MCU, typename PIN>
 concept cordic_mcu = stm_mcu<MCU, PIN>;
 
-namespace hal::cordic {
+namespace hal::periphery {
     template<typename CordicNr, cordic_mcu<CordicNr> mcu>
     class cordic {
        public:
