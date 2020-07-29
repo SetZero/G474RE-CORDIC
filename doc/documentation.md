@@ -19,6 +19,9 @@ toc-depth: 1
 title-own-page: 1
 toc-own-page: 1
 secnumdepth: 2
+header-left: "C++ Framework für STM32 Mikrocontrollers"
+listings-no-page-break: true 
+listings-disable-line-numbers: true
 abstract: |
     Mikrocontroller erhalten immer wieder neue und stärkere Komponenten, dabei hat sich die Programmierung dieser bisher kaum geändert.
     Durch die neuen Funktionalitäten dieser wird auch die Entwicklung immer komplexer. Mit C++ und seinen Zero Cost Abstractions soll
@@ -59,7 +62,7 @@ In der vorherigen Abbildung ist die Beschreibung eines Registers des Mikrocontro
 Die Bits werden beschrieben, indem diesen eine Funktion zugewiesen wird, ein Bereich und gültige Werte. Weiterhin kann es reservierte Bereiche geben, welche
 nicht verändert werden dürfen. Diese Zusammenhänge wurden in einem Datentyp modelliert.
 
-~~~{.cpp}
+~~~cpp
 register_entry_desc<CR::DEDT, uint8_t, bit_range<16u, 20u>, access_mode::read_write>
 ~~~
 
@@ -67,7 +70,7 @@ Dieser Typ beschreibt die Bitpositionen von 16 - 20 einschließlich, der Bereich
 Weiterhin wird die Funktion mit einem enum Eintrag Beschrieben. So muss jedes einzelne Bit beschrieben werden, ein Konzept stellt dies zur Kompilezeit sicher.
 Für das UART Register CR ergibt sich damit folgender Typ:
 
-~~~{.cpp}
+~~~cpp
 register_desc<
 volatile uint32_t, register_entry_desc<CR::UE, bool, bit_pos<0u>>,
 register_entry_desc<CR::UESM, bool, bit_pos<1u>>,
