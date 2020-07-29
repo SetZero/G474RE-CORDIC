@@ -49,7 +49,7 @@ namespace hal::cordic {
     template<typename config, operation_type Type, functions Function>
     class operation final {};
 
-    template<typename ResultType, operation_type Type, functions Function, nres num_result = 1>
+    template<typename ResultType, operation_type Type, functions Function, nres num_result>
     class operation_result final {};
 
     template<precision P, cordic_algorithm_precision A = cordic_algorithm_precision::normal>
