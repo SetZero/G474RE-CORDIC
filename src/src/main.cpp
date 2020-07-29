@@ -78,6 +78,10 @@ int main() {
         float sqrt_arg = 2;
         // int atanval = rdeg / 2;
         vec2<precision::q1_31> v;
+
+        op.arg1(angle<precision::q1_31>{degrees{rdeg}});
+        op2.arg1(angle<precision::q1_31>{degrees{rdeg}});
+
         decltype(op4)::args_type::first_arg_type op4_arg;
         decltype(op6)::args_type::first_arg_type op6_arg;
 
@@ -86,17 +90,18 @@ int main() {
         static constexpr char benchmark_name[] = {"setup arguments"};
         static constexpr char benchmark_name_two[] = {"calculating"};
         static constexpr char benchmark_name_three[] = {"converting back to floats"};
+
+        static constexpr char benchmark_standard_trigon[] = {"calculating with standard trigonmetric functions"};
         uint32_t result = 0;
         uint32_t result_two = 0;
         uint32_t result_three = 0;
+        uint32_t gcc_timer = 0;
         {
             auto probe = b.create_probe<benchmark_name>(&result);
             decltype(op8)::args_type::first_arg_type op8_arg{hyperbolic_argument_atan};
             op4_arg = decltype(op4_arg){rdeg / 2.0f};
             op6_arg = decltype(op6_arg){hyperbolic_argument};
 
-            op.arg1(angle<precision::q1_31>{degrees{rdeg}});
-            op2.arg1(angle<precision::q1_31>{degrees{rdeg}});
             op4.arg1(op4_arg);
 
             v = vec2<precision::q1_31>{x_coord{float_val}, y_coord{float_val2}};
@@ -153,19 +158,28 @@ int main() {
             float_val9 = static_cast<float>(fixed_val9);
             float_val10 = static_cast<float>(fixed_val10);
         }
-        
+
         uart_two::printf<256>("%s took %ld us \r\n", benchmark_name_three, result_three);
 
-        reset_counter();
-        volatile auto v1 [[gnu::unused]] = std::cos(rdeg);
-        volatile auto v2 [[gnu::unused]] = std::sin(rdeg);
-        volatile auto v3 [[gnu::unused]] = std::atan(rdeg);
-        volatile auto v4 [[gnu::unused]] = std::cosh(hyperbolic_argument);
-        volatile auto v5 [[gnu::unused]] = std::sinh(hyperbolic_argument);
-        volatile auto v6 [[gnu::unused]] = std::atanh(hyperbolic_argument_atan);
-        volatile auto v7 [[gnu::unused]] = std::log(rdeg);
-        volatile auto v8 [[gnu::unused]] = std::sqrt(rdeg);
-        auto gcc_timer = static_cast<int>(get_counter_value());
+        float v1{0.0f};
+        float v2{0.0f};
+        float v3{0.0f};
+        float v4{0.0f};
+        float v5{0.0f};
+        float v6{0.0f};
+        float v7{0.0f};
+        float v8{0.0f};
+        {
+            auto probe = b.create_probe<benchmark_standard_trigon>(&gcc_timer);
+            v1 = std::cos(rdeg);
+            v2 = std::sin(rdeg);
+            v3 = std::atan(rdeg);
+            v4 = std::cosh(hyperbolic_argument);
+            v5 = std::sinh(hyperbolic_argument);
+            v6 = std::atanh(hyperbolic_argument_atan);
+            v7 = std::log(rdeg);
+            v8 = std::sqrt(rdeg);
+        }
 
         uart_two::printf<512>("GCC: %d us vs Cordic: %d\r\n", gcc_timer, result + result_two + result_three);
 
