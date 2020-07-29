@@ -119,6 +119,13 @@ namespace Detail {
 
        public:
         constexpr q_number() = default;
+        constexpr q_number(const q_number &other) = default;
+        constexpr q_number(q_number &&other) = default;
+        constexpr ~q_number() = default;
+
+        constexpr q_number &operator=(const q_number &value) = default;
+        constexpr q_number &operator=(q_number &&value) = default;
+
         template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
         constexpr explicit q_number(T value) {
             set_to_value(value);
@@ -136,6 +143,7 @@ namespace Detail {
 
             return *this;
         }
+
 
         template<typename T>
         constexpr q_number &soft_scale(T soft_scale) {

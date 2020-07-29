@@ -15,6 +15,7 @@
 
 #include <cstdint>
 //#include <concepts>
+#include "benchmark.h"
 #include "hal/cordic.h"
 #include "hal/cordic_types.h"
 #include "hal/gpio.h"
@@ -76,44 +77,84 @@ int main() {
         float nat_log_arg = 0.2;
         float sqrt_arg = 2;
         // int atanval = rdeg / 2;
+        vec2<precision::q1_31> v;
+        decltype(op4)::args_type::first_arg_type op4_arg;
+        decltype(op6)::args_type::first_arg_type op6_arg;
 
-        reset_counter();
-        decltype(op4)::args_type::first_arg_type op4_arg{rdeg / 2.0f};
-        decltype(op6)::args_type::first_arg_type op6_arg{hyperbolic_argument};
-        decltype(op8)::args_type::first_arg_type op8_arg{hyperbolic_argument_atan};
+        using setup_benchmark_type = benchmark<decltype(&reset_counter), decltype(&get_counter_value)>;
+        setup_benchmark_type b(reset_counter, get_counter_value);
+        static constexpr char benchmark_name[] = {"setup arguments"};
+        static constexpr char benchmark_name_two[] = {"calculating"};
+        static constexpr char benchmark_name_three[] = {"converting back to floats"};
+        uint32_t result = 0;
+        uint32_t result_two = 0;
+        uint32_t result_three = 0;
+        {
+            auto probe = b.create_probe<benchmark_name>(&result);
+            decltype(op8)::args_type::first_arg_type op8_arg{hyperbolic_argument_atan};
+            op4_arg = decltype(op4_arg){rdeg / 2.0f};
+            op6_arg = decltype(op6_arg){hyperbolic_argument};
 
-        op.arg1(angle<precision::q1_31>{degrees{rdeg}});
-        op2.arg1(angle<precision::q1_31>{degrees{rdeg}});
-        op4.arg1(op4_arg);
+            op.arg1(angle<precision::q1_31>{degrees{rdeg}});
+            op2.arg1(angle<precision::q1_31>{degrees{rdeg}});
+            op4.arg1(op4_arg);
 
-        // auto float_op_val = static_cast<float>(op4_arg);
-        vec2<precision::q1_31> v{x_coord{float_val}, y_coord{float_val2}};
-        op3.arg(v);
-        op5.arg(v);
-        op6.arg1(op6_arg);
-        op7.arg1(op6_arg);
-        op8.arg1(op8_arg);
-        op9.arg1(decltype(op9)::args_type::first_arg_type{nat_log_arg});
-        op10.arg1(decltype(op10)::args_type::first_arg_type{sqrt_arg});
+            v = vec2<precision::q1_31>{x_coord{float_val}, y_coord{float_val2}};
+            op3.arg(v);
+            op5.arg(v);
+            op6.arg1(op6_arg);
+            op7.arg1(op6_arg);
+            op8.arg1(op8_arg);
+            op9.arg1(decltype(op9)::args_type::first_arg_type{nat_log_arg});
+            op10.arg1(decltype(op10)::args_type::first_arg_type{sqrt_arg});
+        }
 
-        auto fixed_val3 = cordic_one::calculate(op3).result();
-        auto fixed_val4 = cordic_one::calculate(op5).result();
-        auto fixed_val5 = cordic_one::calculate(op4).result();
-        auto fixed_val6 = cordic_one::calculate(op6).result();
-        auto fixed_val7 = cordic_one::calculate(op7).result();
-        auto fixed_val8 = cordic_one::calculate(op8).result();
-        auto fixed_val9 = cordic_one::calculate(op9).result();
-        auto fixed_val10 = cordic_one::calculate(op10).result();
+        uart_two::printf<256>("%s took %ld us \r\n", benchmark_name, result);
+        typename decltype(op3)::result_type::result_type fixed_val3;
+        typename decltype(op5)::result_type::result_type fixed_val4;
+        typename decltype(op4)::result_type::result_type fixed_val5;
+        typename decltype(op6)::result_type::result_type fixed_val6;
+        typename decltype(op7)::result_type::result_type fixed_val7;
+        typename decltype(op8)::result_type::result_type fixed_val8;
+        typename decltype(op9)::result_type::result_type fixed_val9;
+        typename decltype(op10)::result_type::result_type fixed_val10;
 
-        volatile auto float_val3 = static_cast<float>(fixed_val3);
-        volatile auto float_val4 = static_cast<float>(fixed_val4);
-        volatile auto float_val5 = static_cast<float>(fixed_val5);
-        volatile auto float_val6 = static_cast<float>(fixed_val6);
-        volatile auto float_val7 = static_cast<float>(fixed_val7);
-        volatile auto float_val8 = static_cast<float>(fixed_val8);
-        volatile auto float_val9 = static_cast<float>(fixed_val9);
-        volatile auto float_val10 = static_cast<float>(fixed_val10);
-        volatile auto cordic_timer = static_cast<int>(get_counter_value());
+        {
+            auto probe = b.create_probe<benchmark_name_two>(&result_two);
+            fixed_val3 = cordic_one::calculate(op3).result();
+            fixed_val4 = cordic_one::calculate(op5).result();
+            fixed_val5 = cordic_one::calculate(op4).result();
+            fixed_val6 = cordic_one::calculate(op6).result();
+            fixed_val7 = cordic_one::calculate(op7).result();
+            fixed_val8 = cordic_one::calculate(op8).result();
+            fixed_val9 = cordic_one::calculate(op9).result();
+            fixed_val10 = cordic_one::calculate(op10).result();
+        }
+
+        uart_two::printf<256>("%s took %ld us \r\n", benchmark_name_two, result_two);
+
+        float float_val3{};
+        float float_val4{};
+        float float_val5{};
+        float float_val6{};
+        float float_val7{};
+        float float_val8{};
+        float float_val9{};
+        float float_val10{};
+
+        {
+            auto probe = b.create_probe<benchmark_name_three>(&result_three);
+            float_val3 = static_cast<float>(fixed_val3);
+            float_val4 = static_cast<float>(fixed_val4);
+            float_val5 = static_cast<float>(fixed_val5);
+            float_val6 = static_cast<float>(fixed_val6);
+            float_val7 = static_cast<float>(fixed_val7);
+            float_val8 = static_cast<float>(fixed_val8);
+            float_val9 = static_cast<float>(fixed_val9);
+            float_val10 = static_cast<float>(fixed_val10);
+        }
+        
+        uart_two::printf<256>("%s took %ld us \r\n", benchmark_name_three, result_three);
 
         reset_counter();
         volatile auto v1 [[gnu::unused]] = std::cos(rdeg);
@@ -126,7 +167,7 @@ int main() {
         volatile auto v8 [[gnu::unused]] = std::sqrt(rdeg);
         auto gcc_timer = static_cast<int>(get_counter_value());
 
-        uart_two::printf<512>("GCC: %d us vs Cordic: %d\r\n", gcc_timer, cordic_timer);
+        uart_two::printf<512>("GCC: %d us vs Cordic: %d\r\n", gcc_timer, result + result_two + result_three);
 
         uart_two::printf<512>("%d, %d, %d, %d, %d, %d, %d, %d \r\n", static_cast<int>(v1 * 10000),
                               static_cast<int>(v2 * 10000), static_cast<int>(v3 * 10000), static_cast<int>(v4 * 10000),
