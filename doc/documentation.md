@@ -162,31 +162,60 @@ In diesem Abschnitt wird beschrieben GPIOs in einem HALs implementiert wurden un
 Da ein Cortex M basierter Mikrocontroller im Gegensatz zu beispielsweise der relativ einfach aufgebauten Mircochip AVR Architektur relativ viele Möglichkeiten zur Ansteuerung und Konfiguration einzelner I/O-Pins sowie deren Register besitzt wurde versucht diese Komplexität möglichst einfach zu implementieren indem so viel wie möglich Komplexität vor dem Nutzer versteckt wird. 
 Hierzu wurden zuerst wie zuvor beschrieben die einzelnen GPIO Register in einer STM32G4 spezifischen Klasse mittels `repeated_control_register` abgebildet. Dies ermöglicht ein Fehlerfreies einsetzen von Registerwerte mittels Enum-Werten. Zum auslesen von Werten an GPIO Pins wurde `data_register` verwendet welches einen reinen Lesezugriff auf ein Register ermöglicht. Somit ist es auch einem Anwender möglich mehrere Werte auf einmal auszulesen und auf diesen Bitoperationen auszuführen. 
 
-~~~{.cpp }
+~~~cpp
  repeated_control_register<GPIO, MODER, uint32_t, 2> moder;
  data_register<GPIO, data_register_type::READ_ONLY, uint32_t, uint32_t{0xFFFF}> idr;
 ~~~
 
 Da sämtliche GPIO Ports die gleiche Register Map besitzen ist es möglich durch Austausch der Basisadresse diese auf die selbe Art anzusprechen indem ein Struct auf den Registerspeicherbereich gemappt wird. Diese wurde mittels Template Spezialisierung Implementiert, wie nachfolgend zu sehen ist.
 
-~~~{.cpp }
+~~~cpp
 template<>
 struct mcu_info::GPIO::address<A> {
     static constexpr inline uintptr_t value = 0x48000000;
 };
 ~~~
 
+Der HAL der GPIOs besteht aus zwei möglichen zum Referenzieren eines Pins, welche Nachfolgend betrachtet werden können.
+
+~~~cpp
+// (1) Port A, Pin 1-3 an
+gpio<mcu_ns::A, used_mcu>::on<1, 2, 3>();
+// (2) Port A, Pin 3 aus
+gpio<mcu_ns::A, used_mcu>::pin<3>::off();
+~~~
+
+Bei Methode 1 können mehrere Pins auf einmal angesprochen und Funktionen auf diesen ausgeführt werden. Dies erleichtert das gleichzeitige ansteuern mehrerer Pins durch einen Benutzer.
+Methode 2 wiederum ermöglicht das ansteuern und Referenzieren eines einzelnen Pins. Diese Methode wird vor allem benutzt um in Speziellen Funktionen, wie beispielsweise UART, einzelne Pins für Senden und Empfangen festzulegen und somit die lesbarkeit zu erhöhen, wie in nachfolgenden Kapiteln zu sehen ist.
+
+Weitere Funktionen von GPIO umfassen bereits von AVR bekannte Fähigkeiten, wie beispielsweise den Pin Modus auf Ein- oder Ausgabe zu setzen mittels `set_port_mode()`, sowie das auslesen eines Pins mittels `get()`. Zusätzlich zu diesen existieren noch unter ARM die Möglichkeit einen Pin explizit auf Push/Pull oder Open Drain zu stellen mittels `set_type()`. Des weiteren ist es auch möglich die Flankensteilheit mittels `set_speed()` zu setzen.
+
 Eine Besonderheit der GPIO Register, welche noch beachtet werden musste ist, dass ein großer teil der Pins eine eigene Alternative Funktion besitzen kann. Beim setzen dieser Funktion wird mittels eines Multiplexers am Pin des Mikrocontrollers dieser mit einer speziellen Funktion verbunden. Dies ist vor allem Notwendig, wenn UART oder andere Funktionen am Ausgang eines Pins verwendet werden müssen.
 Da diese Funktionen sich jedoch von Mikrocontroller zu Mikrocontroller unterscheiden können und auch innerhalb der Modellreihe sich unterscheiden muss hierzu eine Spezialisierung der jeweiligen Verfügbaren Mikrocontroller durchgeführt werden. Hierzu wurde die Klasse `g474re` hinzugefügt, welche die Mappings der Alternativen Funktion mit der jeweiligen Zahl dieser Funktion durchführt. Ein Beispiel hierzu kann nachfolgend gesehen werden
 
-~~~{.cpp }
+~~~cpp
 type_mapper mapper{
     type_value_pair<af_type<A, 2, uart_nr::two, uart::uart_pin_types::TX>, af_name::AF7>{},
     type_value_pair<af_type<A, 3, uart_nr::two, uart::uart_pin_types::RX>, af_name::AF7>{}
 }
 ~~~
 
-Hierbei werden die TX und RX Pins von UART der Funktion 7 zugewiesen. 
+Hierbei werden die TX und RX Pins von UART der Funktion 7 zugewiesen.
+
+Anschließend kann mittels der Funktion find_af, welche für jede Spezialisierte Mikrocontrollerklasse existiert nach diesen Mappings gesucht werden und somit diese abstrahiert werden.
+
+~~~cpp
+template<typename Port, uint32_t pin, typename function_number, auto function_type>
+requires(pin <= 31) static constexpr af_type find_af() {
+    return detail::mapper.lookup_type<detail::af_type<Port, pin, function_number, function_type>>();
+}
+~~~
+
+Im HAL wurden diese Mappings innerhalb der Funktion `set_alternative_function()` verwendet um Mittels der Pin Informationen, welche bereits innerhalb der Klasse verfügbar sind, sowie der Funktionsbeschreibung (wie UART2) die zugehörige Alternative Funktion zu finden und entsprechend ansprechen zu können, wie dies im Nachfolgenden Beispiel zu sehen ist.
+
+~~~cpp
+gpio<mcu_ns::A, used_mcu>::pin<3>::set_alternative_function<uart_nr::one, uart_pin_types::TX>();
+~~~
 
 ### UART
 
