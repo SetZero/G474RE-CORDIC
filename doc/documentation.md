@@ -155,9 +155,46 @@ Diese Concepts werden im Zusammenhang mit dem HAL (Hardware-abstraction-layer) v
 
 ## Hardware Abstraction Layer
 
+### GPIO
+
+In diesem Abschnitt wird beschrieben GPIOs in einem HALs implementiert wurden und wie dessen Verwendung möglich ist.
+
+Da ein Cortex M basierter Mikrocontroller im Gegensatz zu beispielsweise der relativ einfach aufgebauten Mircochip AVR Architektur relativ viele Möglichkeiten zur Ansteuerung und Konfiguration einzelner I/O-Pins sowie deren Register besitzt wurde versucht diese Komplexität möglichst einfach zu implementieren indem so viel wie möglich Komplexität vor dem Nutzer versteckt wird. 
+Hierzu wurden zuerst wie zuvor beschrieben die einzelnen GPIO Register in einer STM32G4 spezifischen Klasse mittels `repeated_control_register` abgebildet. Dies ermöglicht ein Fehlerfreies einsetzen von Registerwerte mittels Enum-Werten. Zum auslesen von Werten an GPIO Pins wurde `data_register` verwendet welches einen reinen Lesezugriff auf ein Register ermöglicht. Somit ist es auch einem Anwender möglich mehrere Werte auf einmal auszulesen und auf diesen Bitoperationen auszuführen. 
+
+~~~{.cpp }
+ repeated_control_register<GPIO, MODER, uint32_t, 2> moder;
+ data_register<GPIO, data_register_type::READ_ONLY, uint32_t, uint32_t{0xFFFF}> idr;
+~~~
+
+Da sämtliche GPIO Ports die gleiche Register Map besitzen ist es möglich durch Austausch der Basisadresse diese auf die selbe Art anzusprechen indem ein Struct auf den Registerspeicherbereich gemappt wird. Diese wurde mittels Template Spezialisierung Implementiert, wie nachfolgend zu sehen ist.
+
+~~~{.cpp }
+template<>
+struct mcu_info::GPIO::address<A> {
+    static constexpr inline uintptr_t value = 0x48000000;
+};
+~~~
+
+Eine Besonderheit der GPIO Register, welche noch beachtet werden musste ist, dass ein großer teil der Pins eine eigene Alternative Funktion besitzen kann. Beim setzen dieser Funktion wird mittels eines Multiplexers am Pin des Mikrocontrollers dieser mit einer speziellen Funktion verbunden. Dies ist vor allem Notwendig, wenn UART oder andere Funktionen am Ausgang eines Pins verwendet werden müssen.
+Da diese Funktionen sich jedoch von Mikrocontroller zu Mikrocontroller unterscheiden können und auch innerhalb der Modellreihe sich unterscheiden muss hierzu eine Spezialisierung der jeweiligen Verfügbaren Mikrocontroller durchgeführt werden. Hierzu wurde die Klasse `g474re` hinzugefügt, welche die Mappings der Alternativen Funktion mit der jeweiligen Zahl dieser Funktion durchführt. Ein Beispiel hierzu kann nachfolgend gesehen werden
+
+~~~{.cpp }
+type_mapper mapper{
+    type_value_pair<af_type<A, 2, uart_nr::two, uart::uart_pin_types::TX>, af_name::AF7>{},
+    type_value_pair<af_type<A, 3, uart_nr::two, uart::uart_pin_types::RX>, af_name::AF7>{}
+}
+~~~
+
+Hierbei werden die TX und RX Pins von UART der Funktion 7 zugewiesen. 
+
 ### UART
 
-### GPIO
+In diesem Abschnitt wird die Abstrahierung der UART Funktionalität beschrieben. Diese dient der Kommunikation eines Mikrocontrollers mit einem externen Gerät.
+
+Die in diesem Projekt verwendete STM32G4 Serie besitzt zwei verschiedene UART Implementierungen. Bei der ersten Variante Handelt es sich um einen Universal synchronous/asynchronous receiver
+transmitter. Dieser besitzt sowohl die möglichkeit der synchronen als auch asynchronen Übertragung. Des weitern existiert neben dieser Variante auch die Möglichkeit einer Kommunikation im Low-power Modus, welcher als LPUART verfügbar ist. In diesem Projekt wurde nur die Möglichkeit der Asynchronen UART Übertragung für den HAL zur Verfügung gestellt. Jedoch wäre es mit minimalen Anpassungen auch möglich die LPUART Variante mit ähnlicher Funktionalität wie UART zu implementieren.
+
 
 ### CORDIC
 
