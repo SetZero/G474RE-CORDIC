@@ -180,7 +180,6 @@ namespace hal {
     template<auto Function, typename DataType, typename PositionType, access_mode Mode = access_mode::read_write>
     struct register_entry_desc {
         using enum_type = decltype(Function);
-        // TODO: add data_type concept
         using data_type = DataType;
         using position_type = PositionType;
 

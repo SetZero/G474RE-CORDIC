@@ -49,6 +49,20 @@ Mit dem Zeiger eines primitiven Datentypes auf des Registers, können unsinnige 
 Registern Werte und Teile, die nicht manipuliert werden dürfen.
 Um diese beiden Ziele zu erreichen wurde Datentypen implementiert, welche bei der Umsetzung dieser Ziele helfen sollen.
 
+![Beschreibung des Registers in der Dokumentation des Mikrocontrollers](images/cr1desc.png)
+
+In der vorherigen Abbildung ist die Beschreibung eines Registers des Mikrocontrollers abgebildet, wie sie üblicherweise in einer Dokumentation vorkommt.
+Die Bits werden beschrieben, indem diesen eine Funktion zugewiesen wird, ein Bereich und gültige Werte. Weiterhin kann es reservierte Bereiche geben, welche
+nicht verändert werden dürfen. Diese Zusammenhänge wurden in einem Datentyp modelliert.
+
+~~~{.cpp}
+register_entry_desc<CR::DEDT, uint8_t, bit_range<16u, 20u>, access_mode::read_write>
+~~~
+
+Dieser Typ beschreibt die Bitpositionen von 16 - 20 einschließlich, dieser Bereich kann gelesen und gesetzt werden.
+Weiterhin wird die Funktion mit einem enum Eintrag Beschrieben. So muss jedes einzelne Bit beschrieben werden, ein Konzept stellt dies zur Kompilezeit sicher.
+Für das UART Register CR ergibt sich damit folgender Typ:
+
 ~~~{.cpp}
 register_desc<
 volatile uint32_t, register_entry_desc<CR::UE, bool, bit_pos<0u>>,
@@ -76,4 +90,4 @@ register_entry_desc<CR::FIFOEN, bool, bit_pos<29u>>,
 register_entry_desc<CR::RESERVED, reserved_type, bit_range<30u, 31u>>>
 ~~~
 
-![Beschreibung des Registers in der Dokumentation des Microcontrollers](images/cr1desc.png)
+
