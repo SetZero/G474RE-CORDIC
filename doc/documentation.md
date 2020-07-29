@@ -180,6 +180,10 @@ Auch haben einige Funktionen unterschiedliche Definitionsbereiche, so müssen di
 
 ## Zeitmessung und Vergleich mit eingebauten Trigonometrischen Funktionen
 
+<!-- TODO: add some text here -->
+
+### Setup
+
 Die benötigte Zeit für Berechnungen wird mithilfe eines Timers gemessen. Zum Start der Berechnungen wird dieser zurückgesetzt und am Ende wird er ausgelesen.
 Für solche Zwecke eignet sich sehr gut eine Klasse welche nach dem RAII Konzept arbeitet. Dazu wird die Methode für das zurücksetzen der Zeit im Konstruktur der Klasse ausgerufen.
 Der Destruktor wiederum speichert den zurückgelieferten Wert des Timers in einen übergeben Pointer.
@@ -200,9 +204,18 @@ uint32_t result = 0;
 
 Der Vergleich zwischen Cordic und den eingebauten trigonometrischen Funktionen soll zunächst davon ausgehen, dass man mit Fließkommazahlen rechnen möchte.
 Zum besseren Überblick werden die Zeiten, welche für die Berechnungen mit dem CORDIC benötigt in drei Teile unterteilt:
-    - Dem Berechnen der Eingaben, also der Umrechnung von den Fließkommazahlen in den jeweiligen Typ
-    - Der eigentlichen Berechnung mit der CORDIC Einheit
-    - Dem Umrechnen der Ergebnisse in eine Fließkommazahl
+
+- Dem Berechnen der Eingaben, also der Umrechnung von den Fließkommazahlen in den jeweiligen Typ
+- Der eigentlichen Berechnung mit der CORDIC Einheit
+- Dem Umrechnen der Ergebnisse in eine Fließkommazahl
+
+### Auswertung der Ergebnisse
+
+Die Performance des CORDIC ist unabhängig von der Eingabe, lediglich die geforderte Präzision beeinträchtigt die benötigte Berechnung.
+
+![Benötigte Zyklen des CORDICs für bestimmte trigonometrische Funktionen](images/perfcordic.png)
+
+Bei den eingebauten trigonometrischen Funktionen des Compilers hat die Größe der Eingabe jedoch einen Einfluss.
 
 # Fazit
 
