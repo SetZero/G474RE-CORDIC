@@ -44,7 +44,7 @@ namespace hal::cordic {
 
     enum class operation_type { single, pipeline };
 
-    enum class cordic_algorithm_precision : uint8_t { normal = 5u };
+    enum class cordic_algorithm_precision : uint8_t { very_low = 1u, low = 3u, normal = 5u, high = 14u };
 
     template<typename config, operation_type Type, functions Function>
     class operation final {};

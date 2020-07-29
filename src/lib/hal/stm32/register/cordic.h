@@ -8,8 +8,8 @@
 #include <utility>
 
 #include "hal/cordic.h"
-#include "hal/cordic_types.h"
 #include "hal/cordic/cordic_operations.h"
+#include "hal/cordic_types.h"
 #include "utils.h"
 
 namespace hal::stm::stm32g4::cordic {
