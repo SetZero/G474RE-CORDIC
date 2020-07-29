@@ -152,3 +152,14 @@ namespace Detail {
 
 template<typename T>
 using integral_equivalent = typename Detail::integral_equivalent<T, std::is_enum_v<T>>::type;
+
+struct frequency {
+    using value_type = uint32_t;
+    value_type value;
+};
+
+namespace units::literals {
+    constexpr frequency operator"" _Hz(unsigned long long freq) {
+        return frequency{static_cast<frequency::value_type>(freq)};
+    }
+}

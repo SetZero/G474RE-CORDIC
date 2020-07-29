@@ -51,7 +51,7 @@ namespace hal::periphery {
         requires(DataBits >= 7 && DataBits <= 9) static void init() {
             uart_registers()->cr1.template set_value<MCU::UART::CR::UE>(false);
             // TODO: Fixme
-            hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()->ahb2.add<MCU::AHBENR::AHB2ENR::GPIOA>();
+            mcu_features<MCU>::template enable_clock<features::hal_features::GPIOA>();
 
             TXPin::template set_alternative_function<UartNr, UsedMCU::uart::uart_pin_types::TX>();
             RXPin::template set_alternative_function<UartNr, UsedMCU::uart::uart_pin_types::RX>();
@@ -62,9 +62,7 @@ namespace hal::periphery {
             TXPin::template set_type<gpio_values::type::PUSH_PULL>();
             RXPin::template set_type<gpio_values::type::PUSH_PULL>();
 
-            // TODO: Changme
-            hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
-                ->apb11.add<hal::stm::stm32g4::mcu_info::APBENR::APB1ENR1::USART2EN>();
+            mcu_features<MCU>::template enable_clock<features::hal_features::UART, UartNr>();
 
             if constexpr (DataBits == 8) {
                 uart_registers()->cr1.template set_value<MCU::UART::CR::M1>(false);
@@ -79,7 +77,7 @@ namespace hal::periphery {
 
             uart_registers()->cr1.template set_value<MCU::UART::CR::PCE>(false);
             uart_registers()->cr2.template set_value<MCU::UART::CR2::STOP>(uart_detail::stop_mapper[StopBits]);
-            uart_registers()->brr.template set_value<MCU::UART::BRR::BRR>(16'000'000u / Baudrate);
+            uart_registers()->brr.template set_value<MCU::UART::BRR::BRR>(UsedMCU::frequency / Baudrate);
 
             uart_registers()->cr1.template set_value<MCU::UART::CR::UE>(true);
             uart_registers()->cr1.template set_value<MCU::UART::CR::TE>(true);

@@ -250,7 +250,8 @@ namespace hal::stm::stm32g4 {
                           register_entry_desc<CR3::TXFTCFG, xftcfg, bit_range<29u, 31u>, access_mode::read_write>>
                 cr3;
 
-            register_desc<volatile uint32_t, register_entry_desc<BRR::BRR, uint16_t, bit_range<0u, 15u>, access_mode::read_write>,
+            register_desc<
+                volatile uint32_t, register_entry_desc<BRR::BRR, uint16_t, bit_range<0u, 15u>, access_mode::read_write>,
                 register_entry_desc<BRR::RESERVED, reserved_type, bit_range<16u, 31u>, access_mode::no_access>>
                 brr;
 
@@ -442,7 +443,6 @@ namespace hal::stm::stm32g4 {
     struct mcu_info::CORDIC::address<cordic_nr::one> {
         static constexpr inline uintptr_t value = 0x40020C00;
     };
-
 }  // namespace hal::stm::stm32g4
 
 namespace hal::info {
@@ -452,3 +452,83 @@ namespace hal::info {
     };
 
 }  // namespace hal::info
+
+namespace detail {
+    template<features::hal_features feature, typename number = unused>
+    void enable_clock();
+
+    template<>
+    void enable_clock<features::hal_features::GPIOA>() {
+        hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
+            ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOA>();
+    }
+
+    template<>
+    void enable_clock<features::hal_features::GPIOB>() {
+        hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
+            ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOB>();
+    }
+
+    template<>
+    void enable_clock<features::hal_features::GPIOC>() {
+        hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
+            ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOC>();
+    }
+
+    template<>
+    void enable_clock<features::hal_features::GPIOD>() {
+        hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
+            ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOD>();
+    }
+
+    template<>
+    void enable_clock<features::hal_features::GPIOE>() {
+        hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
+            ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOE>();
+    }
+
+    template<>
+    void enable_clock<features::hal_features::GPIOF>() {
+        hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
+            ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOF>();
+    }
+
+    template<>
+    void enable_clock<features::hal_features::GPIOG>() {
+        hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
+            ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOG>();
+    }
+
+    template<>
+    void enable_clock<features::hal_features::CORDIC>() {
+        hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
+            ->ahb1.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB1ENR::CORDIC>();
+    }
+
+    template<>
+    void enable_clock<features::hal_features::UART, hal::stm::stm32g4::uart_nr::one>() {
+        hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
+            ->apb2.add<hal::stm::stm32g4::mcu_info::APBENR::APB2ENR::USART1EN>();
+    }
+
+    template<>
+    void enable_clock<features::hal_features::UART, hal::stm::stm32g4::uart_nr::two>() {
+        hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
+            ->apb11.add<hal::stm::stm32g4::mcu_info::APBENR::APB1ENR1::USART2EN>();
+    }
+
+    template<>
+    void enable_clock<features::hal_features::UART, hal::stm::stm32g4::uart_nr::three>() {
+        hal::address<hal::stm::stm32g4::mcu_info::APBENR, 0>()
+            ->apb11.add<hal::stm::stm32g4::mcu_info::APBENR::APB1ENR1::USART3EN>();
+    }
+
+}  // namespace detail
+
+template<>
+struct mcu_features<hal::stm::stm32g4::mcu_info> {
+    template<features::hal_features feature, typename number = detail::unused>
+    static void enable_clock() {
+        detail::enable_clock<feature, number>();
+    }
+};

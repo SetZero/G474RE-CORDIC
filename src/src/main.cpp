@@ -22,8 +22,9 @@
 #include "hal/stm32/stm32g4/stm32g474re.h"
 #include "hal/uart.h"
 
+using namespace units::literals;
 namespace mcu_ns = hal::stm::stm32g4;
-using used_mcu = mcu_ns::g474re;
+using used_mcu = mcu_ns::g474re<16'000'000_Hz>;
 namespace gpio_values = hal::periphery::gpio_values;
 
 /**
@@ -37,11 +38,8 @@ int main() {
     using port_a = hal::periphery::gpio<mcu_ns::A, used_mcu>;
     using uart_two = hal::periphery::uart<mcu_ns::uart_nr::two, used_mcu>;
     using cordic_one = hal::cordic::cordic<mcu_ns::cordic_nr::one, mcu_ns::mcu_info>;
-
-    hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
-        ->ahb1.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB1ENR::CORDIC>();
-    hal::address<hal::stm::stm32g4::mcu_info::AHBENR, 0>()
-        ->ahb2.add<hal::stm::stm32g4::mcu_info::AHBENR::AHB2ENR::GPIOA>();
+    
+    cordic_one::init();
 
     using txpin = port_a::pin<2>;
     using rxpin = port_a::pin<3>;

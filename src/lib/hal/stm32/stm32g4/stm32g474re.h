@@ -54,11 +54,14 @@ namespace hal::stm::stm32g4 {
             type_value_pair<af_type<C, 12, uart_nr::three, uart::uart_pin_types::CK>, af_name::AF7>{}};
     }  // namespace detail
 
+    template<frequency clock_frequency>
     class g474re {
+        static_assert(clock_frequency.value == 16'000'000u, "Frequencies other than 16Mhz are not implemented yet");
        private:
         using af_type = hal::periphery::gpio_values::alternative_function;
 
        public:
+        static constexpr inline auto frequency = clock_frequency.value;
         using base_mcu = mcu_info;
         using uart = base_mcu::UART;
         using cordic = base_mcu::CORDIC;
