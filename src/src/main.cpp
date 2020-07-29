@@ -13,8 +13,9 @@
 /* Includes */
 #include "main.h"
 
+#include <array>
 #include <cstdint>
-//#include <concepts>
+
 #include "benchmark.h"
 #include "hal/cordic.h"
 #include "hal/cordic_types.h"
@@ -27,6 +28,104 @@ using namespace units::literals;
 namespace mcu_ns = hal::stm::stm32g4;
 using used_mcu = mcu_ns::g474re<16'000'000_Hz>;
 namespace gpio_values = hal::periphery::gpio_values;
+
+struct benchmark_results {
+    uint32_t result_cordic = 0;
+    uint32_t result_gcc = 0;
+
+    size_t num_runs = 0;
+    float bogus_value = 0.0f;
+};
+
+template<hal::cordic::functions Function>
+struct gcc_func {};
+
+template<>
+struct gcc_func<hal::cordic::functions::cosine> {
+    static inline float (*func)(float) = std::cos;
+};
+
+template<hal::cordic::functions Function>
+struct func_info {
+    static inline constexpr auto func = Function;
+
+    static inline auto gcc_equivalent = gcc_func<Function>::func;
+
+    static inline constexpr float lower_value = -1.0f;
+    static inline constexpr float upper_value = 1.0f;
+};
+
+template<typename BenchmarkType, typename CordicType, hal::cordic::functions Function, uint32_t num_values = 100>
+benchmark_results do_benchmark(const BenchmarkType &benchmark) {
+    using namespace hal::cordic;
+
+    using cordic_config = cordic_config<precision::q1_31>;
+    using current_func_info = func_info<Function>;
+    auto cordic_op [[gnu::unused]] = hal::cordic::create_cordic_operation<cordic_config, Function>();
+
+    std::array<float, num_values> benchmark_values{};
+    std::array<decltype(cordic_op), num_values> cordic_benchmark_values{};
+    std::array<typename decltype(cordic_op)::result_type, num_values> cordic_benchmark_results{};
+    std::array<float, num_values> bogus_values{};
+    std::array<float, num_values> second_bogus_values{};
+    size_t useable_values = 0;
+    float current_value = current_func_info ::lower_value;
+    constexpr float value_inc =
+        (current_func_info::upper_value - current_func_info::lower_value) / static_cast<float>(num_values);
+
+    for (; useable_values < benchmark_values.size() && current_value < current_func_info::upper_value;
+         ++useable_values) {
+        benchmark_values[useable_values] = current_value;
+        current_value += value_inc;
+    }
+
+    static const char cordic_setup_benchmark_name[] = "cordic_setup_bench";
+    uint32_t cordic_setup_results = 0;
+    {
+        auto probe = benchmark.template create_probe<cordic_setup_benchmark_name>(&cordic_setup_results);
+        for (auto i = 0u; i < useable_values; ++i) {
+            cordic_benchmark_values[i].arg1(
+                typename decltype(cordic_op)::args_type::first_arg_type(benchmark_values[i]));
+        }
+    }
+
+    static const char cordic_calc_benchmark_name[] = "cordic_calc_bench";
+    uint32_t cordic_calc_results = 0;
+    {
+        auto probe = benchmark.template create_probe<cordic_calc_benchmark_name>(&cordic_calc_results);
+        for (auto i = 0u; i < useable_values; ++i) {
+            cordic_benchmark_results[i] = CordicType::calculate(cordic_benchmark_values[i]);
+        }
+    }
+
+    static const char cordic_convert_benchmark_name[] = "cordic_convert_bench";
+    uint32_t cordic_convert_results = 0;
+    {
+        auto probe = benchmark.template create_probe<cordic_convert_benchmark_name>(&cordic_convert_results);
+        for (auto i = 0u; i < useable_values; ++i) {
+            bogus_values[i] = static_cast<float>(cordic_benchmark_results[i].result());
+        }
+    }
+
+    static const char gcc_benchmark_name[] = "gcc_bench";
+    uint32_t gcc_results = 0;
+    {
+        auto probe = benchmark.template create_probe<gcc_benchmark_name>(&gcc_results);
+        for (auto i = 0u; i < useable_values; ++i) {
+            second_bogus_values[i] = current_func_info::gcc_equivalent(benchmark_values[i]);
+        }
+    }
+
+    float complete_result = 0;
+    for (auto i = 0u; i < useable_values; ++i) {
+        complete_result += bogus_values[i] * second_bogus_values[i];
+    }
+
+    return benchmark_results{.result_cordic = cordic_setup_results + cordic_calc_results + cordic_convert_results,
+                             .result_gcc = gcc_results,
+                             .num_runs = useable_values,
+                             .bogus_value = complete_result};
+}
 
 /**
  * @brief  The application entry point.
@@ -48,170 +147,15 @@ int main() {
 
     port_a::set_port_mode<gpio_values::modes::OUTPUT, 5>();
 
-    using cc = cordic_config<precision::q1_31>;
-    auto op = create_cordic_operation<cc, functions::cosine>();
-    auto op2 = create_cordic_operation<cc, functions::sine>();
-    auto op3 = create_cordic_operation<cc, functions::phase>();
-    auto op4 = create_cordic_operation<cc, functions::arctangent>();
-    auto op5 = create_cordic_operation<cc, functions::modulus>();
-    auto op6 = create_cordic_operation<cc, functions::hyperbolic_cosine>();
-    auto op7 = create_cordic_operation<cc, functions::hyperbolic_sine>();
-    auto op8 = create_cordic_operation<cc, functions::arctanh>();
-    auto op9 = create_cordic_operation<cc, functions::natural_logarithm>();
-    auto op10 = create_cordic_operation<cc, functions::square_root>();
+    using setup_benchmark_type = benchmark<decltype(&reset_counter), decltype(&get_counter_value)>;
+    setup_benchmark_type b(reset_counter, get_counter_value);
 
-    int deg = 0;
     while (true) {
-        /*port_a::pin<5>::on();
-        delay_ms(250);
-        port_a::pin<5>::off();
-        delay_ms(250);*/
-        // while((memory(LPUART_BASE + LPUART_ISR) & (1u << 6u)) >> 6u != 1);
-
-        auto float_val = static_cast<float>(cordic_one::calculate(op).result());
-        auto float_val2 = static_cast<float>(cordic_one::calculate(op2).result());
-
-        int16_t rdeg = deg - 180;
-        float hyperbolic_argument = rdeg / 180.0f;
-        float hyperbolic_argument_atan = rdeg / 370.0f;
-        float nat_log_arg = 0.2;
-        float sqrt_arg = 2;
-        // int atanval = rdeg / 2;
-        vec2<precision::q1_31> v;
-
-        op.arg1(angle<precision::q1_31>{degrees{rdeg}});
-        op2.arg1(angle<precision::q1_31>{degrees{rdeg}});
-
-        decltype(op4)::args_type::first_arg_type op4_arg;
-        decltype(op6)::args_type::first_arg_type op6_arg;
-
-        using setup_benchmark_type = benchmark<decltype(&reset_counter), decltype(&get_counter_value)>;
-        setup_benchmark_type b(reset_counter, get_counter_value);
-        static constexpr char benchmark_name[] = {"setup arguments"};
-        static constexpr char benchmark_name_two[] = {"calculating"};
-        static constexpr char benchmark_name_three[] = {"converting back to floats"};
-
-        static constexpr char benchmark_standard_trigon[] = {"calculating with standard trigonmetric functions"};
-        uint32_t result = 0;
-        uint32_t result_two = 0;
-        uint32_t result_three = 0;
-        uint32_t gcc_timer = 0;
-        {
-            auto probe = b.create_probe<benchmark_name>(&result);
-            decltype(op8)::args_type::first_arg_type op8_arg{hyperbolic_argument_atan};
-            op4_arg = decltype(op4_arg){rdeg / 2.0f};
-            op6_arg = decltype(op6_arg){hyperbolic_argument};
-
-            op4.arg1(op4_arg);
-
-            v = vec2<precision::q1_31>{x_coord{float_val}, y_coord{float_val2}};
-            op3.arg(v);
-            op5.arg(v);
-            op6.arg1(op6_arg);
-            op7.arg1(op6_arg);
-            op8.arg1(op8_arg);
-            op9.arg1(decltype(op9)::args_type::first_arg_type{nat_log_arg});
-            op10.arg1(decltype(op10)::args_type::first_arg_type{sqrt_arg});
-        }
-
-        uart_two::printf<256>("%s took %ld us \r\n", benchmark_name, result);
-        typename decltype(op3)::result_type::result_type fixed_val3;
-        typename decltype(op5)::result_type::result_type fixed_val4;
-        typename decltype(op4)::result_type::result_type fixed_val5;
-        typename decltype(op6)::result_type::result_type fixed_val6;
-        typename decltype(op7)::result_type::result_type fixed_val7;
-        typename decltype(op8)::result_type::result_type fixed_val8;
-        typename decltype(op9)::result_type::result_type fixed_val9;
-        typename decltype(op10)::result_type::result_type fixed_val10;
-
-        {
-            auto probe = b.create_probe<benchmark_name_two>(&result_two);
-            fixed_val3 = cordic_one::calculate(op3).result();
-            fixed_val4 = cordic_one::calculate(op5).result();
-            fixed_val5 = cordic_one::calculate(op4).result();
-            fixed_val6 = cordic_one::calculate(op6).result();
-            fixed_val7 = cordic_one::calculate(op7).result();
-            fixed_val8 = cordic_one::calculate(op8).result();
-            fixed_val9 = cordic_one::calculate(op9).result();
-            fixed_val10 = cordic_one::calculate(op10).result();
-        }
-
-        uart_two::printf<256>("%s took %ld us \r\n", benchmark_name_two, result_two);
-
-        float float_val3{};
-        float float_val4{};
-        float float_val5{};
-        float float_val6{};
-        float float_val7{};
-        float float_val8{};
-        float float_val9{};
-        float float_val10{};
-
-        {
-            auto probe = b.create_probe<benchmark_name_three>(&result_three);
-            float_val3 = static_cast<float>(fixed_val3);
-            float_val4 = static_cast<float>(fixed_val4);
-            float_val5 = static_cast<float>(fixed_val5);
-            float_val6 = static_cast<float>(fixed_val6);
-            float_val7 = static_cast<float>(fixed_val7);
-            float_val8 = static_cast<float>(fixed_val8);
-            float_val9 = static_cast<float>(fixed_val9);
-            float_val10 = static_cast<float>(fixed_val10);
-        }
-
-        uart_two::printf<256>("%s took %ld us \r\n", benchmark_name_three, result_three);
-
-        float v1{0.0f};
-        float v2{0.0f};
-        float v3{0.0f};
-        float v4{0.0f};
-        float v5{0.0f};
-        float v6{0.0f};
-        float v7{0.0f};
-        float v8{0.0f};
-        {
-            auto probe = b.create_probe<benchmark_standard_trigon>(&gcc_timer);
-            v1 = std::cos(rdeg);
-            v2 = std::sin(rdeg);
-            v3 = std::atan(rdeg);
-            v4 = std::cosh(hyperbolic_argument);
-            v5 = std::sinh(hyperbolic_argument);
-            v6 = std::atanh(hyperbolic_argument_atan);
-            v7 = std::log(rdeg);
-            v8 = std::sqrt(rdeg);
-        }
-
-        uart_two::printf<512>("GCC: %d us vs Cordic: %d\r\n", gcc_timer, result + result_two + result_three);
-
-        uart_two::printf<512>("%d, %d, %d, %d, %d, %d, %d, %d \r\n", static_cast<int>(v1 * 10000),
-                              static_cast<int>(v2 * 10000), static_cast<int>(v3 * 10000), static_cast<int>(v4 * 10000),
-                              static_cast<int>(v5 * 10000), static_cast<int>(v6 * 10000), static_cast<int>(v7 * 10000),
-                              static_cast<int>(v8 * 10000));
-
-        uart_two::printf<512>(
-            "cos(%d) * 1000 = %d sin(%d) * 1000 = %d atan2(%d * 1000, %d * 1000) = %d * 10000000 == %d * 10000000 "
-            "len(vec) == %d * 1000, scale = %d, value = %d "
-            "atan = %d real_atan = %d cosh = %d real_cosh = %d sinh = %d real_sinh = %d atanh = %d real_atanh = %d "
-            "logn %d real_logn %d "
-            "sqrt %d real_sqrt %d"
-            "\r\n",
-            rdeg, static_cast<int>(float_val * 1000), rdeg, static_cast<int>(float_val2 * 1000),
-            static_cast<int>((float)v.y() * 1000), static_cast<int>((float)v.x() * 1000),
-            static_cast<int>(float_val3 * 10000000), static_cast<int>(std::atan2(float_val2, float_val) * 10000000),
-            static_cast<int>(float_val4 * 1000), op4_arg.scale(), static_cast<int>(static_cast<float>(op4_arg) * 1000),
-            static_cast<int>(float_val5 * static_cast<float>(M_PI) * 100000),
-            static_cast<int>(std::atan(rdeg / 2.0f) * 100000),
-            static_cast<int>(static_cast<float>(float_val6) * 10000000),
-            static_cast<int>(std::cosh(hyperbolic_argument) * 10000000),
-            static_cast<int>(static_cast<float>(float_val7) * 10000000),
-            static_cast<int>(std::sinh(hyperbolic_argument) * 10000000),
-            static_cast<int>(static_cast<float>(float_val8) * 10000000),
-            static_cast<int>(std::atanh(hyperbolic_argument_atan) * 10000000),
-            static_cast<int>(static_cast<float>(float_val9) * 10000000),
-            static_cast<int>(std::log(nat_log_arg) * 10000000),
-            static_cast<int>(static_cast<float>(float_val10) * 10000000),
-            static_cast<int>(std::sqrt(sqrt_arg) * 10000000));
-        deg = (deg + 1) % 360;
-        delay_ms(50);
+        auto results = do_benchmark<setup_benchmark_type, cordic_one, functions::cosine, 1000>(b);
+        uart_two::printf<256>("gcc_results: %d, num_runs : %d, complete_value : %d \r\n", results.result_gcc,
+                              results.num_runs, static_cast<int>(results.bogus_value * 10000));
+        uart_two::printf<256>("cordic_results: %d, num_runs : %d, complete_value : %d \r\n", results.result_cordic,
+                              results.num_runs, static_cast<int>(results.bogus_value * 10000));
+        delay_ms(1000);
     }
 }

@@ -21,7 +21,7 @@ class benchmark {
         : m_reset_func(reset_func), m_counter_func(counter_func) {}
 
     template<const char BenchmarkName[], typename CounterType>
-    auto create_probe(CounterType *count_store) {
+    auto create_probe(CounterType *count_store) const {
         return benchmark_probe<BenchmarkName, ResetCounterFunc, GetCounterFunc, CounterType>{
             m_reset_func, m_counter_func, count_store};
     }
