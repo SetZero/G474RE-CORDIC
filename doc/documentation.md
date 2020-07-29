@@ -20,7 +20,7 @@ title-own-page: 1
 toc-own-page: 1
 secnumdepth: 2
 header-left: "C++ Framework für STM32 Mikrocontrollers"
-listings-no-page-break: true 
+listings-no-page-break: true
 listings-disable-line-numbers: true
 abstract: |
     Mikrocontroller erhalten immer wieder neue und stärkere Komponenten, dabei hat sich die Programmierung dieser bisher kaum geändert.
@@ -190,13 +190,56 @@ Hierbei werden die TX und RX Pins von UART der Funktion 7 zugewiesen.
 
 ### UART
 
-In diesem Abschnitt wird die Abstrahierung der UART Funktionalität beschrieben. Diese dient der Kommunikation eines Mikrocontrollers mit einem externen Gerät.
+In diesem Abschnitt wird die Abstraktion der UART Funktionalität beschrieben. Diese dient der Kommunikation eines Mikrocontrollers mit einem externen Gerät.
 
 Die in diesem Projekt verwendete STM32G4 Serie besitzt zwei verschiedene UART Implementierungen. Bei der ersten Variante Handelt es sich um einen Universal synchronous/asynchronous receiver
-transmitter. Dieser besitzt sowohl die möglichkeit der synchronen als auch asynchronen Übertragung. Des weitern existiert neben dieser Variante auch die Möglichkeit einer Kommunikation im Low-power Modus, welcher als LPUART verfügbar ist. In diesem Projekt wurde nur die Möglichkeit der Asynchronen UART Übertragung für den HAL zur Verfügung gestellt. Jedoch wäre es mit minimalen Anpassungen auch möglich die LPUART Variante mit ähnlicher Funktionalität wie UART zu implementieren.
+transmitter. Dieser besitzt sowohl die Möglichkeit der synchronen als auch asynchronen Übertragung. Des Weiteren existiert neben dieser Variante auch die Möglichkeit einer Kommunikation im Low-power Modus, welcher als LPUART verfügbar ist. In diesem Projekt wurde nur die Möglichkeit der Asynchronen UART Übertragung für den HAL zur Verfügung gestellt. Jedoch wäre es mit minimalen Anpassungen auch möglich die LPUART Variante mit ähnlicher Funktionalität wie UART zu implementieren.
 
 
 ### CORDIC
+
+Die Cordic Abstraktion ist als template implementiert. Dieses wird mit der Nummer der CORDIC und dem Typ des Mikrocontrollers parameterisiert.
+Der Mikrocontroller, welcher Gegenstand dieses Konzepts ist, besitzt lediglich einen CORDIC.
+Die Implementierung der CORDIC Abstraktion nimmt jeweils einen Datentyp entgegen, der einer Operation entspricht.
+Dieser Typ hat hier jeweils ein Typ, welcher das Ergebnis enthält. Anhand von der übergebenen Operation und den template Parametern, werden die Register
+des CORDICs gesetzt. Aus dem Operationstyp werden hierbei die Funktion, sowie die Anzahl der Argumente übernommen.
+Weitere Einstellungen werden aus dem weiteren Kontext her abgeleitet.
+Jeder Operationsdatentyp definiert seinen Argumentdatentyp. Dieser leitet sich von den Anforderungen des CORDICs an das Argument ab.
+
+~~~cpp
+struct sqrt_scales {
+    static inline constexpr std::array ranges{
+        Detail::range{.upper_bound = 0.75f - std::numeric_limits<float>::min(), .lower_bound = 0.027f, .scale = 0},
+        Detail::range{.upper_bound = 1.75f - std::numeric_limits<float>::min(), .lower_bound = 0.75f, .scale = 1},
+        Detail::range{.upper_bound = 2.341f, .lower_bound = 1.75f, .scale = 2}};
+    // ...
+};
+~~~
+
+Hier wird beispielhaft für die anderen Datentypen die benötigten Skalierungen für die Wurzel Funktion gezeigt.
+Die Skalierung wird benötigt um das Interval des q_number Types zu erweitern, um somit einen größeren Definitionsbereich zu erhalten.
+Diese kommt auch bei anderen Funktionen zum tragen wie beispielsweise, der logn Funktion.
+
+~~~cpp
+template<typename Config>
+struct create_op_helper<Config, functions::square_root> {
+    using argument_type = typename Config::scaled_qtype<sqrt_scales>;
+
+    using type =
+        general_operation<Config, operation_type::single, functions::square_root,
+                          general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
+
+    static inline constexpr auto create() { return type{}; }
+};
+
+template<typename Config, functions Function>
+    static inline constexpr auto create_cordic_operation() {
+        return create_op_helper<Config, Function>::create();
+}
+~~~
+
+Das struct *create_op_helper ist für die Erstellung der einzelnen Funktionen zuständig, dieser wird für die einzelnen Funktionen spezialisiert.
+Damit bildet die Funktion *create_cordic_operation* eine Fabrikmethode, womit die spezielle Operation einheitlich erstellt werden kann.
 
 # CORDIC
 
@@ -213,11 +256,12 @@ Nachdem der Algorithmus durchlaufen ist, werden die Ergebnisse je nach Anzahl wi
 Die Werte, welche in das Argumentregister geschrieben werden und die Ergebnisse, welche man aus dem Ergebnisregister erhält sind keine Werte, welche man direkt verwenden kann.
 Sie sind in einem Festkomma Format, dabei gibt es zwei Varianten *q1_31* und *q1_15*.
 Die Zahlen bewegen sich somit in einem Interval zwischen -1.0 und 1.0.  Größere Werte müssen durch die Software skaliert werden.
-Auch haben einige Funktionen unterschiedliche Definitionsbereiche, so müssen diese ebenfall in den Datentyp miteinbezogen werden.
+Auch haben einige Funktionen unterschiedliche Definitionsbereiche, so müssen diese ebenfalls in den Datentyp miteinbezogen werden.
 
 ## Zeitmessung und Vergleich mit eingebauten Trigonometrischen Funktionen
 
-<!-- TODO: add some text here -->
+Im Folgenden wir die Performance des CORDIC verglichen mit der der eingebauten trigonometrischen Funktionen.
+Zunächst wird das Setup zum Messen beschrieben um dann im nachfolgenden Teil die Ergebnisse auszuwerten.
 
 ### Setup
 
