@@ -52,19 +52,31 @@ struct gcc_func<hal::cordic::functions::sine> {
 
 template<>
 struct gcc_func<hal::cordic::functions::arctanh> {
-    static inline float (*func)(float) = std::atan;
+    static inline float (*func)(float) = std::atanh;
 };
 
 template<hal::cordic::functions Function>
 struct func_input_range {
-    static inline constexpr float lower_value = -1.0f;
-    static inline constexpr float upper_value = 1.0f;
+    // static inline constexpr float lower_value = -1.0f;
+    // static inline constexpr float upper_value = 1.0f;
+};
+
+template<>
+struct func_input_range<hal::cordic::functions::cosine> {
+    static inline constexpr float lower_value = -3.141f;
+    static inline constexpr float upper_value = 3.141f;
+};
+
+template<>
+struct func_input_range<hal::cordic::functions::sine> {
+    static inline constexpr float lower_value = -3.141f;
+    static inline constexpr float upper_value = 3.141f;
 };
 
 template<>
 struct func_input_range<hal::cordic::functions::arctanh> {
-    static inline constexpr float lower_value = -127.0f;
-    static inline constexpr float upper_value = 127.0f;
+    static inline constexpr float lower_value = -0.806;
+    static inline constexpr float upper_value = 0.806;
 };
 
 template<hal::cordic::functions Function>
@@ -86,7 +98,7 @@ benchmark_results do_benchmark(const BenchmarkType &benchmark) {
 
     using cordic_config = cordic_config<precision::q1_31, hal::cordic::cordic_algorithm_precision::normal>;
     using current_func_info = func_info<Function>;
-    auto cordic_op [[gnu::unused]] = hal::cordic::create_cordic_operation<cordic_config, Function>();
+    auto cordic_op = hal::cordic::create_cordic_operation<cordic_config, Function>();
 
     std::array<float, num_values> benchmark_values{};
     std::array<decltype(cordic_op), num_values> cordic_benchmark_values{};
@@ -94,13 +106,15 @@ benchmark_results do_benchmark(const BenchmarkType &benchmark) {
     std::array<float, num_values> bogus_values{};
     std::array<float, num_values> second_bogus_values{};
     size_t useable_values = 0;
-    float current_value = current_func_info ::lower_value;
+    float current_value = current_func_info::lower_value;
     constexpr float value_inc =
         (current_func_info::upper_value - current_func_info::lower_value) / static_cast<float>(num_values);
 
     for (; useable_values < benchmark_values.size() && current_value < current_func_info::upper_value;
          ++useable_values) {
         benchmark_values[useable_values] = current_value;
+        // It has to be created via the create method !!
+        cordic_benchmark_values[useable_values] = cordic_op;
         current_value += value_inc;
     }
 
@@ -119,7 +133,7 @@ benchmark_results do_benchmark(const BenchmarkType &benchmark) {
     {
         auto probe = benchmark.template create_probe<cordic_calc_benchmark_name>(&cordic_calc_results);
         for (auto i = 0u; i < useable_values; ++i) {
-            cordic_benchmark_results[i] = CordicType::calculate(cordic_benchmark_values[i]);
+            cordic_benchmark_results[i] = cordic_one::calculate(cordic_benchmark_values[i]);
         }
     }
 
@@ -137,26 +151,20 @@ benchmark_results do_benchmark(const BenchmarkType &benchmark) {
     {
         auto probe = benchmark.template create_probe<gcc_benchmark_name>(&gcc_results);
         for (auto i = 0u; i < useable_values; ++i) {
-            // TODO: for cosine and sine there has to be a prescaler, since the cordic takes radians / PI, instead of
-            // radians
-            second_bogus_values[i] = current_func_info::gcc_equivalent(benchmark_values[i] * static_cast<float>(M_PI));
+            second_bogus_values[i] = current_func_info::gcc_equivalent(benchmark_values[i]);
         }
     }
 
-    float total_difference = 0;
+    uint32_t total_difference = 0;
     for (auto i = 0u; i < useable_values; ++i) {
-        total_difference += std::fabs(bogus_values[i] - second_bogus_values[i]);
-        uart_two::printf<128>("%d, %d \r\n", static_cast<int>(bogus_values[i] * 1000), static_cast<int>(second_bogus_values[i] * 1000));
-    }
-
-    if (num_values != 0) {
-        total_difference /= useable_values;
+        total_difference +=
+            static_cast<decltype(total_difference)>(std::fabs(bogus_values[i] - second_bogus_values[i]) * 1000'000'00);
     }
 
     return benchmark_results{.result_cordic = cordic_setup_results + cordic_calc_results + cordic_convert_results,
                              .result_gcc = gcc_results,
                              .num_runs = useable_values,
-                             .bogus_value = static_cast<uint32_t>(total_difference * 1000.0f)};
+                             .bogus_value = total_difference};
 }
 
 /**
@@ -180,24 +188,23 @@ int main() {
     setup_benchmark_type b(reset_counter, get_counter_value);
 
     while (true) {
-        auto results = do_benchmark<setup_benchmark_type, cordic_one, functions::cosine, 1000>(b);
-        uart_two::printf<256>("cos gcc_results: \t %d, num_runs : \t %d, complete_value : \t %d \r\n",
+        auto results = do_benchmark<setup_benchmark_type, cordic_one, functions::cosine, 100>(b);
+        uart_two::printf<256>("cos gcc_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
                               results.result_gcc, results.num_runs, results.bogus_value);
-        uart_two::printf<256>("cos cordic_results: \t %d, num_runs : \t %d, complete_value : \t %d \r\n",
+        uart_two::printf<256>("cos cordic_results: \t %d, num_runs : \t %d, total_difference  : \t %d \r\n",
                               results.result_cordic, results.num_runs, results.bogus_value);
 
-        results = do_benchmark<setup_benchmark_type, cordic_one, functions::sine, 1000>(b);
-        uart_two::printf<256>("sine gcc_results: \t %d, num_runs : \t %d, complete_value : \t %d \r\n",
+        results = do_benchmark<setup_benchmark_type, cordic_one, functions::sine, 100>(b);
+        uart_two::printf<256>("sin gcc_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
                               results.result_gcc, results.num_runs, results.bogus_value);
-        uart_two::printf<256>("sine cordic_results: \t %d, num_runs : \t %d, complete_value : \t %d \r\n",
+        uart_two::printf<256>("sin cordic_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
+                              results.result_cordic, results.num_runs, results.bogus_value);
+        results = do_benchmark<setup_benchmark_type, cordic_one, functions::arctanh, 100>(b);
+        uart_two::printf<256>("atanh gcc_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
+                              results.result_gcc, results.num_runs, results.bogus_value);
+        uart_two::printf<256>("atanh cordic_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
                               results.result_cordic, results.num_runs, results.bogus_value);
 
-        // results = do_benchmark<setup_benchmark_type, cordic_one, functions::arctanh, 1000>(b);
-        // uart_two::printf<256>("atanh gcc_results: \t %d, num_runs : \t %d, complete_value : \t %d \r\n",
-        //                       results.result_gcc, results.num_runs, static_cast<int>(results.bogus_value * 1'000));
-        // uart_two::printf<256>("atanh cordic_results: \t %d, num_runs : \t %d, complete_value : \t %d \r\n",
-        //                       results.result_cordic, results.num_runs, static_cast<int>(results.bogus_value *
-        //                       1'000));
         delay_ms(1000);
     }
 }

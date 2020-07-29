@@ -222,7 +222,7 @@ class ranged_angle {
     template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     constexpr explicit ranged_angle(const T &value) : m_value(value / static_cast<T>(M_PI)) {}
 
-    constexpr ranged_angle(degrees d = degrees{0}) : m_value(Detail::float_type<p>(d) / Detail::float_type<p>(180.0)) {}
+    constexpr explicit ranged_angle(degrees d = degrees{0}) : m_value(Detail::float_type<p>(d) / Detail::float_type<p>(180.0)) {}
 
     template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
     constexpr explicit operator T() const {

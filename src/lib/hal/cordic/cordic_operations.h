@@ -477,7 +477,7 @@ namespace hal::cordic {
         using result_type = ResultType;
         using thiz_type = operation_result<ResultType, operation_type::single, functions::hyperbolic_sine, res>;
 
-        static inline constexpr auto num_res = nres::two;
+        static inline constexpr auto num_res = res;
 
         thiz_type &result(ResultType result) {
             m_result = result;
