@@ -76,6 +76,10 @@ struct func_info {
     static inline auto gcc_equivalent = gcc_func<Function>::func;
 };
 
+using uart_two = hal::periphery::uart<mcu_ns::uart_nr::two, used_mcu>;
+using port_a = hal::periphery::gpio<mcu_ns::A, used_mcu>;
+using cordic_one = hal::periphery::cordic<mcu_ns::cordic_nr::one, mcu_ns::mcu_info>;
+
 template<typename BenchmarkType, typename CordicType, hal::cordic::functions Function, uint32_t num_values = 100>
 benchmark_results do_benchmark(const BenchmarkType &benchmark) {
     using namespace hal::cordic;
@@ -139,15 +143,20 @@ benchmark_results do_benchmark(const BenchmarkType &benchmark) {
         }
     }
 
-    uint32_t total_difference = 0;
+    float total_difference = 0;
     for (auto i = 0u; i < useable_values; ++i) {
-        total_difference += static_cast<int>(std::fabs(bogus_values[i] - second_bogus_values[i]) * 1'000'000);
+        total_difference += std::fabs(bogus_values[i] - second_bogus_values[i]);
+        uart_two::printf<128>("%d, %d \r\n", static_cast<int>(bogus_values[i] * 1000), static_cast<int>(second_bogus_values[i] * 1000));
+    }
+
+    if (num_values != 0) {
+        total_difference /= useable_values;
     }
 
     return benchmark_results{.result_cordic = cordic_setup_results + cordic_calc_results + cordic_convert_results,
                              .result_gcc = gcc_results,
                              .num_runs = useable_values,
-                             .bogus_value = total_difference};
+                             .bogus_value = static_cast<uint32_t>(total_difference * 1000.0f)};
 }
 
 /**
@@ -158,9 +167,6 @@ int main() {
     init_counter();
 
     using namespace hal::cordic;
-    using port_a = hal::periphery::gpio<mcu_ns::A, used_mcu>;
-    using uart_two = hal::periphery::uart<mcu_ns::uart_nr::two, used_mcu>;
-    using cordic_one = hal::periphery::cordic<mcu_ns::cordic_nr::one, mcu_ns::mcu_info>;
 
     cordic_one::init();
 
