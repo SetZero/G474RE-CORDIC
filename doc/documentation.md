@@ -176,3 +176,20 @@ Die Zahlen bewegen sich somit in einem Interval zwischen -1.0 und 1.0.  Größer
 Auch haben einige Funktionen unterschiedliche Definitionsbereiche, so müssen diese ebenfall in den Datentyp miteinbezogen werden.
 
 ## Zeitmessung und Vergleich mit eingebauten Trigonometrischen Funktionen
+
+# Fazit
+
+Es konnte gezeigt werden, dass C++ gut verwendet werden kann, um typsichere und effiziente Abstraktionen zu erstellen, die die Komplexität bei der Verwendung von Mikrocontrollern
+mindern kann. Dabei ist nicht nur hilfreich bei der Verwendung der Abstraktionslayer, sondern unterstützt ebenfalls die Erstellung weiterer Abstraktionen.
+
+## Ausblick
+
+Durch den weiteren Ausbau des Frameworks können die anderen Peripherien des Mikrocontrollers typsicher und einfach verwendet werden.
+Zudem kann diese Bibliothek auf andere Mikrocontroller portiert werden, sodass man eine gemeinsame Schnittstelle verwenden kann.
+Es können weitere Operationen für die q_number Klasse hinzugefügt werden, sodass die etwas teure Umwandlung von FließKommazahlen in Fixed-Kommazahlen
+erspart bleibt und man stattdessen mit den diesem Typen weiter rechnen kann.
+Weiterhin könnte die CORDIC-Einheit im Pipeline Modus gut mit dem ranges feature von C++20 verbunden werden.
+Dadurch kann eine gewohnte API, auch für die CORDIC Einheit verwendet werden kann.
+Abschließend kann gesagt werden, dass die Verwendung von C++ auf Mikrocontrollern sinnvoll ist, da die Entwicklung vereinfacht wird und häufige Fehler durch
+C++ features bereits zur Kompilezeit aufgedeckt werden können.
+Somit können viele Tests bereits zur Kompilezeit stattfinden, die sonst umständlich auf dem Mikrocontroller durchgeführt werden müssten.
