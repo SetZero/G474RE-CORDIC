@@ -55,3 +55,14 @@ namespace hal::periphery {
         requires(hal::info::vendor_information<MCU>::vendor == hal::info::vendors::STM) struct stm_mcu_mapper {};
     }  // namespace detail
 }  // namespace hal::periphery
+
+namespace features {
+    enum class hal_features { GPIOA, GPIOB, GPIOC, GPIOD, GPIOE, GPIOF, GPIOG, CORDIC, UART };
+}
+
+namespace detail {
+    struct unused {};
+}  // namespace detail
+
+template<typename mcu>
+struct mcu_features;

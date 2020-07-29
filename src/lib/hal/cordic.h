@@ -15,6 +15,10 @@ namespace hal::cordic {
         static inline constexpr auto cordic_register = hal::address<typename mcu::CORDIC, CordicNr>;
         using cordic_control_register_type = std::remove_pointer_t<decltype(cordic_register()->csr)>;
 
+        static constexpr auto init() {
+            mcu_features<mcu>::template enable_clock<features::hal_features::CORDIC>();
+        }
+
         template<typename OperationType>
         static constexpr auto calculate(const OperationType &op) {
             using op_type = std::decay_t<decltype(op)>;
