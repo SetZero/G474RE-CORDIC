@@ -33,6 +33,11 @@ namespace hal::cordic {
         static inline constexpr float target_range_lower_bound = 0.054f;
     };
 
+    struct sqrt_bounds {
+        static inline constexpr float target_range_upper_bound = 0.875f;
+        static inline constexpr float target_range_lower_bound = 0.027f;
+    };
+
     enum struct nargs : uint8_t { one = 1, two = 2 };
 
     enum struct nres : uint8_t { one = 1, two = 2 };
@@ -54,6 +59,10 @@ namespace hal::cordic {
 
         template<typename ScaleType>
         using scaled_qtype = Detail::precision_to_type_with_add<P, Detail::normal_fixed_range, ScaleType>;
+
+        template<typename Range, typename ScaleType>
+        using scaled_qtype_with_range = Detail::precision_to_type_with_add<P, Range, ScaleType>;
+
 
         static inline constexpr auto precision = P;
         static inline constexpr auto calculation_precision = A;
@@ -162,7 +171,7 @@ namespace hal::cordic {
     template<typename Config>
     struct create_op_helper<Config, functions::hyperbolic_cosine> {
         using argument_type =
-            typename Config::scaled_qtype<scales<hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
+            typename Config::scaled_qtype_with_range<hyperbolic_bounds, scales<hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
 
         using type =
             general_operation<Config, operation_type::single, functions::hyperbolic_cosine,
@@ -174,7 +183,7 @@ namespace hal::cordic {
     template<typename Config>
     struct create_op_helper<Config, functions::hyperbolic_sine> {
         using argument_type =
-            typename Config::scaled_qtype<scales<hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
+            typename Config::scaled_qtype_with_range<hyperbolic_bounds, scales<hyperbolic_bounds, std::integer_sequence<unsigned int, 1>>>;
 
         using type =
             general_operation<Config, operation_type::single, functions::hyperbolic_sine,
@@ -186,7 +195,7 @@ namespace hal::cordic {
     template<typename Config>
     struct create_op_helper<Config, functions::arctanh> {
         using argument_type =
-            typename Config::scaled_qtype<scales<hyperbolic_atan_bounds, std::integer_sequence<unsigned int, 1>>>;
+            typename Config::scaled_qtype_with_range<hyperbolic_atan_bounds, scales<hyperbolic_atan_bounds, std::integer_sequence<unsigned int, 1>>>;
 
         using type =
             general_operation<Config, operation_type::single, functions::arctanh, general_operation_args<argument_type>,
@@ -221,7 +230,7 @@ namespace hal::cordic {
 
     template<typename Config>
     struct create_op_helper<Config, functions::natural_logarithm> {
-        using argument_type = typename Config::scaled_qtype<natural_logarithm_scales>;
+        using argument_type = typename Config::scaled_qtype_with_range<nat_log_bounds, natural_logarithm_scales>;
 
         using type =
             general_operation<Config, operation_type::single, functions::natural_logarithm,
@@ -242,7 +251,7 @@ namespace hal::cordic {
 
     template<typename Config>
     struct create_op_helper<Config, functions::square_root> {
-        using argument_type = typename Config::scaled_qtype<sqrt_scales>;
+        using argument_type = typename Config::scaled_qtype_with_range<sqrt_bounds, sqrt_scales>;
 
         using type =
             general_operation<Config, operation_type::single, functions::square_root,

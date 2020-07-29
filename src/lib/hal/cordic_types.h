@@ -88,18 +88,15 @@ namespace Detail {
         (all_bits <= 8), int8_t,
         std::conditional_t<(all_bits <= 16), int16_t, std::conditional_t<(all_bits <= 32), int32_t, int64_t>>>;
 
-    struct normal_fixed_range {
-        static inline constexpr double lower_bound = -1.0f;
-        static inline constexpr double upper_bound = 1.0f;
-    };
+    using normal_fixed_range = normal_bounds;
 
     // TODO: fix negative numbers
     template<uint8_t integer_bit, uint8_t fractional_bit, typename allowed_range, typename scales_lookup>
     class q_number {
         using type = internal_type<integer_bit + fractional_bit>;
         static inline constexpr uint8_t sign_pos = sizeof(type) * CHAR_BIT - 1;
-        static inline constexpr auto lower_bound = allowed_range::lower_bound;
-        static inline constexpr auto upper_bound = allowed_range::upper_bound;
+        static inline constexpr auto lower_bound = allowed_range::target_range_lower_bound;
+        static inline constexpr auto upper_bound = allowed_range::target_range_upper_bound;
 
         static inline constexpr auto two_raised_by_fractional_bit =
             constexpr_pow<uint32_t, decltype(fractional_bit)>(2, fractional_bit);
