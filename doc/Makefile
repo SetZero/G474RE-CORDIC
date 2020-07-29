@@ -6,7 +6,7 @@ PDF_OUTPUT = $(INPUT).pdf
 READER = evince
 
 all:
-	pandoc -s --template default.latex --biblatex --from=$(SOURCEFORMAT)+$(EXTENSIONS) --template=custom.latex $(SOURCES) -o $(PDF_OUTPUT)
+	pandoc -s --template eisvogel.latex --biblatex --from=$(SOURCEFORMAT)+$(EXTENSIONS) --template=eisvogel $(SOURCES) -o $(PDF_OUTPUT)
 
 show: all
 	$(READER) $(PDF_OUTPUT) &
