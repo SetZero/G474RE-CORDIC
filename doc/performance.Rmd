@@ -34,7 +34,7 @@ ggplot(performance_reading, aes(x = factor(ALGO), y = RUN_TIME, fill=SUBJ)) +
   xlab("Function") +
   ylab("Run Time [µS]") +
   labs(subtitle=paste0(""),
-       title= "Speed Comparison") + 
+       title= "") + 
 #  facet_wrap(~achievementname, scales = "free_x") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   theme(legend.position="top") +
@@ -48,7 +48,7 @@ ggplot(performance_reading, aes(x = ALGO, y = RUN_TIME, fill=SUBJ, color=SUBJ)) 
   xlab("Function") +
   ylab("Run Time [µS]") +
   labs(subtitle=paste0(""),
-       title= "Speed Comparison") + 
+       title= "") + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   theme(legend.position="top") +
   geom_boxplot(outlier.colour="black", outlier.shape=16,
@@ -61,7 +61,7 @@ ggplot(performance_reading, aes(x=ALGO, y = RUN_TIME, fill=SUBJ)) +
   xlab("Function") +
   ylab("Run Time [µS]") +
   labs(subtitle=paste0(""),
-       title= "Speed Comparison") + 
+       title= "") + 
   facet_wrap(~ALGO, scales = "free") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   theme(legend.position="top", axis.text.x=element_blank()) +
@@ -75,7 +75,7 @@ ggplot(performance_reading, aes(x = SUBJ, y = RUN_TIME, fill=ALGO)) +
   xlab("Runtime") +
   ylab("Run Time [µS]") +
   labs(subtitle=paste0(""),
-       title= "Speed Comparison") + 
+       title= "") + 
 #  facet_wrap(~achievementname, scales = "free_x") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   theme(legend.position="top") +
