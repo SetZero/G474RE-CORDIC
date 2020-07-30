@@ -299,7 +299,7 @@ Diese existieren bereits in der Registerbeschreibung der jeweiligen Mikrocontrol
 Die möglichen Optionen für den Benutzer sind hierbei die Auswahl der Baudrate, sowie die Anzahl an Daten und Stoppbits.
 UART der STM32G4-Reihe umfasst noch einige weitere Optionen zur Konfiguration, jedoch wurden weitere Optionen aufgrund der steigenden Benutzungskomplexität zunächst ausgelassen.
 
-Ein Aufruf zur UART Initialisierung ich nachfolgend beispielhaft gezeigt.
+Ein Aufruf zur UART Initialisierung wird nachfolgend beispielhaft gezeigt.
 
 ~~~cpp
 uart_two::init<txpin, rxpin, 115200_baud>();
