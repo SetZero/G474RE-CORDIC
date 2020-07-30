@@ -13,7 +13,9 @@ link-citations: true
 nocite: |
     @*
 documentclass: scrartcl
-classoption: a4paper, 12pt
+classoption: a4paper, 12pt, bibtotocnumbered
+biblatexoptions: backend=biber, style=alphabetic
+bibliography: sources.bib
 fontsize: 12pt
 papersize: a4
 titlepage: 1
@@ -25,6 +27,7 @@ secnumdepth: 2
 header-left: "C++ Framework für STM32 Mikrocontrollers"
 listings-no-page-break: true
 listings-disable-line-numbers: true
+reference-section-title: Quellen
 abstract: |
     Mikrocontroller erhalten immer wieder neue und stärkere Komponenten. Dabei hat sich die Programmierung für diese bisher kaum geändert.
     Durch die neuen Funktionalitäten der Mikrocontroller wird auch die Entwicklung dafür immer komplexer. Mit C++ und seinen Zero Cost Abstractions soll
@@ -34,6 +37,8 @@ abstract: |
     den trigonometrischen Funktionen verglichen, welche durch reine Softwarelösungen berechnet werden. Dabei werden die verschiedenen Funktionen getestet und
     evaluiert. Weiterhin werden einzelne Aspekte bei der Programmierung des CORDICs und deren Einfluss auf die gesamte Performance genauer betrachtet.
 include-before: \newpage
+include-after:
+    - \nocite{*}
 ---
 
 # Einleitung
@@ -47,6 +52,8 @@ Dabei sollen zwei Komponenten des Mikrocontrollers mit den Mitteln von C++ model
 Dafür werden zunächst die dem Framework zugrunde liegenden Konzepte gezeigt, um dann die Komponenten als solche zu implementieren.
 Die zweite Komponente, eine sogenannte CORDIC-Einheit, ist eine spezielle Einheit innerhalb des hier verwendeten Modells des STM32.
 Dieser kann einige trigonometrische Funktionen berechnen. Die Performance soll dann mit den bereits eingebauten trigonometrischen Funktionen verglichen werden.
+
+\newpage
 
 # Die Ansteuerung der Peripherie
 
@@ -268,7 +275,7 @@ Zum Erstellen des HALs wurden die zuvor beschriebenen GPIO Pin Abstrahierungen v
 
 Anschließend können die jeweiligen UART Register konfiguriert werden. Diese existieren bereits in der Registerbeschreibung der jeweiligen Mikrocontroller und werden in dieser Funktion für den Benutzer konfiguriert. Die möglichen Optionen für den Benutzer sind hierbei die Auswahl der Baudrate sowie die Anzahl an Daten und Stoppbits. UART der STM32G4-Reihe umfasst noch deutlich mehr Optionen zur Konfiguration, jedoch wurden weitere Optionen aufgrund der steigenden Benutzungskomplexität ausgelassen.
 
-Ein Aufruf zur UART Initialisierung ich nachfolgend beispielhaft gezeigt.
+Ein Aufruf zur UART Initialisierung wird nachfolgend beispielhaft gezeigt.
 
 ~~~cpp
 uart_two::init<txpin, rxpin, 115200_baud>();
@@ -401,6 +408,10 @@ Die kleinen Unterschiede bei den verschiedenen Funktionen des Cordics können du
 Des Weiteren müssen manche Wert zusätzlich skaliert werden und dies benötigt ebenfalls ein wenig Zeit.
 Sichtbar wird dies bei den beiden Funktionen *logn* und *sqrt*, welche beide eine relativ hohe Varianz haben, wenn man sie mit den restlichen Funktionen vergleicht.
 
+![Genaure Auswertung der Performance auf Basis einzelner Funktionen](images/speed_comparison_single.png)
+
+\newpage
+
 # Fazit
 
 Es konnte gezeigt werden, dass C++ gut verwendet werden kann, um typsichere und effiziente Abstraktionen zu erstellen, die die Komplexität bei der Verwendung von Mikrocontrollern
@@ -417,3 +428,5 @@ Dadurch kann eine gewohnte API, auch für die CORDIC Einheit verwendet werden ka
 Abschließend kann gesagt werden, dass die Verwendung von C++ auf Mikrocontrollern sinnvoll ist, da die Entwicklung vereinfacht wird und häufige Fehler durch
 C++ Features bereits zur Kompilezeit aufgedeckt werden können.
 Somit können viele Tests bereits zur Kompilezeit stattfinden, die sonst umständlich auf dem Mikrocontroller durchgeführt werden müssten.
+
+\newpage
