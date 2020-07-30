@@ -325,7 +325,17 @@ Die Performance des CORDIC ist unabhängig von der Eingabe, lediglich die geford
 
 ![Benötigte Zyklen des CORDICs für bestimmte trigonometrische Funktionen](images/perfcordic.png)
 
-Bei den eingebauten trigonometrischen Funktionen des Compilers hat die Größe der Eingabe jedoch einen Einfluss.
+![Genaure Auswertung der Performance](images/speed_comparison_stacked.png)
+
+Betrachtet man die verschiedenen Zeitmessungen der Funktionen 
+
+![Genaure Auswertung der Performance auf Basis einzelner Funktionen](images/speed_comparison_single.png)
+
+Bei den eingebauten trigonometrischen Funktionen des Compilers hat die Größe der Eingabe jedoch einen Einfluss. Erkennbar ist die an der größeren Varianz des
+Laufzeit des GCC. Hier lässt sich dadurch erahnen welche Methoden, wenig selbst berechnen.
+Die kleinen Unterschiede bei den verschiedenen Funktionen des Cordics können durch die verschiedene Anzahl von Argumenten erklärt werden.
+Des Weiteren müssen manche Wert zusätzlich skaliert werden und dies benötigt ebenfalls ein wenig Zeit.
+Sichtbar wird dies bei den beiden Funktionen *logn* und *sqrt*, welche beide eine relativ hohe Varianz haben, wenn man sie mit den restlichen Funktionen vergleicht.
 
 # Fazit
 
