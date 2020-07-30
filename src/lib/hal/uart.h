@@ -50,7 +50,6 @@ namespace hal::periphery {
         template<gpio_pin TXPin, gpio_pin RXPin, auto Baudrate = 9600, auto DataBits = 8, uart_values::stop StopBits = uart_values::stop::STOP_1>
         requires(DataBits >= 7 && DataBits <= 9) static void init() {
             uart_registers()->cr1.template set_value<MCU::UART::CR::UE>(false);
-            // TODO: Fixme
             mcu_features<MCU>::template enable_clock<features::hal_features::GPIOA>();
 
             TXPin::template set_alternative_function<UartNr, UsedMCU::uart::uart_pin_types::TX>();
