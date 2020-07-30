@@ -1,5 +1,5 @@
 ---
-title: 'Entwicklung eines C++ Frameworks zur effizienten Ansteuerung der Periphery eines STM32 Microcontrollers'
+title: 'Entwicklung eines C++ Frameworks zur effizienten Ansteuerung der Peripherie eines STM32 Microcontrollers'
 date : 27.7.2020
 lang: de-De
 author:
@@ -26,13 +26,13 @@ header-left: "C++ Framework für STM32 Mikrocontrollers"
 listings-no-page-break: true
 listings-disable-line-numbers: true
 abstract: |
-    Mikrocontroller erhalten immer wieder neue und stärkere Komponenten, dabei hat sich die Programmierung für diese bisher kaum geändert.
+    Mikrocontroller erhalten immer wieder neue und stärkere Komponenten. Dabei hat sich die Programmierung für diese bisher kaum geändert.
     Durch die neuen Funktionalitäten der Mikrocontroller wird auch die Entwicklung dafür immer komplexer. Mit C++ und seinen Zero Cost Abstractions soll
-    deshalb ein Abstraktionslayer entworfen werden, welches die Verwendung der Komponenten einfacher und sicherer machen soll.
+    deshalb ein Abstraktionslayer entworfen werden, welche die Verwendung der Komponenten einfacher und sicherer machen soll.
     Hierfür wird das Modell G474RE der STM32 Reihe verwendet. Dieser besitzt zusätzlich zu den üblichen Komponenten auch eine Einheit,
-    welche trigonometrische Funktionen berechnen kann. Im Zuge dieser Arbeit wird daher auch die Performance dieser Einheit verglichen mit
-    den trigonometrischen Funktionen, welche durch reine Softwarelösungen berechnet werden. Dabei werden die verschiedenen Funktionen miteinander
-    verglichen, weiterhin werden einzelne Aspekte bei der Programmierung des CORDICs und deren Einfluss auf die gesamte Performance genauer betrachtet.
+    welche trigonometrische Funktionen berechnen kann. Im Zuge dieser Arbeit wird daher auch die Performance dieser Einheit mit
+    den trigonometrischen Funktionen verglichen, welche durch reine Softwarelösungen berechnet werden. Dabei werden die verschiedenen Funktionen getestet und
+    evaluiert. Weiterhin werden einzelne Aspekte bei der Programmierung des CORDICs und deren Einfluss auf die gesamte Performance genauer betrachtet.
 include-before: \newpage
 ---
 
@@ -42,11 +42,11 @@ Die Programmierung mit Mikrocontrollern wird immer anspruchsvoller, da diese imm
 Gleichzeitig hat sich dieser Bereich der Softwareentwicklung kaum weiterentwickelt, sodass Mikrocontroller weiterhin so programmiert werden,
 wie es üblich war zu der Zeit, als diese wesentlich weniger komplex waren. C++ mit seinen Zero-Cost Abstractions bietet daher eine sehr gute Möglichkeit,
 bestimmte Konzepte zu abstrahieren und somit die Entwicklung für Mikrocontroller nicht nur einfacher, sondern auch sicherer, zu gestalten.
-Beispielhaft wurde ein Framework für die Verwendung von mehreren Komponenten für einen Mikrocontroller der STM32-Reihe entwickelt. 
+Beispielhaft wurde ein Framework für die Verwendung von mehreren Komponenten für einen Mikrocontroller der STM32-Reihe entwickelt.
 Dabei sollen zwei Komponenten des Mikrocontrollers mit den Mitteln von C++ modelliert werden.
 Dafür werden zunächst die dem Framework zugrunde liegenden Konzepte gezeigt, um dann die Komponenten als solche zu implementieren.
 Die zweite Komponente, eine sogenannte CORDIC-Einheit, ist eine spezielle Einheit innerhalb des hier verwendeten Modells des STM32.
-Dieser kann einige trigonometrische Funktionen berechnen, die Performance soll dann mit den bereits eingebauten trigonometrischen Funktionen verglichen werden.
+Dieser kann einige trigonometrische Funktionen berechnen. Die Performance soll dann mit den bereits eingebauten trigonometrischen Funktionen verglichen werden.
 
 # Die Ansteuerung der Peripherie
 
@@ -72,7 +72,7 @@ register_entry_desc<CR::DEDT, uint8_t, bit_range<16u, 20u>, access_mode::read_wr
 ~~~
 
 Dieser Typ beschreibt die Bitpositionen von 16 - 20 einschließlich, der Bereich kann gelesen und gesetzt werden.
-Weiterhin wird die Funktion mit einem enum Eintrag Beschrieben. So muss jedes einzelne Bit beschrieben werden, ein Konzept stellt dies zur Kompilezeit sicher.
+Weiterhin wird die Funktion mit einem enum Eintrag dargestellt. So muss jedes einzelne Bit beschrieben werden. Ein Konzept stellt dies zur Compilezeit sicher.
 Für das UART Register CR ergibt sich damit folgender Typ:
 
 ~~~cpp
@@ -114,8 +114,8 @@ Bei diesem Register sind nur die ersten 8 Bits beschreibbar.
 
 ## Platzierung eines Registers
 
-Wie eingangs erwähnt, sind Register bestimmte Stellen im Speicher. Damit muss die vorherige gezeigte Beschreibung eines Register korrekt platziert werden.
-Oftmals gibt es auch mehrere Register der selben Art, welche nur an anderen Positionen stehen. Daher braucht man eine Lösung die Register an die richtigen Stellen
+Wie Eingangs erwähnt, sind Register bestimmte Stellen im Speicher. Damit muss die vorherige gezeigte Beschreibung eines Register korrekt platziert werden.
+Oftmals gibt es auch mehrere Register der selben Art, welche nur an anderen Positionen stehen. Daher braucht man eine Lösung, die Register an die richtigen Stellen
 im Code zu platzieren.
 
 ~~~{.cpp}
@@ -130,9 +130,9 @@ template<typename Component, typename N>
 }
 ~~~
 
-Die beiden Methoden werden dann parametrisiert mit der gewünschten Peripherie oder hier Component genannt, mit dem entsprechenden Index.
+Die beiden Methoden werden anschließend mit der gewünschten Peripherie, oder hier Component genannt, mit dem entsprechenden Index parametrisiert.   
 Die Funktion greift dafür auf einen zuvor festgelegten Bereich zu und wandelt, diesen in den gewünschten Datentyp um.
-Die Beschreibung dieser Zusammenhänge werden in structs gespeichert, welche den speziellen Mikrocontroller beschreiben, diese wird nachfolgend erläutert
+Die Beschreibung dieser Zusammenhänge werden in structs gespeichert, welche den speziellen Mikrocontroller beschreiben. Diese werden in den nachfolgenden Abschnitten erläutert.
 
 ## Beschreibung des Mikrocontroller Aufbaus
 
@@ -155,24 +155,24 @@ Dies kann man mit einem Konzept implementieren, was die Fähigkeiten eines Mikro
 };
 ~~~
 
-Obiges Beispiel modelliert einen Mikrocontroller mit gpios, damit kann sichergestellt werden, dass eine konkrete Implementierung für GPIOs vorliegt.
-Diese Concepts werden im Zusammenhang mit dem HAL (Hardware-abstraction-layer) verwendet, dieses verallgemeinert eine Implementierung für mehrere Mikrocontroller.
+Obiges Beispiel modelliert einen Mikrocontroller mit gpios. Damit kann sichergestellt werden, dass eine konkrete Implementierung für GPIOs vorliegt.
+Diese Concepts werden im Zusammenhang mit dem HAL (Hardware-abstraction-layer) verwendet und verallgemeinert eine Implementierung für mehrere Mikrocontroller.
 
 ## Hardware Abstraction Layer
 
 ### GPIO
 
-In diesem Abschnitt wird beschrieben GPIOs in einem HALs implementiert wurden und wie dessen Verwendung möglich ist.
+In diesem Abschnitt wird beschrieben, wie GPIOs in einem HALs implementiert wurden und wie deren Verwendung möglich ist.
 
-Da ein Cortex M basierter Mikrocontroller im Gegensatz zu beispielsweise der relativ einfach aufgebauten Mircochip AVR Architektur relativ viele Möglichkeiten zur Ansteuerung und Konfiguration einzelner I/O-Pins sowie deren Register besitzt wurde versucht diese Komplexität möglichst einfach zu implementieren indem so viel wie möglich Komplexität vor dem Nutzer versteckt wird. 
-Hierzu wurden zuerst wie zuvor beschrieben die einzelnen GPIO Register in einer STM32G4 spezifischen Klasse mittels `repeated_control_register` abgebildet. Dies ermöglicht ein Fehlerfreies einsetzen von Registerwerte mittels Enum-Werten. Zum auslesen von Werten an GPIO Pins wurde `data_register` verwendet welches einen reinen Lesezugriff auf ein Register ermöglicht. Somit ist es auch einem Anwender möglich mehrere Werte auf einmal auszulesen und auf diesen Bitoperationen auszuführen. 
+Da ein Cortex M basierter Mikrocontroller im Gegensatz zu beispielsweise der relativ einfach aufgebauten Mircochip AVR Architektur relativ viele Möglichkeiten zur Ansteuerung und Konfiguration einzelner I/O-Pins sowie deren Register besitzt, wurde versucht, diese Komplexität möglichst einfach zu implementieren, indem so viel wie möglich Komplexität vor dem Nutzer versteckt wird. 
+Hierzu wurden zuerst, wie zuvor beschrieben, die einzelnen GPIO Register in einer STM32G4 spezifischen Klasse mittels `repeated_control_register` abgebildet. Dies ermöglicht ein fehlerfreies Einsetzen von Registerwerte mittels Enum-Werten. Zum Auslesen von Werten an GPIO Pins, wurde `data_register` verwendet, welches einen reinen Lesezugriff auf ein Register ermöglicht. Somit ist es auch einem Anwender möglich, mehrere Werte auf einmal auszulesen und auf diesen Bitoperationen auszuführen. 
 
 ~~~cpp
  repeated_control_register<GPIO, MODER, uint32_t, 2> moder;
  data_register<GPIO, data_register_type::READ_ONLY, uint32_t, uint32_t{0xFFFF}> idr;
 ~~~
 
-Da sämtliche GPIO Ports die gleiche Register Map besitzen ist es möglich durch Austausch der Basisadresse diese auf die selbe Art anzusprechen indem ein Struct auf den Registerspeicherbereich gemappt wird. Diese wurde mittels Template Spezialisierung Implementiert, wie nachfolgend zu sehen ist.
+Da sämtliche GPIO Ports die gleiche Register Map besitzen ist es möglich, durch Austausch der Basisadresse diese auf die selbe Art anzusprechen, indem ein Struct auf den Registerspeicherbereich gemappt wird. Diese wurde mittels Template- Spezialisierung implementiert, wie nachfolgend zu sehen ist.
 
 ~~~cpp
 template<>
@@ -181,7 +181,7 @@ struct mcu_info::GPIO::address<A> {
 };
 ~~~
 
-Der HAL der GPIOs besteht aus zwei möglichen zum Referenzieren eines Pins, welche Nachfolgend betrachtet werden können.
+Der HAL der GPIOs besteht aus zwei Bestandteilen zum Referenzieren eines Pins, welche nachfolgend betrachtet werden können.
 
 ~~~cpp
 // (1) Port A, Pin 1-3 an
@@ -190,15 +190,15 @@ gpio<mcu_ns::A, used_mcu>::on<1, 2, 3>();
 gpio<mcu_ns::A, used_mcu>::pin<3>::off();
 ~~~
 
-Bei Methode 1 können mehrere Pins auf einmal angesprochen und Funktionen auf diesen ausgeführt werden. Dies erleichtert das gleichzeitige ansteuern mehrerer Pins durch einen Benutzer.
-Methode 2 wiederum ermöglicht das ansteuern und Referenzieren eines einzelnen Pins. Diese Methode wird vor allem benutzt um in Speziellen Funktionen, wie beispielsweise UART, einzelne Pins für Senden und Empfangen festzulegen und somit die lesbarkeit zu erhöhen, wie in nachfolgenden Kapiteln zu sehen ist.
+Bei Methode 1 können mehrere Pins auf einmal angesprochen und Funktionen auf diesen ausgeführt werden. Dies erleichtert das gleichzeitige Ansteuern mehrerer Pins durch einen Benutzer.
+Methode 2 wiederum ermöglicht das Ansteuern und Referenzieren eines einzelnen Pins. Diese Methode wird vor allem benutzt, um in speziellen Funktionen, wie beispielsweise UART, einzelne Pins für Senden und Empfangen festzulegen und somit die Lesbarkeit zu erhöhen, wie in nachfolgenden Kapiteln zu sehen ist.
 
-Weitere Funktionen von GPIO umfassen bereits von AVR bekannte Fähigkeiten, wie beispielsweise den Pin Modus auf Ein- oder Ausgabe zu setzen mittels `set_port_mode()`, sowie das auslesen eines Pins mittels `get()`. Zusätzlich zu diesen existieren noch unter ARM die Möglichkeit einen Pin explizit auf Push/Pull oder Open Drain zu stellen mittels `set_type()`. Des weiteren ist es auch möglich die Flankensteilheit mittels `set_speed()` zu setzen.
+Weitere Funktionen von GPIO umfassen bereits von AVR bekannte Fähigkeiten, wie beispielsweise den Pin Modus auf Ein- oder Ausgabe zu setzen mittels `set_port_mode()`, sowie das Auslesen eines Pins mittels `get()`. Zusätzlich zu diesen Methoden existiert noch unter ARM die Möglichkeit, einen Pin explizit auf Push/Pull oder Open Drain mittels `set_type()` zu stellen. Des weiteren ist es auch möglich, die Flankensteilheit mittels `set_speed()` zu setzen.
 
-Zu beachten das zum setzen und leeren von Pin Outputs bei STM32 zwei verschiedene Möglichkeiten bestehen. Erstere ist mittels des ODR Registers welches sowohl das Lesen als auch Schreiben unterstützt. Diese Methode ist jedoch nicht atomar, jedoch wird hierbei das gleichzeitige setzen und löschen über den selben Eintrag ermöglicht. Zweitere Methode ist mittels BSRR Register. Hierbei sind lesen und schreiben in unterschiedliche Einträge getrennt und diese Operation wird auch atomar ausgeführt. In diesme Projekt wurde sich für BSRR entschieden, da dies eine erhöhte Nutzungssicherheit bietet und eventuelle Fehlbenutzungen leichter auffallen.
+Zu beachten ist, dass zum Setzen und Leeren von Pin Outputs bei STM32 zwei verschiedene Möglichkeiten bestehen. Erstere ist mittels des ODR Registers möglich, welches sowohl das Lesen als auch das Schreiben unterstützt. Diese Methode ist jedoch nicht atomar. Jedoch wird hierbei das gleichzeitige Setzen und das Löschen über den selben Eintrag ermöglicht. Die zweite Methode ist mittels BSRR Register. Hierbei sind lesen und schreiben in unterschiedliche Einträge getrennt und diese Operation wird auch atomar ausgeführt. In diesem Projekt wurde sich für BSRR entschieden, da dies eine erhöhte Nutzungssicherheit bietet und eventuelle Fehlbenutzungen leichter auffallen.
 
-Eine Besonderheit der GPIO Register, welche noch beachtet werden musste ist, dass ein großer teil der Pins eine eigene Alternative Funktion besitzen kann. Beim setzen dieser Funktion wird mittels eines Multiplexers am Pin des Mikrocontrollers dieser mit einer speziellen Funktion verbunden. Dies ist vor allem Notwendig, wenn UART oder andere Funktionen am Ausgang eines Pins verwendet werden müssen.
-Da diese Funktionen sich jedoch von Mikrocontroller zu Mikrocontroller unterscheiden können und auch innerhalb der Modellreihe sich unterscheiden muss hierzu eine Spezialisierung der jeweiligen Verfügbaren Mikrocontroller durchgeführt werden. Hierzu wurde die Klasse `g474re` hinzugefügt, welche die Mappings der Alternativen Funktion mit der jeweiligen Zahl dieser Funktion durchführt. Ein Beispiel hierzu kann nachfolgend gesehen werden
+Eine Besonderheit der GPIO Register, welche noch beachtet werden musste ist, dass ein großer Teil der Pins eine eigene alternative Funktion besitzen kann. Beim Setzen dieser Funktion wird mittels eines Multiplexers am Pin des Mikrocontrollers dieser mit einer speziellen Funktion verbunden. Dies ist vor allem notwendig, wenn UART oder andere Funktionen am Ausgang eines Pins verwendet werden müssen.
+Da diese Funktionen sich jedoch von Mikrocontroller zu Mikrocontroller unterscheiden können und auch innerhalb der Modellreihe sich unterscheiden, muss hierzu eine Spezialisierung der jeweiligen verfügbaren Mikrocontroller durchgeführt werden. Hierzu wurde die Klasse `g474re` hinzugefügt, welche die Mappings der alternativen Funktion mit der jeweiligen Zahl dieser Funktion durchführt. Ein Beispiel hierzu kann nachfolgend gesehen werden
 
 ~~~cpp
 type_mapper mapper{
@@ -209,7 +209,7 @@ type_mapper mapper{
 
 Hierbei werden die TX und RX Pins von UART der Funktion 7 zugewiesen.
 
-Anschließend kann mittels der Funktion find_af, welche für jede Spezialisierte Mikrocontrollerklasse existiert nach diesen Mappings gesucht werden und somit diese abstrahiert werden.
+Anschließend kann mittels der Funktion find_af, welche für jede spezialisierte Mikrocontrollerklasse existiert, nach diesen Mappings gesucht und somit diese abstrahiert werden.
 
 ~~~cpp
 template<typename Port, uint32_t pin, typename function_number, auto function_type>
@@ -218,7 +218,7 @@ requires(pin <= 31) static constexpr af_type find_af() {
 }
 ~~~
 
-Im HAL wurden diese Mappings innerhalb der Funktion `set_alternative_function()` verwendet um Mittels der Pin Informationen, welche bereits innerhalb der Klasse verfügbar sind, sowie der Funktionsbeschreibung (wie UART2) die zugehörige Alternative Funktion zu finden und entsprechend ansprechen zu können, wie dies im Nachfolgenden Beispiel zu sehen ist.
+Im HAL wurden diese Mappings innerhalb der Funktion `set_alternative_function()` verwendet um mittels der Pin Informationen, welche bereits innerhalb der Klasse verfügbar sind, sowie der Funktionsbeschreibung (wie UART2) die zugehörige alternative Funktion zu finden und entsprechend ansprechen zu können, wie dies im nachfolgenden Beispiel zu sehen ist.
 
 ~~~cpp
 gpio<mcu_ns::A, used_mcu>::pin<3>::set_alternative_function<uart_nr::one, uart_pin_types::TX>();
@@ -228,19 +228,19 @@ gpio<mcu_ns::A, used_mcu>::pin<3>::set_alternative_function<uart_nr::one, uart_p
 
 In diesem Abschnitt wird die Abstraktion der UART Funktionalität beschrieben. Diese dient der Kommunikation eines Mikrocontrollers mit einem externen Gerät.
 
-Die in diesem Projekt verwendete STM32G4 Serie besitzt zwei verschiedene UART Implementierungen. Bei der ersten Variante Handelt es sich um einen "universal synchronous/asynchronous receiver
-transmitter". Dieser besitzt sowohl die Möglichkeit der synchronen als auch asynchronen Übertragung. Des Weiteren existiert neben dieser Variante auch die Möglichkeit einer Kommunikation im Low-power Modus, welcher als LPUART verfügbar ist. In diesem Projekt wurde nur die Möglichkeit der Asynchronen UART Übertragung für den HAL zur Verfügung gestellt. Jedoch wäre es mit minimalen Anpassungen auch möglich die LPUART Variante mit ähnlicher Funktionalität wie UART zu implementieren.
+Die in diesem Projekt verwendete STM32G4 Serie besitzt zwei verschiedene UART Implementierungen. Bei der ersten Variante handelt es sich um einen "universal synchronous/asynchronous receiver
+transmitter". Dieser besitzt sowohl die Möglichkeit der synchronen als auch asynchronen Übertragung. Des Weiteren existiert neben dieser Variante auch die Möglichkeit einer Kommunikation im Low-power Modus, welcher als LPUART verfügbar ist. In diesem Projekt wurde nur die Möglichkeit der Asynchronen UART Übertragung für den HAL zur Verfügung gestellt. Jedoch wäre es mit minimalen Anpassungen auch möglich. die LPUART Variante mit ähnlicher Funktionalität wie UART zu implementieren.
 
-Als erster Schritt bei der Implementierung des Hal muss die die Taktleitung von dem zugehörigen GPIO Port, wie auch die des UART-Moduls aktiviert werden. Hierzu wird die Klasse mcu_features verwendet, welche die jeweiligen Clock zu Funktions mappings besitzt. Ein Aufruf zum aktivieren der Clock kann im nachfolgenden Codebeispiel gesehen werden:
+Als erster Schritt bei der Implementierung des Hal muss die Taktleitung von dem zugehörigen GPIO Port, wie auch die des UART-Moduls, aktiviert werden. Hierzu wird die Klasse mcu_features verwendet, welche die jeweiligen Clock zu Funktions mappings besitzt. Ein Aufruf zum aktivieren der Clock kann im nachfolgenden Codebeispiel gesehen werden:
 
 ~~~cpp
 mcu_features<MCU>::template enable_clock<features::hal_features::UART, UartNr>();
 ~~~
 
-Ein weiterer Schritt zum aktivieren von UART ist die Konfiguration der jeweiligen Pins. Zur konkreten Implementierung wurden hierbei auf die HAL Funktionen des vorherigen Kapitels verwendet.
-Zum Erstellen des HALs wurden die zuvor beschriebenen GPIO Pin Abstrahierungen verwendet um sich möglichst einfach auf Veränderungen an der Zugrundeliegende Hardware anzupassen. So wurden unter anderem die Alternativen Funktionen auf UART gesetztu und die Pins in Push/Pull Konfiguration versetzt. 
+Ein weiterer Schritt zum Aktivieren von UART ist die Konfiguration der jeweiligen Pins. Zur konkreten Implementierung wurden hierbei auf die HAL Funktionen des vorherigen Kapitels verwendet.
+Zum Erstellen des HALs wurden die zuvor beschriebenen GPIO Pin Abstrahierungen verwendet um sich möglichst einfach auf Veränderungen an der zugrundeliegende Hardware anzupassen. So wurden unter anderem die alternativen Funktionen auf UART gesetzt und die Pins in Push/Pull Konfiguration versetzt. 
 
-Anschließend können die jeweiligen UART register Konfiguriert werden. Diese existieren bereits in der Registerbeschreibung der jeweiligen Mikrocontroller und werden in dieser Funktion für den Benutzer Konfiguriert. Die möglichen Optionen für den Benutzer sind hierbei die Auswahl der Baudrate sowie die Anzahl an Daten und Stoppbits. UART der STM32G4-Reihe umfasst noch deutlich mehr Optionen zur Konfiguration, jedoch wurden weitere Optionen aufgrund der Steigenden Benutzungskomplexität ausgelassen.
+Anschließend können die jeweiligen UART Register konfiguriert werden. Diese existieren bereits in der Registerbeschreibung der jeweiligen Mikrocontroller und werden in dieser Funktion für den Benutzer konfiguriert. Die möglichen Optionen für den Benutzer sind hierbei die Auswahl der Baudrate sowie die Anzahl an Daten und Stoppbits. UART der STM32G4-Reihe umfasst noch deutlich mehr Optionen zur Konfiguration, jedoch wurden weitere Optionen aufgrund der steigenden Benutzungskomplexität ausgelassen.
 
 Ein Aufruf zur UART Initialisierung kann beispielhaft nachfolgend betrachtet werden:
 
