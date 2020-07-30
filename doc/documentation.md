@@ -292,15 +292,17 @@ Diese existieren bereits in der Registerbeschreibung der jeweiligen Mikrocontrol
 Die möglichen Optionen für den Benutzer sind hierbei die Auswahl der Baudrate, sowie die Anzahl an Daten und Stoppbits.
 UART der STM32G4-Reihe umfasst noch einige weitere Optionen zur Konfiguration, jedoch wurden weitere Optionen aufgrund der steigenden Benutzungskomplexität zunächst ausgelassen.
 
-Ein Aufruf zur UART Initialisierung kann beispielhaft nachfolgend betrachtet werden:
+Ein Aufruf zur UART Initialisierung ich nachfolgend beispielhaft gezeigt.
 
 ~~~cpp
 uart_two::init<txpin, rxpin, 115200_baud>();
 ~~~
 
-Die Ausgabe mittels UART kann mit einer an printf orientierten Funktion durchgeführt werden. Diese benutzt intern `snprintf` und schreibt die jeweiligen `char` in das UART Ausgabe Register.
-
-Abschließend kann ein Beispiel zur Ausgabe gesehen werden:
+Die Ausgabe mittels UART kann mit einer an printf angelehnten Funktion durchgeführt werden.
+Weiterhin wird diese Methode mit der Größe des Ausgabepuffers parameterisiert, um zum einen dynamisch allokierten Speicher zu verhindern, 
+als auch dem Nutzer die Möglichkeit zu geben, den Puffer je nach Bedarf vergrößern zu können.
+Diese benutzt intern `snprintf` und schreibt die einzelnen Zeichen nacheinander in das UART Ausgabe Register.
+Abschließend ein kurzes Beispiel, wie die Ausgabe erfolgen kann.
 
 ~~~cpp
 uart_two::printf<256>("quadrant : %d \r\n", i);
