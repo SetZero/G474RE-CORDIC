@@ -5,13 +5,16 @@ lang: de-De
 author:
     - Christian Roth
     - Sebastian Dauenhauer
-keywords: [Microcontroller, C++, Type-Safity, Cordic]
+keywords: [Microcontroller, C++, Type-Safety, Cordic]
+institute: "Hochschule Kaiserslautern"
+supervisor: "Programmiertechniken für Embedded Systems bei Prof. Dr.-Ing. Wilhelm Meier"
+course: "Master Informatik (Software Engineering)"
 link-citations: true
 nocite: |
     @*
 documentclass: scrartcl
-classoption: a4paper, 11pt
-fontsize: 11pt
+classoption: a4paper, 12pt
+fontsize: 12pt
 papersize: a4
 titlepage: 1
 toc: 1

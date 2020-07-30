@@ -891,6 +891,11 @@ $if(titlepage-background)$
   \vskip 1em
   {\Large \textsf{$subtitle$}}
   $endif$
+  $if(affiliations)$
+  \vskip 1em
+  {\Large \textsf{$institute$}}
+  $endif$
+
   \vskip 2em
   \noindent {\Large \textsf{$for(author)$$author$$sep$, $endfor$} \vskip 0.6em \textsf{$date$}}
   \vfill
@@ -904,9 +909,23 @@ $else$
   \vskip 1em
   {\Large \textsf{$subtitle$}}
   $endif$
+  $if(supervisor)$
+  \vskip .5em
+  {\large \textsf{$supervisor$}}
+  $endif$
+  $if(course)$
+  \newline
+  {\large \textsf{$course$}}
+  $endif$
+  $if(institute)$
+  \newline
+  {\large \textsf{$institute$}}
+  $endif$
+
   \vskip 2em
   \noindent {\Large \textsf{$for(author)$$author$$sep$, $endfor$}}
   \vfill
+  
 }
 $endif$
 
