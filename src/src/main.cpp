@@ -251,47 +251,45 @@ int main() {
             uart_two::printf<256>("quadrant : %d \r\n", i);
 
             auto results = do_benchmark<setup_benchmark_type, cordic_one, functions::cosine, 100>(b, i);
-            uart_two::printf<256>("GCC \t COS \t num_runs : \t %d, total_difference : \t %d run_time :  \t %d \r\n",
-                                  results.num_runs, results.bogus_value, results.result_gcc);
-            uart_two::printf<256>("CORDIC \t COS \t num_runs : \t %d, total_difference : \t %d run_time :  \t %d \r\n",
+            uart_two::printf<256>("GCC COS \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n", results.num_runs,
+                                  results.bogus_value, results.result_gcc);
+            uart_two::printf<256>("CORDIC COS \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n",
                                   results.num_runs, results.bogus_value, results.result_cordic);
 
             results = do_benchmark<setup_benchmark_type, cordic_one, functions::sine, 100>(b, i);
-            uart_two::printf<256>("GCC \t SIN \t num_runs : \t %d, total_difference : \t %d run_time :  \t\t %d \r\n",
-                                  results.num_runs, results.bogus_value, results.result_gcc);
-            uart_two::printf<256>(
-                "CORDIC \t SIN \t num_runs : \t %d, total_difference : \t %d run_time :  \t\t %d \r\n",
-                results.num_runs, results.bogus_value, results.result_cordic);
+            uart_two::printf<256>("GCC SIN \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n", results.num_runs,
+                                  results.bogus_value, results.result_gcc);
+            uart_two::printf<256>("CORDIC SIN \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n",
+                                  results.num_runs, results.bogus_value, results.result_cordic);
 
             results = do_benchmark<setup_benchmark_type, cordic_one, functions::arctanh, 100>(b, i);
-            uart_two::printf<256>("GCC \t ATANH \t num_runs : \t %d, total_difference : \t %d run_time :  \t %d \r\n",
+            uart_two::printf<256>("GCC ATANH \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n",
                                   results.num_runs, results.bogus_value, results.result_gcc);
-            uart_two::printf<256>(
-                "CORDIC \t ATANH \t num_runs : \t %d, total_difference : \t %d run_time :  \t %d \r\n",
-                results.num_runs, results.bogus_value, results.result_cordic);
+            uart_two::printf<256>("CORDIC ATANH \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n",
+                                  results.num_runs, results.bogus_value, results.result_cordic);
 
             results = do_benchmark<setup_benchmark_type, cordic_one, functions::square_root, 100>(b, i);
-            uart_two::printf<256>("GCC \t SQRT \t num_runs : \t %d, total_difference : \t %d run_time :  \t %d \r\n",
-                                  results.num_runs, results.bogus_value, results.result_gcc);
-            uart_two::printf<256>("CORDIC \t SQRT \t num_runs : \t %d, total_difference : \t %d run_time :  \t %d \r\n",
+            uart_two::printf<256>("GCC SQRT \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n", results.num_runs,
+                                  results.bogus_value, results.result_gcc);
+            uart_two::printf<256>("CORDIC SQRT \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n",
                                   results.num_runs, results.bogus_value, results.result_cordic);
 
             results = do_benchmark<setup_benchmark_type, cordic_one, functions::hyperbolic_sine, 100>(b, i);
-            uart_two::printf<256>("GCC \t SINH \t num_runs : \t %d, total_difference : \t %d run_time :  \t %d \r\n",
-                                  results.num_runs, results.bogus_value, results.result_gcc);
-            uart_two::printf<256>("CORDIC \t SINH \t num_runs : \t %d, total_difference : \t %d run_time :  \t %d \r\n",
+            uart_two::printf<256>("GCC SINH \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n", results.num_runs,
+                                  results.bogus_value, results.result_gcc);
+            uart_two::printf<256>("CORDIC SINH \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n",
                                   results.num_runs, results.bogus_value, results.result_cordic);
 
             results = do_benchmark<setup_benchmark_type, cordic_one, functions::hyperbolic_cosine, 100>(b, i);
-            uart_two::printf<256>("GCC \t COSH \t num_runs : \t %d, total_difference : \t %d run_time :  \t %d \r\n",
-                                  results.num_runs, results.bogus_value, results.result_gcc);
-            uart_two::printf<256>("CORDIC \t COSH \t num_runs : \t %d, total_difference : \t %d run_time :  \t %d \r\n",
+            uart_two::printf<256>("GCC COSH \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n", results.num_runs,
+                                  results.bogus_value, results.result_gcc);
+            uart_two::printf<256>("CORDIC COSH \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n",
                                   results.num_runs, results.bogus_value, results.result_cordic);
 
             results = do_benchmark<setup_benchmark_type, cordic_one, functions::natural_logarithm, 100>(b, i);
-            uart_two::printf<256>("GCC \t LOGN \t num_runs : \t %d, total_difference : \t %d run_time :  \t %d \r\n",
-                                  results.num_runs, results.bogus_value, results.result_gcc);
-            uart_two::printf<256>("CORDIC \t LOGN \t num_runs : \t %d, total_difference : \t %d run_time :  \t %d \r\n",
+            uart_two::printf<256>("GCC LOGN \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n", results.num_runs,
+                                  results.bogus_value, results.result_gcc);
+            uart_two::printf<256>("CORDIC LOGN \t\t num_runs : %10d, total_difference : %10d run_time :  %10d \r\n",
                                   results.num_runs, results.bogus_value, results.result_cordic);
         }
 
