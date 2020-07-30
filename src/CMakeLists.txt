@@ -1,51 +1,51 @@
-#THIS FILE IS AUTO GENERATED FROM THE TEMPLATE! DO NOT CHANGE!
-SET(CMAKE_SYSTEM_NAME Generic)
-SET(CMAKE_SYSTEM_VERSION 1)
-cmake_minimum_required(VERSION 3.7)
+option(USE_HARDWARE_FLOAT "Enable the use of hardware floating point operations" off)
+add_subdirectory(./lib)
 
-# specify cross compilers and tools
-SET(CMAKE_C_COMPILER_WORKS 1)
-SET(CMAKE_C_COMPILER arm-none-eabi-gcc)
-SET(CMAKE_CXX_COMPILER_WORKS 1)
-SET(CMAKE_CXX_COMPILER arm-none-eabi-g++)
-set(CMAKE_ASM_COMPILER  arm-none-eabi-gcc)
-set(CMAKE_AR arm-none-eabi-ar)
-set(CMAKE_OBJCOPY arm-none-eabi-objcopy)
-set(CMAKE_OBJDUMP arm-none-eabi-objdump)
-set(SIZE arm-none-eabi-size)
-
-SET(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32G474RETx_FLASH.ld)
-
-#Uncomment for hardware floating point
-#SET(FPU_FLAGS "-mfloat-abi=hard -mfpu=fpv4-sp-d16")
-#add_definitions(-DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -D__FPU_PRESENT=1)
-
-#Uncomment for software floating point
-#SET(FPU_FLAGS "-mfloat-abi=soft")
-
-SET(COMMON_FLAGS
-    "-mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections \
-    -g -fno-common -fmessage-length=0 -specs=nosys.specs -specs=nano.specs \
-    -Wdouble-promotion -fstack-protector-strong -Wall -Wextra -Wpedantic -Wshadow")
-
-SET(CMAKE_CXX_FLAGS_INIT "${COMMON_FLAGS} -std=c++17")
-SET(CMAKE_C_FLAGS_INIT "${COMMON_FLAGS} -std=gnu11")
-SET(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,-gc-sections,--print-memory-usage -T ${LINKER_SCRIPT}")
-
-PROJECT(G474RE-CORDIC C CXX ASM)
-set(CMAKE_CXX_STANDARD 17)
-
-#add_definitions(-DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -D__FPU_PRESENT=1)
-add_definitions(-DUSE_HAL_DRIVER -DSTM32G474xx)
-
-file(GLOB_RECURSE SOURCES "startup/*.*" "Src/*.*")
-
-#include_directories(Inc Drivers/STM32G4xx_HAL_Driver/Inc Drivers/STM32G4xx_HAL_Driver/Inc/Legacy Drivers/CMSIS/Device/ST/STM32G4xx/Include Drivers/CMSIS/Include)
+set(LINKER_SCRIPT STM32G474RETx_FLASH.ld)
+set(SOURCES
+    startup/startup_stm32g474xx.s
+    src/main.cpp)
 
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
+target_link_libraries(${PROJECT_NAME}.elf hal_lib)
+set_target_properties(${PROJECT_NAME}.elf PROPERTIES CXX_STANDARD 20 C_STANDARD 11)
 
-set(CMAKE_EXE_LINKER_FLAGS
-    "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map")
+target_compile_definitions(${PROJECT_NAME}.elf PUBLIC STM32G474xx)
+target_include_directories(${PROJECT_NAME}.elf PUBLIC src)
+
+target_compile_options(${PROJECT_NAME}.elf PUBLIC  -fconcepts-diagnostics-depth=3)
+
+target_compile_options(${PROJECT_NAME}.elf PUBLIC
+    -mcpu=cortex-m4 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections
+    -fno-common -fmessage-length=0 -Wdouble-promotion -fstack-protector-strong -Wno-address-of-packed-member
+    -Wno-unused-local-typedefs)
+
+target_compile_options(${PROJECT_NAME}.elf PUBLIC -fno-exceptions)
+target_compile_options(${PROJECT_NAME}.elf PUBLIC
+    -Werror -Wall -Wextra -Wpedantic -Wshadow)
+set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CXX_STANDARD 20)
+set_property(TARGET ${PROJECT_NAME}.elf PROPERTY C_STANDARD 11)
+
+if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+    target_compile_options(${PROJECT_NAME}.elf PUBLIC -g)
+    message("Build Debug")
+endif()
+
+if (USE_HARDWARE_FLOAT)
+    target_compile_options(${PROJECT_NAME}.elf PUBLIC -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+    target_compile_definitions(${PROJECT_NAME}.elf PUBLIC ARM_MATH_CM4 ARM_MATH_MATRIX_CHECK ARM_MATH_ROUNDING __FPU_PRESENT=1)
+else()
+    target_compile_options(${PROJECT_NAME}.elf PUBLIC -mfloat-abi=soft)
+endif()
+
+set_target_properties( ${PROJECT_NAME}.elf
+  PROPERTIES
+  LINK_FLAGS
+  "-T ${CMAKE_CURRENT_SOURCE_DIR}/${LINKER_SCRIPT} \
+   -mthumb \
+   -mcpu=cortex-m4 \
+   -Wl,--gc-sections,--print-memory-usage \
+   -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map")
 
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
 set(BIN_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin)
