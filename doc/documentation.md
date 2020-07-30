@@ -26,25 +26,27 @@ header-left: "C++ Framework für STM32 Mikrocontrollers"
 listings-no-page-break: true
 listings-disable-line-numbers: true
 abstract: |
-    Mikrocontroller erhalten immer wieder neue und stärkere Komponenten, dabei hat sich die Programmierung dieser bisher kaum geändert.
-    Durch die neuen Funktionalitäten dieser wird auch die Entwicklung immer komplexer. Mit C++ und seinen Zero Cost Abstractions soll
+    Mikrocontroller erhalten immer wieder neue und stärkere Komponenten, dabei hat sich die Programmierung für diese bisher kaum geändert.
+    Durch die neuen Funktionalitäten der Mikrocontroller wird auch die Entwicklung dafür immer komplexer. Mit C++ und seinen Zero Cost Abstractions soll
     deshalb ein Abstraktionslayer entworfen werden, welches die Verwendung der Komponenten einfacher und sicherer machen soll.
     Hierfür wird das Modell G474RE der STM32 Reihe verwendet. Dieser besitzt zusätzlich zu den üblichen Komponenten auch eine Einheit,
     welche trigonometrische Funktionen berechnen kann. Im Zuge dieser Arbeit wird daher auch die Performance dieser Einheit verglichen mit
-    den trigonometrischen Funktionen, welche durch Software berechnet werden.
+    den trigonometrischen Funktionen, welche durch reine Softwarelösungen berechnet werden. Dabei werden die verschiedenen Funktionen miteinander
+    verglichen, weiterhin werden einzelne Aspekte bei der Programmierung des CORDICs und deren Einfluss auf die gesamte Performance genauer betrachtet.
 include-before: \newpage
 ---
 
 # Einleitung
 
-Die Programmierung mit Mikrocontrollern wird immer anspruchsvoller, da diese immer mehr Komponenten und Möglichkeiten erhalten sie zu verwenden.
-Gleichzeitig hat sich die in diesem Bereich Softwareentwicklung oftmals kaum weiterentwickelt, sodass Mikrocontroller weiterhin so programmiert werden,
+Die Programmierung mit Mikrocontrollern wird immer anspruchsvoller, da diese immer mehr Komponenten erhalten.
+Gleichzeitig hat sich dieser Bereich der Softwareentwicklung kaum weiterentwickelt, sodass Mikrocontroller weiterhin so programmiert werden,
 wie es üblich war zu der Zeit, als diese wesentlich weniger komplex waren. C++ mit seinen Zero-Cost Abstractions bietet daher eine sehr gute Möglichkeit,
-bestimmte Konzepte zu abstrahieren und somit die Entwicklung für Mikrocontroller nicht nur einfacher, sondern auch sicherer zu gestalten.
-Beispielhaft wurde ein Framework für einen STM32 entwickelt. Dabei sollen zwei Komponenten des Mikrocontrollers mit den Mitteln von C++ modelliert werden.
-Dafür werden zunächst die zugrunde liegenden Konzepte gezeigt, um dann die Komponente als solche zu modellieren.
-Die zweite Komponente, ein sogenannte CORDIC, ist eine spezielle Einheit innerhalb des hier verwendeten Modells des STM32.
-Dessen Geschwindigkeit soll mit den bereits eingebauten Trigonometrischen Funktionen verglichen werden.
+bestimmte Konzepte zu abstrahieren und somit die Entwicklung für Mikrocontroller nicht nur einfacher, sondern auch sicherer, zu gestalten.
+Beispielhaft wurde ein Framework für die Verwendung von mehreren Komponenten für einen Mikrocontroller der STM32-Reihe entwickelt. 
+Dabei sollen zwei Komponenten des Mikrocontrollers mit den Mitteln von C++ modelliert werden.
+Dafür werden zunächst die dem Framework zugrunde liegenden Konzepte gezeigt, um dann die Komponenten als solche zu implementieren.
+Die zweite Komponente, eine sogenannte CORDIC-Einheit, ist eine spezielle Einheit innerhalb des hier verwendeten Modells des STM32.
+Dieser kann einige trigonometrische Funktionen berechnen, die Performance soll dann mit den bereits eingebauten trigonometrischen Funktionen verglichen werden.
 
 # Die Ansteuerung der Peripherie
 
