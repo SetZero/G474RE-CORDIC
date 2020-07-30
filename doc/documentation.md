@@ -10,8 +10,8 @@ link-citations: true
 nocite: |
     @*
 documentclass: scrartcl
-classoption: a4paper, 12pt
-fontsize: 12pt
+classoption: a4paper, 11pt
+fontsize: 11pt
 papersize: a4
 titlepage: 1
 toc: 1
@@ -351,9 +351,14 @@ Die Performance des CORDIC ist unabhängig von der Eingabe, lediglich die geford
 
 ![Benötigte Zyklen des CORDICs für bestimmte trigonometrische Funktionen](images/perfcordic.png)
 
+Basierend auf den Daten aus dem Datenblatt des Mikrocontrollers kann davon ausgegangen werden, dass die einzelnen Funktionen sich kaum in ihrer Ausführungszeit
+unterscheiden. Lediglich die verschiedene Implementation der Funktionen in der Software, also das beschreiben der Argumentregister und das Auslesen der
+Resultatregister kann Unterschiede in der Performance nach sich ziehen.
+
 ![Genaure Auswertung der Performance](images/speed_comparison_stacked.png)
 
-Betrachtet man die verschiedenen Zeitmessungen der Funktionen 
+Summiert man alle Zeitmessungen der verschiedenen Funktionen zusammen, sieht man, dass der CORDIC insgesamt deutlich schneller war als die eingebauten
+trigonometrischen Funktionen von gcc.
 
 ![Genaure Auswertung der Performance auf Basis einzelner Funktionen](images/speed_comparison_single.png)
 
