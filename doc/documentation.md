@@ -418,6 +418,7 @@ Die Performance des CORDIC ist unabhängig von der Eingabe, lediglich die geford
 Basierend auf den Daten aus dem Datenblatt des Mikrocontrollers kann davon ausgegangen werden, dass die einzelnen Funktionen sich kaum in ihrer Ausführungszeit
 unterscheiden. Lediglich die verschiedene Implementation der Funktionen in der Software, also das beschreiben der Argumentregister und das Auslesen der
 Resultatregister kann Unterschiede in der Performance nach sich ziehen.
+Diese Vermutung wird später gesondert überprüft.
 
 ![Genaure Auswertung der Performance](images/speed_comparison_stacked.png)
 
