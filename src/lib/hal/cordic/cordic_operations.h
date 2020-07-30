@@ -175,7 +175,7 @@ namespace hal::cordic {
 
         using type =
             general_operation<Config, operation_type::single, functions::hyperbolic_cosine,
-                              general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
+                              general_operation_args<argument_type>, general_operation_res<argument_type>>;
 
         static inline constexpr auto create() { return type{}; }
     };
@@ -187,7 +187,7 @@ namespace hal::cordic {
 
         using type =
             general_operation<Config, operation_type::single, functions::hyperbolic_sine,
-                              general_operation_args<argument_type>, general_operation_res<typename Config::qtype>>;
+                              general_operation_args<argument_type>, general_operation_res<argument_type>>;
 
         static inline constexpr auto create() { return type{}; }
     };

@@ -51,32 +51,63 @@ struct gcc_func<hal::cordic::functions::sine> {
 };
 
 template<>
+struct gcc_func<hal::cordic::functions::hyperbolic_sine> {
+    static inline float (*func)(float) = std::sinh;
+};
+
+template<>
+struct gcc_func<hal::cordic::functions::hyperbolic_cosine> {
+    static inline float (*func)(float) = std::cosh;
+};
+
+template<>
 struct gcc_func<hal::cordic::functions::arctanh> {
     static inline float (*func)(float) = std::atanh;
 };
 
+template<>
+struct gcc_func<hal::cordic::functions::square_root> {
+    static inline float (*func)(float) = std::sqrt;
+};
+
 template<hal::cordic::functions Function>
 struct func_input_range {
-    // static inline constexpr float lower_value = -1.0f;
-    // static inline constexpr float upper_value = 1.0f;
 };
 
 template<>
 struct func_input_range<hal::cordic::functions::cosine> {
-    static inline constexpr float lower_value = -3.141f;
-    static inline constexpr float upper_value = 3.141f;
+    static inline constexpr float lower_value = -3.140f;
+    static inline constexpr float upper_value = 3.140f;
 };
 
 template<>
 struct func_input_range<hal::cordic::functions::sine> {
-    static inline constexpr float lower_value = -3.141f;
-    static inline constexpr float upper_value = 3.141f;
+    static inline constexpr float lower_value = -3.140f;
+    static inline constexpr float upper_value = 3.140f;
+};
+
+template<>
+struct func_input_range<hal::cordic::functions::hyperbolic_sine> {
+    static inline constexpr float lower_value = -1.118f;
+    static inline constexpr float upper_value = 1.118f;
+};
+
+template<>
+struct func_input_range<hal::cordic::functions::hyperbolic_cosine> {
+    static inline constexpr float lower_value = -1.118f;
+    static inline constexpr float upper_value = 1.118f;
 };
 
 template<>
 struct func_input_range<hal::cordic::functions::arctanh> {
-    static inline constexpr float lower_value = -0.806;
-    static inline constexpr float upper_value = 0.806;
+    static inline constexpr float lower_value = -0.805f;
+    static inline constexpr float upper_value = 0.805f;
+};
+
+template<>
+struct func_input_range<hal::cordic::functions::square_root> {
+    static inline constexpr float lower_value = 0.028f;
+    static inline constexpr float upper_value = 2.32f;
 };
 
 template<hal::cordic::functions Function>
@@ -96,7 +127,7 @@ template<typename BenchmarkType, typename CordicType, hal::cordic::functions Fun
 benchmark_results do_benchmark(const BenchmarkType &benchmark) {
     using namespace hal::cordic;
 
-    using cordic_config = cordic_config<precision::q1_31, hal::cordic::cordic_algorithm_precision::normal>;
+    using cordic_config = cordic_config<precision::q1_31, hal::cordic::cordic_algorithm_precision::high>;
     using current_func_info = func_info<Function>;
     auto cordic_op = hal::cordic::create_cordic_operation<cordic_config, Function>();
 
@@ -158,7 +189,9 @@ benchmark_results do_benchmark(const BenchmarkType &benchmark) {
     uint32_t total_difference = 0;
     for (auto i = 0u; i < useable_values; ++i) {
         total_difference +=
-            static_cast<decltype(total_difference)>(std::fabs(bogus_values[i] - second_bogus_values[i]) * 1000'000'00);
+            static_cast<decltype(total_difference)>(std::fabs(bogus_values[i] - second_bogus_values[i]) * 1000'000);
+        // uart_two::printf<256>("%d %d \t %d \r\n", static_cast<int>(benchmark_values[i] * 1000), static_cast<int>(bogus_values[i] * 10000),
+        //                       static_cast<int>(second_bogus_values[i] * 10000));
     }
 
     return benchmark_results{.result_cordic = cordic_setup_results + cordic_calc_results + cordic_convert_results,
@@ -203,6 +236,24 @@ int main() {
         uart_two::printf<256>("atanh gcc_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
                               results.result_gcc, results.num_runs, results.bogus_value);
         uart_two::printf<256>("atanh cordic_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
+                              results.result_cordic, results.num_runs, results.bogus_value);
+
+        results = do_benchmark<setup_benchmark_type, cordic_one, functions::square_root, 100>(b);
+        uart_two::printf<256>("square_root gcc_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
+                              results.result_gcc, results.num_runs, results.bogus_value);
+        uart_two::printf<256>("square_root cordic_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
+                              results.result_cordic, results.num_runs, results.bogus_value);
+
+        results = do_benchmark<setup_benchmark_type, cordic_one, functions::hyperbolic_sine, 100>(b);
+        uart_two::printf<256>("hyperbolic_sine gcc_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
+                              results.result_gcc, results.num_runs, results.bogus_value);
+        uart_two::printf<256>("hyperbolic_sine cordic_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
+                              results.result_cordic, results.num_runs, results.bogus_value);
+
+        results = do_benchmark<setup_benchmark_type, cordic_one, functions::hyperbolic_cosine, 100>(b);
+        uart_two::printf<256>("hyperbolic_sine gcc_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
+                              results.result_gcc, results.num_runs, results.bogus_value);
+        uart_two::printf<256>("hyperbolic_sine cordic_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
                               results.result_cordic, results.num_runs, results.bogus_value);
 
         delay_ms(1000);
