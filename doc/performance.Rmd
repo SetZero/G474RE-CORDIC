@@ -1,0 +1,83 @@
+---
+title: "Cordic Results"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(viridis)
+library(hrbrthemes)
+library(tidyr)
+library(plyr)
+library(scales)
+library(zoo)
+library(lubridate)
+library(diffobj)
+library(stats)
+library(rmarkdown)
+library(DT)
+
+knitr::opts_chunk$set(echo = TRUE)
+
+train_loss <- "./"
+
+location <- paste(train_loss, "performance.csv", sep="")
+performance_reading <- read.csv(location, header = TRUE)
+performance_reading
+```
+
+
+```{r speed}
+ggplot(performance_reading, aes(x = factor(ALGO), y = RUN_TIME, fill=SUBJ)) +
+  scale_fill_brewer(labels = c("CORDIC", "GCC"), palette='Paired') +
+  xlab("Function") +
+  ylab("Run Time [µS]") +
+  labs(subtitle=paste0(""),
+       title= "Speed Comparison") + 
+#  facet_wrap(~achievementname, scales = "free_x") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme(legend.position="top") +
+  geom_bar(stat="identity", width=.5, position="dodge")
+```
+
+```{r fig.width=12, fig.height=7, echo=FALSE, warning=FALSE}
+ggplot(performance_reading, aes(x = ALGO, y = RUN_TIME, fill=SUBJ, color=SUBJ)) +
+  scale_fill_brewer(labels = c("CORDIC", "GCC"), palette='Paired') +
+  scale_color_brewer(labels = c("CORDIC", "GCC"), palette='Accent') +
+  xlab("Function") +
+  ylab("Run Time [µS]") +
+  labs(subtitle=paste0(""),
+       title= "Speed Comparison") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme(legend.position="top") +
+  geom_boxplot(outlier.colour="black", outlier.shape=16,
+             outlier.size=2, notch=FALSE)
+```
+
+```{r fig.width=12, fig.height=7, echo=FALSE, warning=FALSE}
+ggplot(performance_reading, aes(x=ALGO, y = RUN_TIME, fill=SUBJ)) +
+  scale_fill_brewer(labels = c("CORDIC", "GCC"), palette='Paired') +
+  xlab("Function") +
+  ylab("Run Time [µS]") +
+  labs(subtitle=paste0(""),
+       title= "Speed Comparison") + 
+  facet_wrap(~ALGO, scales = "free") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme(legend.position="top", axis.text.x=element_blank()) +
+  geom_boxplot(outlier.colour="black", outlier.shape=16,
+             outlier.size=2, notch=FALSE)
+```
+
+```{r speed2}
+ggplot(performance_reading, aes(x = SUBJ, y = RUN_TIME, fill=ALGO)) +
+  scale_fill_brewer(palette='Pastel1') +
+  xlab("Runtime") +
+  ylab("Run Time [µS]") +
+  labs(subtitle=paste0(""),
+       title= "Speed Comparison") + 
+#  facet_wrap(~achievementname, scales = "free_x") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme(legend.position="top") +
+  geom_bar(stat="identity", width=.5, position="stack")
+```
