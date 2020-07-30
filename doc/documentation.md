@@ -228,11 +228,13 @@ Hierbei sind der lesende und schreibende Bereich durch unterschiedliche Einträg
 Diese Operation ist dagegen aber auch atomar.
 In diesem Projekt wurde die Verwendung des BSRR-Registers vorgezogen, da dieses eine erhöhte Nutzungssicherheit bietet und eventuelle Fehlbenutzungen leichter bemerkt werden.
 
-Eine Besonderheit der GPIO Register, welche noch beachtet werden musste ist, dass ein großer teil der Pins eine eigene Alternative Funktion besitzen kann.
-Beim setzen dieser Funktion wird mittels eines Multiplexers am Pin des Mikrocontrollers dieser mit einer speziellen Funktion verbunden.
-Dies ist vor allem Notwendig, wenn UART oder andere Funktionen am Ausgang eines Pins verwendet werden müssen.
-Da diese Funktionen sich jedoch von Mikrocontroller zu Mikrocontroller unterscheiden können und auch innerhalb der Modellreihe sich unterscheiden muss hierzu eine Spezialisierung der jeweiligen Verfügbaren Mikrocontroller durchgeführt werden.
-Hierzu wurde die Klasse `g474re` hinzugefügt, welche die Mappings der Alternativen Funktion mit der jeweiligen Zahl dieser Funktion durchführt. Ein Beispiel hierzu kann nachfolgend gesehen werden
+Eine Besonderheit der GPIO Register ist es, dass ein Großteil der Pins eine eigene Alternative Funktion unterstützen kann.
+Beim Setzen dieser Funktion wird mithilfe eines Multiplexers, der mit dem Pin verbunden ist, dieser mit einer speziellen Funktion oder Komponente verbunden.
+Dies ist vor allem Notwendig, wenn UART oder andere Funktionen am Ausgang eines Pins verwendet werden sollen.
+Da diese Funktionen sich jedoch von Mikrocontroller zu Mikrocontroller unterscheiden können und auch es innerhalb der Modellreihe Unterschiede geben kann, 
+wird hierzu eine Spezialisierung der jeweiligen verfügbaren Mikrocontroller hinzugefügt.
+Für den hier verwendeten Mikrocontroller wurde die Klasse `g474re` hinzugefügt, welche die Alternativen Funktionen auf die jeweilige Zahl dieser Funktion abbildet.
+Das nachfolgende Beispiel zeigt eine solche Abbildung.
 
 ~~~cpp
 type_mapper mapper{
@@ -242,8 +244,8 @@ type_mapper mapper{
 ~~~
 
 Hierbei werden die TX und RX Pins von UART der Funktion 7 zugewiesen.
-
-Anschließend kann mittels der Funktion find_af, welche für jede Spezialisierte Mikrocontrollerklasse existiert nach diesen Mappings gesucht werden und somit diese abstrahiert werden.
+Anschließend kann mittels der Funktion find_af, welche für jede Spezialisierung eines Mikrocontrollers existiert, nach dessen Abbildungen gesucht werden.
+Somit können die Alternative Funktionen und deren konkrete Werte abstrahiert werden.
 
 ~~~cpp
 template<typename Port, uint32_t pin, typename function_number, auto function_type>
@@ -252,7 +254,9 @@ requires(pin <= 31) static constexpr af_type find_af() {
 }
 ~~~
 
-Im HAL wurden diese Mappings innerhalb der Funktion `set_alternative_function()` verwendet um Mittels der Pin Informationen, welche bereits innerhalb der Klasse verfügbar sind, sowie der Funktionsbeschreibung (wie UART2) die zugehörige Alternative Funktion zu finden und entsprechend ansprechen zu können, wie dies im Nachfolgenden Beispiel zu sehen ist.
+Im HAL wurden diese Abbildungen innerhalb der Funktion `set_alternative_function()` verwendet.
+Mithilfe der Pin Informationen, welche bereits innerhalb der Klasse verfügbar sind, sowie der Funktionsbeschreibung (wie UART2), kann dann die zugehörige Alternative Funktion gefunden werden.
+Das nachfolgende Codebeispiel illustriert die konkrete Verwendung.
 
 ~~~cpp
 gpio<mcu_ns::A, used_mcu>::pin<3>::set_alternative_function<uart_nr::one, uart_pin_types::TX>();
@@ -260,19 +264,28 @@ gpio<mcu_ns::A, used_mcu>::pin<3>::set_alternative_function<uart_nr::one, uart_p
 
 ### UART
 
-In diesem Abschnitt wird die Abstraktion der UART Funktionalität beschrieben. Diese dient der Kommunikation eines Mikrocontrollers mit einem externen Gerät.
+In diesem Abschnitt wird die Abstraktion der UART Funktionalität beschrieben.
+Diese dient der Kommunikation eines Mikrocontrollers mit einem externen Gerät.
+Die in diesem Projekt verwendete STM32G4 Serie besitzt zwei verschiedene UART Implementierungen.
+Bei der ersten Variante Handelt es sich um einen "universal synchronous/asynchronous receiver transmitter".
+Dieser besitzt sowohl die Möglichkeit der synchronen, als auch der asynchronen Übertragung.
+Des Weiteren existiert neben dieser Variante auch die Möglichkeit die Kommunikation im Low-power Modus durchzuführen.
+Diese Variante ist als LPUART verfügbar.
+In diesem Projekt wurde zunächst nur die Möglichkeit der Asynchronen UART Übertragung für den HAL zur Verfügung gestellt.
+Jedoch wäre es mit minimalen Anpassungen ebenfalls möglich die LPUART Variante mit ähnlicher Funktionalität wie der, der UART Alternative, zu implementieren.
 
-Die in diesem Projekt verwendete STM32G4 Serie besitzt zwei verschiedene UART Implementierungen. Bei der ersten Variante Handelt es sich um einen "universal synchronous/asynchronous receiver
-transmitter". Dieser besitzt sowohl die Möglichkeit der synchronen als auch asynchronen Übertragung. Des Weiteren existiert neben dieser Variante auch die Möglichkeit einer Kommunikation im Low-power Modus, welcher als LPUART verfügbar ist. In diesem Projekt wurde nur die Möglichkeit der Asynchronen UART Übertragung für den HAL zur Verfügung gestellt. Jedoch wäre es mit minimalen Anpassungen auch möglich die LPUART Variante mit ähnlicher Funktionalität wie UART zu implementieren.
-
-Als erster Schritt bei der Implementierung des Hal muss die die Taktleitung von dem zugehörigen GPIO Port, wie auch die des UART-Moduls aktiviert werden. Hierzu wird die Klasse mcu_features verwendet, welche die jeweiligen Clock zu Funktions mappings besitzt. Ein Aufruf zum aktivieren der Clock kann im nachfolgenden Codebeispiel gesehen werden:
+Zuerst muss die Taktleitung des zugehörigen GPIO Ports, wie auch die des UART-Moduls aktiviert werden.
+Hierfür wird die Klasse mcu_features verwendet, welche die jeweiligen Abbildungen von einem Taktgeber zu einer bestimmten Funktion besitzt.
+Ein Aufruf zum Aktivieren des Taktgebers ist im nachfolgenden Codeauschnitt dargestellt.
 
 ~~~cpp
 mcu_features<MCU>::template enable_clock<features::hal_features::UART, UartNr>();
 ~~~
 
-Ein weiterer Schritt zum aktivieren von UART ist die Konfiguration der jeweiligen Pins. Zur konkreten Implementierung wurden hierbei auf die HAL Funktionen des vorherigen Kapitels verwendet.
-Zum Erstellen des HALs wurden die zuvor beschriebenen GPIO Pin Abstrahierungen verwendet um sich möglichst einfach auf Veränderungen an der Zugrundeliegende Hardware anzupassen. So wurden unter anderem die Alternativen Funktionen auf UART gesetztu und die Pins in Push/Pull Konfiguration versetzt. 
+Ein weiterer Schritt zum aktivieren von UART ist die Konfiguration der jeweiligen Pins.
+Zur konkreten Implementierung wurden hierbei auf die HAL Funktionen des vorherigen Kapitels verwendet.
+Zum Erstellen des HALs wurden die zuvor beschriebenen GPIO Pin Abstrahierungen verwendet um sich möglichst einfach auf Veränderungen an der Zugrundeliegende Hardware anzupassen.
+So wurden unter anderem die Alternativen Funktionen auf UART gesetztu und die Pins in Push/Pull Konfiguration versetzt. 
 
 Anschließend können die jeweiligen UART register Konfiguriert werden. Diese existieren bereits in der Registerbeschreibung der jeweiligen Mikrocontroller und werden in dieser Funktion für den Benutzer Konfiguriert. Die möglichen Optionen für den Benutzer sind hierbei die Auswahl der Baudrate sowie die Anzahl an Daten und Stoppbits. UART der STM32G4-Reihe umfasst noch deutlich mehr Optionen zur Konfiguration, jedoch wurden weitere Optionen aufgrund der Steigenden Benutzungskomplexität ausgelassen.
 
