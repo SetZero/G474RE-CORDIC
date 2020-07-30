@@ -270,12 +270,14 @@ namespace hal::cordic {
        public:
         using config_type = Config;
         using thiz_type = operation<Config, operation_type::single, functions::phase>;
+        using argument_type = const vec2<config_type::precision>;
+        using args_type = general_operation_args<argument_type, void>;
         using result_type = operation_result<typename config_type::qtype, operation_type::single, functions::phase, nres::one>;
 
         static inline constexpr auto function = functions::phase;
         static inline constexpr auto num_args = nargs::two;
 
-        thiz_type &arg(const vec2<config_type::precision> &v) {
+        thiz_type &arg1(const vec2<config_type::precision> &v) {
             m_v = v;
             return *this;
         }
@@ -300,7 +302,7 @@ namespace hal::cordic {
         static inline constexpr auto function = functions::modulus;
         static inline constexpr auto num_args = nargs::two;
 
-        thiz_type &arg(const vec2<config_type::precision> &v) {
+        thiz_type &arg1(const vec2<config_type::precision> &v) {
             m_v = v;
             return *this;
         }
