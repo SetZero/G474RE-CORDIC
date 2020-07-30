@@ -119,9 +119,11 @@ Der *reserved_type* ist ein Datentyp, welcher nicht angelegt werden kann, er die
 
 ## Platzierung eines Registers
 
-Wie eingangs erwähnt, sind Register bestimmte Stellen im Speicher. Damit muss die vorherige gezeigte Beschreibung eines Register korrekt platziert werden.
-Oftmals gibt es auch mehrere Register der selben Art, welche nur an anderen Positionen stehen. Daher braucht man eine Lösung die Register an die richtigen Stellen
-im Code zu platzieren.
+Wie eingangs erwähnt, befinden sich die Register an bestimmten Stellen im Speicher. 
+Damit muss die vorherige gezeigte Beschreibung eines Register korrekt platziert werden.
+Oftmals gibt es auch mehrere Register der selben Art, welche nur an anderen Positionen stehen. 
+Die Typen können daher mehrmals verwendet werden, um die verschiedenen Instanzen der Register zu bilden.
+Dazu braucht man nur noch eine Lösung die Register an die richtigen Stellen im Speicher zu platzieren.
 
 ~~~{.cpp}
 template<typename Component, auto N>
@@ -135,14 +137,19 @@ template<typename Component, typename N>
 }
 ~~~
 
-Die beiden Methoden werden dann parametrisiert mit der gewünschten Peripherie oder hier Component genannt, mit dem entsprechenden Index.
-Die Funktion greift dafür auf einen zuvor festgelegten Bereich zu und wandelt, diesen in den gewünschten Datentyp um.
-Die Beschreibung dieser Zusammenhänge werden in structs gespeichert, welche den speziellen Mikrocontroller beschreiben, diese wird nachfolgend erläutert
+Die beiden Methoden werden dann parametrisiert mit der gewünschten Peripherie, hier Component genannt, mit dem entsprechenden Index.
+Die Funktion greift dafür auf einen zuvor festgelegten Bereich zu und wandelt diesen in den gewünschten Datentyp um.
+In welcher Relation die Register zueinander stehen, wird in structs modelliert, welche den speziellen Mikrocontroller beschreiben.
+Wie diese aufgebaut sind wird in nachfolgend erklärt.
 
 ## Beschreibung des Mikrocontroller Aufbaus
 
+<!-- TODO: Add Mikrocontroller Beschreibung hier -->
+
 Die Beschreibung eines Mikrocontrollers ist die Anzahl und die Art seiner Komponenten.
-Dies kann man mit einem Konzept implementieren, was die Fähigkeiten eines Mikrocontrollers modellieren kann.
+Dies kann man mit einem Konzept implementieren, welches so die Peripherien eines Mikrocontrollers erfordern kann.
+Diese Konzepts können dann in den einzelnen HAL-Schnittstellen verwendet werden.
+So erfordert die GPIO Klasse, dass der Mikrocontroller einen bestimmten Aufbau aufweist.
 
 ~~~{.cpp }
     template<typename MCU, typename PIN>
@@ -165,19 +172,25 @@ Diese Concepts werden im Zusammenhang mit dem HAL (Hardware-abstraction-layer) v
 
 ## Hardware Abstraction Layer
 
+<!-- TODO: Konzept des HALS hier kurz erklären --->
+
 ### GPIO
 
-In diesem Abschnitt wird beschrieben GPIOs in einem HALs implementiert wurden und wie dessen Verwendung möglich ist.
-
-Da ein Cortex M basierter Mikrocontroller im Gegensatz zu beispielsweise der relativ einfach aufgebauten Mircochip AVR Architektur relativ viele Möglichkeiten zur Ansteuerung und Konfiguration einzelner I/O-Pins sowie deren Register besitzt wurde versucht diese Komplexität möglichst einfach zu implementieren indem so viel wie möglich Komplexität vor dem Nutzer versteckt wird. 
-Hierzu wurden zuerst wie zuvor beschrieben die einzelnen GPIO Register in einer STM32G4 spezifischen Klasse mittels `repeated_control_register` abgebildet. Dies ermöglicht ein Fehlerfreies einsetzen von Registerwerte mittels Enum-Werten. Zum auslesen von Werten an GPIO Pins wurde `data_register` verwendet welches einen reinen Lesezugriff auf ein Register ermöglicht. Somit ist es auch einem Anwender möglich mehrere Werte auf einmal auszulesen und auf diesen Bitoperationen auszuführen. 
+In diesem Abschnitt wird beschrieben wie GPIOs in einem HAL implementiert wurden und wie deren Verwendung möglich ist.
+Da ein Cortex M basierter Mikrocontroller im Gegensatz zu beispielsweise der relativ einfach aufgebauten Mircochip AVR Architektur relativ viele Möglichkeiten zur Ansteuerung und Konfiguration einzelner I/O-Pins sowie deren Register besitzt, wurde versucht diese Komplexität gut vor dem Nutzer zu verstecken. 
+Hierzu wurden zunächst wie zuvor beschrieben die einzelnen GPIO Register in einer STM32G4 spezifischen Klasse mittels `repeated_control_register` abgebildet.
+Dieser Typ ermöglicht ein fehlerfreies einsetzen von Registerwerten mittels Enum-Werten. 
+Zum Auslesen von Werten, welche an GPIO Pins anliegen, wurde `data_register` verwendet, welches einen reinen Lesezugriff auf ein Register ermöglicht.
+Somit ist es auch einem Anwender leicht möglich mehrere Werte auf einmal auszulesen und auf diesen Bit-Operationen anzuwenden. 
 
 ~~~cpp
  repeated_control_register<GPIO, MODER, uint32_t, 2> moder;
  data_register<GPIO, data_register_type::READ_ONLY, uint32_t, uint32_t{0xFFFF}> idr;
 ~~~
 
-Da sämtliche GPIO Ports die gleiche Register Map besitzen ist es möglich durch Austausch der Basisadresse diese auf die selbe Art anzusprechen indem ein Struct auf den Registerspeicherbereich gemappt wird. Diese wurde mittels Template Spezialisierung Implementiert, wie nachfolgend zu sehen ist.
+Da sämtliche GPIO Ports gleich aufgebaut sind, also die gleiche Register Map besitzen, ist es möglich durch Austausch der Basisadresse diese auf die selbe Art anzusprechen.
+Dies geschieht, indem ein Struct auf den Registerspeicherbereich gemappt wird. 
+Dieser Mechanismus wurde mittels Template Spezialisierung realisert, wie nachfolgend zu sehen ist.
 
 ~~~cpp
 template<>
@@ -186,7 +199,7 @@ struct mcu_info::GPIO::address<A> {
 };
 ~~~
 
-Der HAL der GPIOs besteht aus zwei möglichen zum Referenzieren eines Pins, welche Nachfolgend betrachtet werden können.
+Der HAL der GPIOs bietet zwei Möglichkeiten zum Referenzieren eines Pins, diese werden nachfolgend aufgezeigt.
 
 ~~~cpp
 // (1) Port A, Pin 1-3 an
@@ -195,8 +208,11 @@ gpio<mcu_ns::A, used_mcu>::on<1, 2, 3>();
 gpio<mcu_ns::A, used_mcu>::pin<3>::off();
 ~~~
 
-Bei Methode 1 können mehrere Pins auf einmal angesprochen und Funktionen auf diesen ausgeführt werden. Dies erleichtert das gleichzeitige ansteuern mehrerer Pins durch einen Benutzer.
-Methode 2 wiederum ermöglicht das ansteuern und Referenzieren eines einzelnen Pins. Diese Methode wird vor allem benutzt um in Speziellen Funktionen, wie beispielsweise UART, einzelne Pins für Senden und Empfangen festzulegen und somit die lesbarkeit zu erhöhen, wie in nachfolgenden Kapiteln zu sehen ist.
+Bei Methode 1 können mehrere Pins auf einmal angesprochen und Funktionen auf diesen ausgeführt werden.
+Dies erleichtert das gleichzeitige ansteuern mehrerer Pins durch einen Benutzer.
+Methode 2 wiederum ermöglicht das ansteuern und Referenzieren eines einzelnen Pins.
+Letztere wird vor allem benutzt, um in speziellen Funktionen, wie beispielsweise UART, einzelne Pins für das Senden und Empfangen festzulegen.
+Das Ziel dieser Methode ist, es die Lesbarkeit zu erhöhen.
 
 Weitere Funktionen von GPIO umfassen bereits von AVR bekannte Fähigkeiten, wie beispielsweise den Pin Modus auf Ein- oder Ausgabe zu setzen mittels `set_port_mode()`, sowie das auslesen eines Pins mittels `get()`. Zusätzlich zu diesen existieren noch unter ARM die Möglichkeit einen Pin explizit auf Push/Pull oder Open Drain zu stellen mittels `set_type()`. Des weiteren ist es auch möglich die Flankensteilheit mittels `set_speed()` zu setzen.
 
