@@ -214,12 +214,25 @@ Methode 2 wiederum ermöglicht das ansteuern und Referenzieren eines einzelnen P
 Letztere wird vor allem benutzt, um in speziellen Funktionen, wie beispielsweise UART, einzelne Pins für das Senden und Empfangen festzulegen.
 Das Ziel dieser Methode ist, es die Lesbarkeit zu erhöhen.
 
-Weitere Funktionen von GPIO umfassen bereits von AVR bekannte Fähigkeiten, wie beispielsweise den Pin Modus auf Ein- oder Ausgabe zu setzen mittels `set_port_mode()`, sowie das auslesen eines Pins mittels `get()`. Zusätzlich zu diesen existieren noch unter ARM die Möglichkeit einen Pin explizit auf Push/Pull oder Open Drain zu stellen mittels `set_type()`. Des weiteren ist es auch möglich die Flankensteilheit mittels `set_speed()` zu setzen.
+Weitere Funktionen der HAL Schnittstelle für GPIO umfassen bereits von AVR bekannte Fähigkeiten.
+Beispielsweise kann damit der Modus des Pins auf Ein- oder Ausgabe gesetzt werden, dies geschieht mittels der Methode `set_port_mode()`.
+Das Auslesen eines Pins kann dann mittels `get()` erfolgen.
+Zusätzlich hat man mit ARM Mikrocontrollern die Möglichkeit einen Pin explizit auf Push/Pull oder Open Drain zu stellen, dies funktioniert mittels `set_type()`.
+Des Weiteren ist es auch möglich die Flankensteilheit mittels `set_speed()` zu setzen.
 
-Zu beachten das zum setzen und leeren von Pin Outputs bei STM32 zwei verschiedene Möglichkeiten bestehen. Erstere ist mittels des ODR Registers welches sowohl das Lesen als auch Schreiben unterstützt. Diese Methode ist jedoch nicht atomar, jedoch wird hierbei das gleichzeitige setzen und löschen über den selben Eintrag ermöglicht. Zweitere Methode ist mittels BSRR Register. Hierbei sind lesen und schreiben in unterschiedliche Einträge getrennt und diese Operation wird auch atomar ausgeführt. In diesme Projekt wurde sich für BSRR entschieden, da dies eine erhöhte Nutzungssicherheit bietet und eventuelle Fehlbenutzungen leichter auffallen.
+Weiterhin existieren bei den Mikrocontrollern der STM32-Reihe zwei Möglichkeiten die Outputs der Pins zu setzen.
+Erstere wird mithilfe des ODR-Registers durchgeführt, dieses unterstützt sowohl einen lesenden als auch einen schreibenden Zugriff.
+Zu beachten ist hierbei, dass Diese Methode ist nicht atomar ist, dennoch wird hierbei das gleichzeitige Setzen und Löschen über den selben Eintrag ermöglicht.
+Die Andere Möglichkeit besteht aus der Verwendung des BSRR-Registers.
+Hierbei sind der lesende und schreibende Bereich durch unterschiedliche Einträge getrennt.
+Diese Operation ist dagegen aber auch atomar.
+In diesem Projekt wurde die Verwendung des BSRR-Registers vorgezogen, da dieses eine erhöhte Nutzungssicherheit bietet und eventuelle Fehlbenutzungen leichter bemerkt werden.
 
-Eine Besonderheit der GPIO Register, welche noch beachtet werden musste ist, dass ein großer teil der Pins eine eigene Alternative Funktion besitzen kann. Beim setzen dieser Funktion wird mittels eines Multiplexers am Pin des Mikrocontrollers dieser mit einer speziellen Funktion verbunden. Dies ist vor allem Notwendig, wenn UART oder andere Funktionen am Ausgang eines Pins verwendet werden müssen.
-Da diese Funktionen sich jedoch von Mikrocontroller zu Mikrocontroller unterscheiden können und auch innerhalb der Modellreihe sich unterscheiden muss hierzu eine Spezialisierung der jeweiligen Verfügbaren Mikrocontroller durchgeführt werden. Hierzu wurde die Klasse `g474re` hinzugefügt, welche die Mappings der Alternativen Funktion mit der jeweiligen Zahl dieser Funktion durchführt. Ein Beispiel hierzu kann nachfolgend gesehen werden
+Eine Besonderheit der GPIO Register, welche noch beachtet werden musste ist, dass ein großer teil der Pins eine eigene Alternative Funktion besitzen kann.
+Beim setzen dieser Funktion wird mittels eines Multiplexers am Pin des Mikrocontrollers dieser mit einer speziellen Funktion verbunden.
+Dies ist vor allem Notwendig, wenn UART oder andere Funktionen am Ausgang eines Pins verwendet werden müssen.
+Da diese Funktionen sich jedoch von Mikrocontroller zu Mikrocontroller unterscheiden können und auch innerhalb der Modellreihe sich unterscheiden muss hierzu eine Spezialisierung der jeweiligen Verfügbaren Mikrocontroller durchgeführt werden.
+Hierzu wurde die Klasse `g474re` hinzugefügt, welche die Mappings der Alternativen Funktion mit der jeweiligen Zahl dieser Funktion durchführt. Ein Beispiel hierzu kann nachfolgend gesehen werden
 
 ~~~cpp
 type_mapper mapper{
