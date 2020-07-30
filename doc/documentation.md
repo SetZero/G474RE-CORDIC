@@ -391,7 +391,7 @@ Die Performance des CORDIC ist unabhängig von der Eingabe, lediglich die geford
 
 Basierend auf den Daten aus dem Datenblatt des Mikrocontrollers kann davon ausgegangen werden, dass die einzelnen Funktionen sich kaum in ihrer Ausführungszeit
 unterscheiden. Lediglich die verschiedene Implementation der Funktionen in der Software, also das Beschreiben der Argumentregister und das Auslesen der
-Resultatregister kann Unterschiede in der Performance nach sich ziehen.
+Ergebnisregister kann Unterschiede in der Performance nach sich ziehen.
 Diese Vermutung wird später gesondert überprüft.
 
 ![Genaure Auswertung der Performance](images/speed_comparison_stacked.png)
@@ -406,6 +406,8 @@ Laufzeit des GCC. Hier lässt sich erahnen, welche Methoden wenig selbst berechn
 Die kleinen Unterschiede bei den verschiedenen Funktionen des Cordics können durch die verschiedene Anzahl von Argumenten erklärt werden.
 Des Weiteren müssen manche Werte zusätzlich skaliert werden und dies benötigt ebenfalls ein wenig Zeit.
 Sichtbar wird dies bei den beiden Funktionen *logn* und *sqrt*, welche beide eine relativ hohe Varianz haben, wenn man sie mit den restlichen Funktionen vergleicht.
+
+![Genaure Auswertung der CORDIC Performance](images/runtime_comparison.png)
 
 # Fazit
 
@@ -423,3 +425,5 @@ Dadurch kann eine gewohnte API, auch für die CORDIC Einheit verwendet werden ka
 Abschließend kann gesagt werden, dass die Verwendung von C++ auf Mikrocontrollern sinnvoll ist, da die Entwicklung vereinfacht wird und häufige Fehler durch
 C++ Features bereits zur Kompilezeit aufgedeckt werden können.
 Somit können viele Tests bereits zur Kompilezeit stattfinden, die sonst umständlich auf dem Mikrocontroller durchgeführt werden müssten.
+
+\newpage
