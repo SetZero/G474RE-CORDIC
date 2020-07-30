@@ -70,9 +70,13 @@ struct gcc_func<hal::cordic::functions::square_root> {
     static inline float (*func)(float) = std::sqrt;
 };
 
-template<hal::cordic::functions Function>
-struct func_input_range {
+template<>
+struct gcc_func<hal::cordic::functions::natural_logarithm> {
+    static inline float (*func)(float) = std::log;
 };
+
+template<hal::cordic::functions Function>
+struct func_input_range {};
 
 template<>
 struct func_input_range<hal::cordic::functions::cosine> {
@@ -108,6 +112,12 @@ template<>
 struct func_input_range<hal::cordic::functions::square_root> {
     static inline constexpr float lower_value = 0.028f;
     static inline constexpr float upper_value = 2.32f;
+};
+
+template<>
+struct func_input_range<hal::cordic::functions::natural_logarithm> {
+    static inline constexpr float lower_value = 0.11f;
+    static inline constexpr float upper_value = 9.35f;
 };
 
 template<hal::cordic::functions Function>
@@ -190,7 +200,8 @@ benchmark_results do_benchmark(const BenchmarkType &benchmark) {
     for (auto i = 0u; i < useable_values; ++i) {
         total_difference +=
             static_cast<decltype(total_difference)>(std::fabs(bogus_values[i] - second_bogus_values[i]) * 1000'000);
-        // uart_two::printf<256>("%d %d \t %d \r\n", static_cast<int>(benchmark_values[i] * 1000), static_cast<int>(bogus_values[i] * 10000),
+        // uart_two::printf<256>("%d %d \t %d \r\n", static_cast<int>(benchmark_values[i] * 1000),
+        //                       static_cast<int>(bogus_values[i] * 10000),
         //                       static_cast<int>(second_bogus_values[i] * 10000));
     }
 
@@ -251,10 +262,18 @@ int main() {
                               results.result_cordic, results.num_runs, results.bogus_value);
 
         results = do_benchmark<setup_benchmark_type, cordic_one, functions::hyperbolic_cosine, 100>(b);
-        uart_two::printf<256>("hyperbolic_sine gcc_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
+        uart_two::printf<256>("hyperbolic_cosine gcc_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
                               results.result_gcc, results.num_runs, results.bogus_value);
-        uart_two::printf<256>("hyperbolic_sine cordic_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
-                              results.result_cordic, results.num_runs, results.bogus_value);
+        uart_two::printf<256>(
+            "hyperbolic_cosine cordic_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
+            results.result_cordic, results.num_runs, results.bogus_value);
+
+        results = do_benchmark<setup_benchmark_type, cordic_one, functions::natural_logarithm, 100>(b);
+        uart_two::printf<256>("natural_logarithm gcc_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
+                              results.result_gcc, results.num_runs, results.bogus_value);
+        uart_two::printf<256>(
+            "natural_logarithm cordic_results: \t %d, num_runs : \t %d, total_difference : \t %d \r\n",
+            results.result_cordic, results.num_runs, results.bogus_value);
 
         delay_ms(1000);
     }
