@@ -46,34 +46,37 @@ Beispielhaft wurde ein Framework für die Verwendung von mehreren Komponenten f�
 Dabei sollen zwei Komponenten des Mikrocontrollers mit den Mitteln von C++ modelliert werden.
 Dafür werden zunächst die dem Framework zugrunde liegenden Konzepte gezeigt, um dann die Komponenten als solche zu implementieren.
 Die zweite Komponente, eine sogenannte CORDIC-Einheit, ist eine spezielle Einheit innerhalb des hier verwendeten Modells des STM32.
-Dieser kann einige trigonometrische Funktionen berechnen, die Performance soll dann mit den bereits eingebauten trigonometrischen Funktionen verglichen werden.
+Dieser kann einige trigonometrische Funktionen berechnen, die Performance soll dann mit den äquivalenten, eingebauten Funktionen verglichen werden.
 
 # Die Ansteuerung der Peripherie
 
-Die Peripherie von Mikrocontrollern und auch bei dem STM32 funktioniert im Allgemeinen über das Setzen von Bits in Registern.
+Oftmals wird die Peripherie von Mikrocontrollern, sowie bei dem vorliegenden STM32G4 über das Setzen von Bits in Registern, gesteuert.
 Die Register befinden sich an bestimmten Stellen im Speicher des Mikrocontrollers.
-Für das Setzen von Bits würde es genügen einen Pointer mit dem richtigen Typ auf diesen Bereich zeigen zu lassen
-und dann die benötigten Bits zu setzen.
-Eines der Ziele ist es jedoch neben Typsicherheit eine Resistenz gegen Fehlverwendung herzustellen.
-Mit dem Zeiger eines primitiven Datentypes auf des Registers, können unsinnige Werte gesetzt werden, weiterhin gibt es oftmals in
+Für das Setzen von Bits würde es genügen einen Pointer mit dem richtigen Typ auf diesen Bereich zeigen zu lassen und dann die jeweils benötigten Bits zu setzen.
+Eines der Ziele ist es jedoch neben der Typsicherheit eine Resistenz gegen Fehlverwendung herzustellen.
+Mit dem Zeiger eines primitiven Datentypes auf das Register, können unsinnige Werte gesetzt werden, weiterhin gibt es oftmals in
 Registern Werte und Teile, die nicht manipuliert werden dürfen.
-Um diese beiden Ziele zu erreichen wurde Datentypen implementiert, welche bei der Umsetzung dieser Ziele helfen sollen.
+Um diese beiden Ziele zu erreichen wurden eigene Datentypen implementiert, diese werden im nachfolgenden Abschnitt näher erläutert.
 
 ## Beschreibung eines Registers
 
-![Beschreibung des Registers in der Dokumentation des Mikrocontrollers](images/cr1desc.png)
+In der folgenden Abbildung ist die Beschreibung eines Registers des Mikrocontrollers abgebildet, wie sie in der Dokumentation des STM32G4 Mikrocontrollers vorkommt.
+Die Beschreibung einzelner Bits besteht aus einer Funktion, einem Bereich und gültigen Werten.
+Weiterhin wird bestimmt, ob es reservierte Bereiche gibt, welche nicht verändert werden dürfen.
+Diese Zusammenhänge wurden in einem Datentyp modelliert.
+Dieser Datentyp kann somit als Manifestation des Datenblattes verstanden werden.
 
-In der vorherigen Abbildung ist die Beschreibung eines Registers des Mikrocontrollers abgebildet, wie sie üblicherweise in einer Dokumentation vorkommt.
-Die Bits werden beschrieben, indem diesen eine Funktion zugewiesen wird, ein Bereich und gültige Werte. Weiterhin kann es reservierte Bereiche geben, welche
-nicht verändert werden dürfen. Diese Zusammenhänge wurden in einem Datentyp modelliert.
+![Beschreibung des Registers in der Dokumentation des Mikrocontrollers \label{cr1}](images/cr1desc.png)
 
 ~~~cpp
 register_entry_desc<CR::DEDT, uint8_t, bit_range<16u, 20u>, access_mode::read_write>
 ~~~
 
-Dieser Typ beschreibt die Bitpositionen von 16 - 20 einschließlich, der Bereich kann gelesen und gesetzt werden.
-Weiterhin wird die Funktion mit einem enum Eintrag Beschrieben. So muss jedes einzelne Bit beschrieben werden, ein Konzept stellt dies zur Kompilezeit sicher.
-Für das UART Register CR ergibt sich damit folgender Typ:
+Dieser Typ beschreibt die Bitpositionen von 16 - 20 einschließlich, auf den Bereich kann lesend und schreibend zugegriffen werden.
+Die Funktion des Bereichs wird mit einem enum Eintrag beschrieben. 
+So muss jedes einzelne Bit beschrieben werden, ein Konzept stellt dies zur Kompilezeit sicher.
+Diese überprüft weiterhin, dass sich die einzelnen Bereiche nicht überdecken, sodass Fehler beim Zugriff auf die einzelnen Bits ausgeschlossen werden können.
+Für das UART Register CR ergibt sich damit folgender Typ, dieser spiegelt die Beschreibung in Abbildung \ref{cr1} wieder.
 
 ~~~cpp
 register_desc<
@@ -107,10 +110,12 @@ Hier muss ebenfalls jedes einzelne Bit beschrieben werden.
 
 ~~~{.cpp}
 register_desc<volatile uint32_t, register_entry_desc<0, uint8_t, bit_range<0u, 7u>>,
-                          register_entry_desc<1, uint8_t, bit_range<8u, 31u>, access_mode::no_access>>
+                          register_entry_desc<1, reserved_type, bit_range<8u, 31u>, access_mode::no_access>>
 ~~~
 
 Bei diesem Register sind nur die ersten 8 Bits beschreibbar.
+Der *reserved_type* ist ein Datentyp, welcher nicht angelegt werden kann, er dient lediglich als Platzhalter.
+
 
 ## Platzierung eines Registers
 
