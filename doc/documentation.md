@@ -50,30 +50,33 @@ Dieser kann einige trigonometrische Funktionen berechnen. Die Performance soll d
 
 # Die Ansteuerung der Peripherie
 
-Die Peripherie von Mikrocontrollern und auch bei dem STM32 funktioniert im Allgemeinen über das Setzen von Bits in Registern.
+Oftmals wird die Peripherie von Mikrocontrollern, sowie bei dem vorliegenden STM32G4 über das Setzen von Bits in Registern, gesteuert.
 Die Register befinden sich an bestimmten Stellen im Speicher des Mikrocontrollers.
-Für das Setzen von Bits würde es genügen einen Pointer mit dem richtigen Typ auf diesen Bereich zeigen zu lassen
-und dann die benötigten Bits zu setzen.
-Eines der Ziele ist es jedoch neben Typsicherheit eine Resistenz gegen Fehlverwendung herzustellen.
-Mit dem Zeiger eines primitiven Datentypes auf des Registers, können unsinnige Werte gesetzt werden, weiterhin gibt es oftmals in
+Für das Setzen von Bits würde es genügen einen Pointer mit dem richtigen Typ auf diesen Bereich zeigen zu lassen und dann die jeweils benötigten Bits zu setzen.
+Eines der Ziele ist es jedoch neben der Typsicherheit eine Resistenz gegen Fehlverwendung herzustellen.
+Mit dem Zeiger eines primitiven Datentypes auf das Register, können unsinnige Werte gesetzt werden, weiterhin gibt es oftmals in
 Registern Werte und Teile, die nicht manipuliert werden dürfen.
-Um diese beiden Ziele zu erreichen wurde Datentypen implementiert, welche bei der Umsetzung dieser Ziele helfen sollen.
+Um diese beiden Ziele zu erreichen wurden eigene Datentypen implementiert, diese werden im nachfolgenden Abschnitt näher erläutert.
 
 ## Beschreibung eines Registers
 
-![Beschreibung des Registers in der Dokumentation des Mikrocontrollers](images/cr1desc.png)
+In der folgenden Abbildung ist die Beschreibung eines Registers des Mikrocontrollers abgebildet, wie sie in der Dokumentation des STM32G4 Mikrocontrollers vorkommt.
+Die Beschreibung einzelner Bits besteht aus einer Funktion, einem Bereich und gültigen Werten.
+Weiterhin wird bestimmt, ob es reservierte Bereiche gibt, welche nicht verändert werden dürfen.
+Diese Zusammenhänge wurden in einem Datentyp modelliert.
+Dieser Datentyp kann somit als Manifestation des Datenblattes verstanden werden.
 
-In der vorherigen Abbildung ist die Beschreibung eines Registers des Mikrocontrollers abgebildet, wie sie üblicherweise in einer Dokumentation vorkommt.
-Die Bits werden beschrieben, indem diesen eine Funktion zugewiesen wird, ein Bereich und gültige Werte. Weiterhin kann es reservierte Bereiche geben, welche
-nicht verändert werden dürfen. Diese Zusammenhänge wurden in einem Datentyp modelliert.
+![Beschreibung des Registers in der Dokumentation des Mikrocontrollers \label{cr1}](images/cr1desc.png)
 
 ~~~cpp
 register_entry_desc<CR::DEDT, uint8_t, bit_range<16u, 20u>, access_mode::read_write>
 ~~~
 
-Dieser Typ beschreibt die Bitpositionen von 16 - 20 einschließlich, der Bereich kann gelesen und gesetzt werden.
-Weiterhin wird die Funktion mit einem enum Eintrag dargestellt. So muss jedes einzelne Bit beschrieben werden. Ein Konzept stellt dies zur Compilezeit sicher.
-Für das UART Register CR ergibt sich damit folgender Typ:
+Dieser Typ beschreibt die Bitpositionen von 16 - 20 einschließlich, auf den Bereich kann lesend und schreibend zugegriffen werden.
+Die Funktion des Bereichs wird mit einem enum Eintrag beschrieben. 
+So muss jedes einzelne Bit beschrieben werden, ein Konzept stellt dies zur Kompilezeit sicher.
+Diese überprüft weiterhin, dass sich die einzelnen Bereiche nicht überdecken, sodass Fehler beim Zugriff auf die einzelnen Bits ausgeschlossen werden können.
+Für das UART Register CR ergibt sich damit folgender Typ, dieser spiegelt die Beschreibung in Abbildung \ref{cr1} wieder.
 
 ~~~cpp
 register_desc<
@@ -107,13 +110,20 @@ Hier muss ebenfalls jedes einzelne Bit beschrieben werden.
 
 ~~~{.cpp}
 register_desc<volatile uint32_t, register_entry_desc<0, uint8_t, bit_range<0u, 7u>>,
-                          register_entry_desc<1, uint8_t, bit_range<8u, 31u>, access_mode::no_access>>
+                          register_entry_desc<1, reserved_type, bit_range<8u, 31u>, access_mode::no_access>>
 ~~~
 
 Bei diesem Register sind nur die ersten 8 Bits beschreibbar.
+Der *reserved_type* ist ein Datentyp, welcher nicht angelegt werden kann, er dient lediglich als Platzhalter.
+
 
 ## Platzierung eines Registers
 
+Wie eingangs erwähnt, befinden sich die Register an bestimmten Stellen im Speicher. 
+Damit muss die vorherige gezeigte Beschreibung eines Register korrekt platziert werden.
+Oftmals gibt es auch mehrere Register der selben Art, welche nur an anderen Positionen stehen. 
+Die Typen können daher mehrmals verwendet werden, um die verschiedenen Instanzen der Register zu bilden.
+Dazu braucht man nur noch eine Lösung die Register an die richtigen Stellen im Speicher zu platzieren.
 Wie Eingangs erwähnt, sind Register bestimmte Stellen im Speicher. Damit muss die vorherige gezeigte Beschreibung eines Register korrekt platziert werden.
 Oftmals gibt es auch mehrere Register der selben Art, welche nur an anderen Positionen stehen. Daher braucht man eine Lösung, die Register an die richtigen Stellen
 im Code zu platzieren.
@@ -136,8 +146,12 @@ Die Beschreibung dieser Zusammenhänge werden in structs gespeichert, welche den
 
 ## Beschreibung des Mikrocontroller Aufbaus
 
+<!-- TODO: Add Mikrocontroller Beschreibung hier -->
+
 Die Beschreibung eines Mikrocontrollers ist die Anzahl und die Art seiner Komponenten.
-Dies kann man mit einem Konzept implementieren, was die Fähigkeiten eines Mikrocontrollers modellieren kann.
+Dies kann man mit einem Konzept implementieren, welches so die Peripherien eines Mikrocontrollers erfordern kann.
+Diese Konzepts können dann in den einzelnen HAL-Schnittstellen verwendet werden.
+So erfordert die GPIO Klasse, dass der Mikrocontroller einen bestimmten Aufbau aufweist.
 
 ~~~{.cpp }
     template<typename MCU, typename PIN>
@@ -159,6 +173,8 @@ Obiges Beispiel modelliert einen Mikrocontroller mit gpios. Damit kann sicherges
 Diese Concepts werden im Zusammenhang mit dem HAL (Hardware-abstraction-layer) verwendet und verallgemeinert eine Implementierung für mehrere Mikrocontroller.
 
 ## Hardware Abstraction Layer
+
+<!-- TODO: Konzept des HALS hier kurz erklären --->
 
 ### GPIO
 
@@ -208,6 +224,8 @@ type_mapper mapper{
 ~~~
 
 Hierbei werden die TX und RX Pins von UART der Funktion 7 zugewiesen.
+Anschließend kann mittels der Funktion find_af, welche für jede Spezialisierung eines Mikrocontrollers existiert, nach dessen Abbildungen gesucht werden.
+Somit können die Alternative Funktionen und deren konkrete Werte abstrahiert werden.
 
 Anschließend kann mittels der Funktion find_af, welche für jede spezialisierte Mikrocontrollerklasse existiert, nach diesen Mappings gesucht und somit diese abstrahiert werden.
 
@@ -226,7 +244,15 @@ gpio<mcu_ns::A, used_mcu>::pin<3>::set_alternative_function<uart_nr::one, uart_p
 
 ### UART
 
-In diesem Abschnitt wird die Abstraktion der UART Funktionalität beschrieben. Diese dient der Kommunikation eines Mikrocontrollers mit einem externen Gerät.
+In diesem Abschnitt wird die Abstraktion der UART Funktionalität beschrieben.
+Diese dient der Kommunikation eines Mikrocontrollers mit einem externen Gerät.
+Die in diesem Projekt verwendete STM32G4 Serie besitzt zwei verschiedene UART Implementierungen.
+Bei der ersten Variante Handelt es sich um einen "universal synchronous/asynchronous receiver transmitter".
+Dieser besitzt sowohl die Möglichkeit der synchronen, als auch der asynchronen Übertragung.
+Des Weiteren existiert neben dieser Variante auch die Möglichkeit die Kommunikation im Low-power Modus durchzuführen.
+Diese Variante ist als LPUART verfügbar.
+In diesem Projekt wurde zunächst nur die Möglichkeit der Asynchronen UART Übertragung für den HAL zur Verfügung gestellt.
+Jedoch wäre es mit minimalen Anpassungen ebenfalls möglich die LPUART Variante mit ähnlicher Funktionalität wie der, der UART Alternative, zu implementieren.
 
 Die in diesem Projekt verwendete STM32G4 Serie besitzt zwei verschiedene UART Implementierungen. Bei der ersten Variante handelt es sich um einen "universal synchronous/asynchronous receiver
 transmitter". Dieser besitzt sowohl die Möglichkeit der synchronen als auch asynchronen Übertragung. Des Weiteren existiert neben dieser Variante auch die Möglichkeit einer Kommunikation im Low-power Modus, welcher als LPUART verfügbar ist. In diesem Projekt wurde nur die Möglichkeit der Asynchronen UART Übertragung für den HAL zur Verfügung gestellt. Jedoch wäre es mit minimalen Anpassungen auch möglich. die LPUART Variante mit ähnlicher Funktionalität wie UART zu implementieren.
@@ -242,15 +268,17 @@ Zum Erstellen des HALs wurden die zuvor beschriebenen GPIO Pin Abstrahierungen v
 
 Anschließend können die jeweiligen UART Register konfiguriert werden. Diese existieren bereits in der Registerbeschreibung der jeweiligen Mikrocontroller und werden in dieser Funktion für den Benutzer konfiguriert. Die möglichen Optionen für den Benutzer sind hierbei die Auswahl der Baudrate sowie die Anzahl an Daten und Stoppbits. UART der STM32G4-Reihe umfasst noch deutlich mehr Optionen zur Konfiguration, jedoch wurden weitere Optionen aufgrund der steigenden Benutzungskomplexität ausgelassen.
 
-Ein Aufruf zur UART Initialisierung kann beispielhaft nachfolgend betrachtet werden:
+Ein Aufruf zur UART Initialisierung ich nachfolgend beispielhaft gezeigt.
 
 ~~~cpp
 uart_two::init<txpin, rxpin, 115200_baud>();
 ~~~
 
-Die Ausgabe mittels UART kann mit einer an printf orientierten Funktion durchgeführt werden. Diese benutzt intern `snprintf` und schreibt die jeweiligen `char` in das UART Ausgabe Register.
-
-Abschließend kann ein Beispiel zur Ausgabe gesehen werden:
+Die Ausgabe mittels UART kann mit einer an printf angelehnten Funktion durchgeführt werden.
+Weiterhin wird diese Methode mit der Größe des Ausgabepuffers parameterisiert, um zum einen dynamisch allokierten Speicher zu verhindern, 
+als auch dem Nutzer die Möglichkeit zu geben, den Puffer je nach Bedarf vergrößern zu können.
+Diese benutzt intern `snprintf` und schreibt die einzelnen Zeichen nacheinander in das UART Ausgabe Register.
+Abschließend ein kurzes Beispiel, wie die Ausgabe erfolgen kann.
 
 ~~~cpp
 uart_two::printf<256>("quadrant : %d \r\n", i);
