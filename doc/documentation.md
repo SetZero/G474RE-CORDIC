@@ -282,12 +282,15 @@ Ein Aufruf zum Aktivieren des Taktgebers ist im nachfolgenden Codeauschnitt darg
 mcu_features<MCU>::template enable_clock<features::hal_features::UART, UartNr>();
 ~~~
 
-Ein weiterer Schritt zum aktivieren von UART ist die Konfiguration der jeweiligen Pins.
-Zur konkreten Implementierung wurden hierbei auf die HAL Funktionen des vorherigen Kapitels verwendet.
-Zum Erstellen des HALs wurden die zuvor beschriebenen GPIO Pin Abstrahierungen verwendet um sich möglichst einfach auf Veränderungen an der Zugrundeliegende Hardware anzupassen.
-So wurden unter anderem die Alternativen Funktionen auf UART gesetztu und die Pins in Push/Pull Konfiguration versetzt. 
+Ein weiterer Schritt zum aktivieren des UARTs, ist die Konfiguration der jeweiligen Pins.
+Zur konkreten Implementierung wird hierbei auf die HAL Funktionen des vorherigen Kapitels zurückgegriffen.
+Zum Erstellen des HALs wurden die zuvor beschriebenen GPIO Pin Abstraktionen verwendet, um möglichst einfach auf Veränderungen an der zugrundeliegenden Hardware angepasst zu sein.
+So wurden unter anderem die Alternativen Funktionen auf UART gesetzt und die Pins in eine Push/Pull Konfiguration versetzt. 
 
-Anschließend können die jeweiligen UART register Konfiguriert werden. Diese existieren bereits in der Registerbeschreibung der jeweiligen Mikrocontroller und werden in dieser Funktion für den Benutzer Konfiguriert. Die möglichen Optionen für den Benutzer sind hierbei die Auswahl der Baudrate sowie die Anzahl an Daten und Stoppbits. UART der STM32G4-Reihe umfasst noch deutlich mehr Optionen zur Konfiguration, jedoch wurden weitere Optionen aufgrund der Steigenden Benutzungskomplexität ausgelassen.
+Anschließend können die jeweiligen UART-Register konfiguriert werden. 
+Diese existieren bereits in der Registerbeschreibung der jeweiligen Mikrocontroller und werden in dieser Funktion für den Benutzer konfiguriert.
+Die möglichen Optionen für den Benutzer sind hierbei die Auswahl der Baudrate, sowie die Anzahl an Daten und Stoppbits.
+UART der STM32G4-Reihe umfasst noch einige weitere Optionen zur Konfiguration, jedoch wurden weitere Optionen aufgrund der steigenden Benutzungskomplexität zunächst ausgelassen.
 
 Ein Aufruf zur UART Initialisierung kann beispielhaft nachfolgend betrachtet werden:
 
