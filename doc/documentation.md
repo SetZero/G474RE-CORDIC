@@ -483,7 +483,7 @@ Bei den eingebauten trigonometrischen Funktionen des Compilers hat die Größe d
 Laufzeit des GCC. Hier lässt sich erahnen, welche Methoden wenig selbst berechnen müssen.
 Die kleinen Unterschiede bei den verschiedenen Funktionen des Cordics könnten durch die verschiedenen Anzahlen von Argumenten erklärt werden, die die einzelnen Funktionen benötigen.
 In der nachfolgenden Abbildung ist, die Zeitmessung des CORDICs aufgeteilt auf die einzelnen Aspekte der Berechnung.
-Dabei setzt sich die Berechnung wie folgt zusammen: 
+Dabei setzt sich die Berechnung wie folgt zusammen:
 
 * SETUP: Das Erstellen und Setzen der Argumente, beispielsweise das Umrechnen einer Gleitkommaeingabe in den verwendeten Argumenttyp
 * CALC: Stellt die eigentliche Berechnung des CORDICs dar, hierbei werden auch die Argumente in das Argumentregister geschrieben
@@ -500,21 +500,29 @@ Sichtbar wird dies vor allem bei den beiden Funktionen *logn* und *sqrt*, welche
 Diese haben einen größeren Eingabebereich, weswegen mehr Skalierungen notwendig sind, um diesen Bereich auf den verwendeten Datentyp abzubilden.
 Auch die Funktion atan2 benötigt mehr Zeit für die Beschreibung seiner Argumente, dies liegt darin begründet, dass atan2 als einzige Funktion 2 Argumente in Form eines Vektors benötigt.
 
+### Bewertung der Ergebnisse
+
+Wenn mit Ergebnissen der Funktionen des CORDICs weitergerechnet werden kann, verbessert sich die Performance noch mehr.
+Denn die in Relation gesehene, teure Umwandlung von Gleitkommazahlen kann dadurch gespart werden.
+Weiterhin sollte bedacht werden, dass die einzelnen Funktionen oftmals mehrere Ergebnisse liefern, kann also bei einer
+das zweite Ergebnis genutzt werden, verdoppelt sich der Nutzen der CORDIC Funktionen praktisch.
+
 # Fazit
 
-Es konnte gezeigt werden, dass C++ gut verwendet werden kann, um typsichere und effiziente Abstraktionen zu erstellen, die die Komplexität bei der Verwendung von Mikrocontrollern
-mindern kann. Dabei können nicht nur die  Abstraktionslayer selbständig genutzt werden, sondern diese können ebenfalls zur Erstellung weiterer Abstraktionen verwendet werden.
+Es konnte gezeigt werden, dass C++ gut verwendet werden kann, um typsichere und effiziente Abstraktionen zu erstellen, die die Komplexität bei der Verwendung von Mikrocontrollern mindern kann.
+Dabei können nicht nur die  Abstraktionslayer selbständig genutzt werden, sondern diese können ebenfalls zur Erstellung weiterer Abstraktionen verwendet werden.
+Dadurch vermindert sich die weitere Entwicklungszeit, immer wieder auf bereits implementierte Abstraktionen zurückgegriffen werden kann.
 
 ## Ausblick
 
-Durch den weiteren Ausbau des Frameworks können die anderen Peripherien des Mikrocontrollers typsicher und einfach verwendet werden.
-Zudem kann diese Bibliothek auf andere Mikrocontroller portiert werden, sodass man eine gemeinsame Schnittstelle verwenden kann.
+Durch den weiteren Ausbau des Frameworks können weitere Peripherien des Mikrocontrollers typsicher und einfach verwendet werden.
+Zudem könnte dieses Framework auf andere Mikrocontroller portiert werden, sodass man eine gemeinsame Schnittstelle verwenden kann.
+Dadurch entfällt ein großer Teil der Komplexität bei der Entwicklung von Mikrocontrollern, da der Nutzer nicht mehr die Eigenheiten kennen muss.
 Es können weitere Operationen für die q_number Klasse hinzugefügt werden, sodass die etwas teure Umwandlung von Fließkommazahlen in Fixed-Kommazahlen
-erspart bleibt und man stattdessen mit den diesem Typen weiter rechnen kann.
-Weiterhin könnte die CORDIC-Einheit im Pipeline Modus gut mit dem ranges feature von C++20 verbunden werden.
-Dadurch kann eine gewohnte API, auch für die CORDIC Einheit verwendet werden kann.
+erspart bleibt und man stattdessen mit diesem Typen weiter rechnen kann.
+Weiterhin könnte die CORDIC-Einheit im Pipeline Modus gut mit dem ranges feature von C++20 verbunden werden, denn dann kann eine gewohnte API auch für die CORDIC Einheit verwendet werden.
 Abschließend kann gesagt werden, dass die Verwendung von C++ auf Mikrocontrollern sinnvoll ist, da die Entwicklung vereinfacht wird und häufige Fehler durch
-C++ Features bereits zur Kompilezeit aufgedeckt werden können.
-Somit können viele Tests bereits zur Kompilezeit stattfinden, die sonst umständlich auf dem Mikrocontroller durchgeführt werden müssten.
+C++ Features, wie beispielsweise Konzepts bereits zur Kompilezeit aufgedeckt werden können.
+Somit kann ein gewisser Grad von Korrektheit für das Programm sichergestellt werden, wenn es kompiliert werden kann.
 
 \newpage
