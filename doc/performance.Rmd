@@ -92,10 +92,14 @@ cordic_performance
 cordic_performance <- gather(cordic_performance, TYPE, VALUE, SETUP:CONV, factor_key=TRUE)
 
 cordic_performance
+cordic_performance <- aggregate(cordic_performance$VALUE,by=list(ALGO=cordic_performance$ALGO,
+                                           NUM_RUNS=cordic_performance$NUM_RUNS,
+                                           TYPE=cordic_performance$TYPE),data=cordic_performance,FUN=mean)
+cordic_performance
 ```
 
 ```{r}
-ggplot(cordic_performance, aes(x = ALGO, y = VALUE, fill=TYPE)) +
+ggplot(cordic_performance, aes(x = ALGO, y = x, fill=TYPE)) +
   scale_fill_brewer(palette='Pastel1') +
   xlab("Function") +
   ylab("Run Time [µS]") +
