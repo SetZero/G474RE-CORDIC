@@ -454,7 +454,7 @@ template<typename Config, functions Function>
 Das struct *create_op_helper* ist für die Erstellung der einzelnen Funktionen zuständig. Dieser wird für die einzelnen Funktionen spezialisiert.
 Damit bildet die Funktion *create_cordic_operation* eine Fabrikmethode, womit die spezielle Operation einheitlich erstellt werden kann.
 Warum eine Typisierung wichtig ist, bei der Vermeidung von Fehlern kann beispielhaft an der atan2 Methode gezeigt werden.
-Atan2 benötigt einen 2-Dimensionalen Vektor als Eingabe, dies wird in der entsprechenden CORDIC operation auch so modelliert:
+Atan2 benötigt einen 2-Dimensionalen Vektor als Eingabe, dies wird in der entsprechenden CORDIC Operation auch so modelliert:
 
 ~~~cpp
 //...
@@ -497,7 +497,7 @@ Auch haben einige Funktionen unterschiedliche Definitionsbereiche, so müssen di
 
 ## Zeitmessung und Vergleich mit eingebauten trigonometrischen Funktionen
 
-Im Folgenden wird die Performance des CORDIC verglichen mit der, der eingebauten trigonometrischen Funktionen.
+Im Folgenden wird die Performance des CORDICs mit der, der eingebauten trigonometrischen Funktionen verglichen.
 Zunächst wird das Setup zum Messen beschrieben, um dann im nachfolgenden Teil die Ergebnisse auszuwerten.
 
 ### Konfiguration der Hardware
@@ -552,7 +552,8 @@ Zum besseren Überblick werden die Zeiten, welche für die Berechnungen mit dem 
 
 ### Auswertung der Ergebnisse
 
-Die Performance des CORDIC ist unabhängig von der Eingabe, lediglich die geforderte Präzision beeinträchtigt die benötigte Berechnung.
+Die Performance des CORDIC ist unabhängig von der Eingabe, lediglich die geforderte Präzision beeinträchtigt die benötigte Berechnungszeit.
+Diese gibt die Anzahl der Zyklen für die Kalkulation an.
 
 ![Benötigte Zyklen des CORDICs für bestimmte trigonometrische Funktionen](images/perfcordic.png)
 
@@ -570,8 +571,8 @@ trigonometrischen Funktionen von gcc.
 
 Bei den eingebauten trigonometrischen Funktionen des Compilers hat die Größe der Eingabe einen Einfluss. Erkennbar ist dies an der größeren Varianz der
 Laufzeit des GCC. Hier lässt sich erahnen, welche Methoden wenig selbst berechnen müssen.
-Die kleinen Unterschiede bei den verschiedenen Funktionen des Cordics könnten durch die verschiedenen Anzahlen von Argumenten erklärt werden, die die einzelnen Funktionen benötigen.
-In der nachfolgenden Abbildung ist, die Zeitmessung des CORDICs aufgeteilt auf die einzelnen Aspekte der Berechnung.
+Die kleinen Unterschiede bei den verschiedenen Funktionen des CORDICs könnten durch die verschiedenen Anzahlen von Argumenten erklärt werden, die die einzelnen Funktionen benötigen.
+In der nachfolgenden Abbildung ist die Zeit, welcher der CORDIC zur Berechnung benötigt in die einzelnen Aspekte der Berechnung unterteilt.
 Dabei setzt sich die Berechnung wie folgt zusammen:
 
 * SETUP: Das Erstellen und Setzen der Argumente, beispielsweise das Umrechnen einer Gleitkommaeingabe in den verwendeten Argumenttyp
@@ -584,37 +585,38 @@ Die Abbildung bestätigt die vorangegangen Vermutungen.
 Die Berechnungen des CORDICs selbst, sind nahezu identisch, da die Berechnungszeit über die Präzision bestimmt wird.
 Auch die benötigte Zeit für die Umwandlung des Ergebnisses ist identisch, da bei allen genannten Funktionen nur ein zu berechnendes Ergebnis verwendet und ausgelesen wird.
 Lediglich die Anzahl der Argumente hat eine wesentliche Auswirkung auf die benötigte Zeit.
-Manche Werte müssen skaliert werden und dies benötigt ebenfalls ein wenig Zeit, da überprüft werden muss, in welchem Bereich die jeweilige Zahl liegt.
+Manche Werte müssen skaliert werden und dies benötigt ebenfalls etwas Zeit, da überprüft werden muss, in welchem Bereich die jeweilige Zahl liegt.
 Sichtbar wird dies vor allem bei den beiden Funktionen *logn* und *sqrt*, welche beide eine relativ hohe Varianz haben, wenn man sie mit den restlichen Funktionen vergleicht.
-Diese haben einen größeren Eingabebereich, weswegen mehr Skalierungen notwendig sind, um diesen Bereich auf den verwendeten Datentyp abzubilden.
-Auch die Funktion atan2 benötigt mehr Zeit für die Beschreibung seiner Argumente, dies liegt darin begründet, dass atan2 als einzige Funktion 2 Argumente in Form eines Vektors benötigt.
+Diese haben einen größeren Eingabebereich, weswegen mehrere Skalierungsbereiche notwendig sind, um diesen Bereich auf den verwendeten Datentyp abzubilden.
+Auch die Funktion atan2 auch phase genannt, benötigt mehr Zeit für die Beschreibung seiner Argumente.
+Dies liegt darin begründet, dass atan2 als einzige Funktion zwei Argumente in Form eines Vektors benötigt.
 
 ### Bewertung der Ergebnisse
 
-Wenn mit Ergebnissen der Funktionen des CORDICs weitergerechnet werden kann, verbessert sich die Performance noch mehr.
-Denn die in Relation gesehene, teure Umwandlung von Gleitkommazahlen kann dadurch gespart werden.
-Weiterhin sollte bedacht werden, dass die einzelnen Funktionen oftmals mehrere Ergebnisse liefern, kann also bei einer
+Wenn mit Ergebnissen der Funktionen des CORDICs weitergerechnet werden kann, verbessert sich die Performance im Vergleich zu den Softwarelösungen weiter.
+Denn die in Relation gesehen, teure Umwandlung von Gleitkommazahlen, kann dadurch weggelassen werden.
+Weiterhin sollte bedacht werden, dass die einzelnen Funktionen oftmals mehrere Ergebnisse liefern, kann also bei einer Funktion
 das zweite Ergebnis genutzt werden, verdoppelt sich der Nutzen der CORDIC Funktionen praktisch.
 
 \newpage
 
 # Fazit
 
-Es konnte gezeigt werden, dass C++ gut verwendet werden kann, um typsichere und effiziente Abstraktionen zu erstellen, die die Komplexität bei der Verwendung von Mikrocontrollern mindern kann.
-Dabei können nicht nur die  Abstraktionslayer selbständig genutzt werden, sondern diese können ebenfalls zur Erstellung weiterer Abstraktionen verwendet werden.
-Dadurch vermindert sich die weitere Entwicklungszeit, immer wieder auf bereits implementierte Abstraktionen zurückgegriffen werden kann.
+Es konnte durch die gute Performance gezeigt werden, dass C++ gut verwendet werden kann, um typsichere und effiziente Abstraktionen zu erstellen, die die Komplexität bei der Verwendung von Mikrocontrollern mindern kann.
+Dabei können nicht nur die Abstraktionslayer alleine genutzt werden, sondern sie können ebenfalls zur Erstellung weiterer Abstraktionen verwendet werden.
+Dadurch vermindert sich die Zeit, welche für die Weiterentwicklung benötigt wird, da immer wieder auf bereits implementierte Abstraktionen zurückgegriffen werden kann.
 
 ## Ausblick
 
 Durch den weiteren Ausbau des Frameworks können weitere Peripherien des Mikrocontrollers typsicher und einfach verwendet werden.
 Zudem könnte dieses Framework auf andere Mikrocontroller portiert werden, sodass man eine gemeinsame Schnittstelle verwenden kann.
-Dadurch entfällt ein großer Teil der Komplexität bei der Entwicklung von Mikrocontrollern, da der Nutzer nicht mehr die Eigenheiten kennen muss.
-Es können weitere Operationen für die q_number Klasse hinzugefügt werden, sodass die etwas teure Umwandlung von Fließkommazahlen in Fixed-Kommazahlen
-erspart bleibt und man stattdessen mit diesem Typen weiter rechnen kann.
+Dadurch entfällt ein großer Teil der Komplexität bei der Entwicklung von Mikrocontrollern, da der Nutzer nicht mehr die Besonderheiten kennen muss.
+Es können weitere Mathematische Operationen für die q_number Klasse hinzugefügt werden, sodass die etwas teure Umwandlung von Fließkommazahlen in Fixed-Kommazahlen
+erspart bleiben kann und man stattdessen mit diesem Typen weiter rechnen kann.
 Weiterhin könnte die CORDIC-Einheit im Pipeline Modus gut mit dem ranges feature von C++20 verbunden werden, denn dann kann eine gewohnte API auch für die CORDIC Einheit verwendet werden.
 Des Weiteren kann die UART Komponente um zusätzliche Optionen, wie unter anderem Autobaud, erweitert werden um mehr Funktionalität des Mikrocontrollers abzubilden.
 Abschließend kann gesagt werden, dass die Verwendung von C++ auf Mikrocontrollern sinnvoll ist, da die Entwicklung vereinfacht wird und häufige Fehler durch
-C++ Features, wie beispielsweise Konzepts bereits zur Kompilezeit aufgedeckt werden können.
+C++ Features, wie beispielsweise Conzepts bereits zur Compilezeit aufgedeckt werden können.
 Somit kann ein gewisser Grad von Korrektheit für das Programm sichergestellt werden, wenn es kompiliert werden kann.
 
 \newpage
