@@ -53,13 +53,66 @@ Dafür werden zunächst die dem Framework zugrunde liegenden Konzepte gezeigt, u
 Die zweite Komponente, eine sogenannte CORDIC-Einheit, ist eine spezielle Einheit innerhalb des hier verwendeten Modells des STM32.
 Dieser kann einige trigonometrische Funktionen berechnen. Die Performance soll dann mit den bereits eingebauten trigonometrischen Funktionen verglichen werden.
 
+# Beschreibung der Projektstruktur
+
+Da es sich bei dem Projekt um ein Framework handelt, war es dass Ziel ein System zu nutzen, welche die Verwendung als solches ermöglicht.
+Es ist ein Header-Only Framerwork, weswegen das System ein solches Unterstützen sollte.
+Wichtige benötigte Features und Voraussetzungen sollten klar definierbar sein.
+Daher wurde cmake verwendet, da es alle Anforderungen erfüllt und es die Verwendung des Frameworks vereinfacht.
+Nachfolgend ist ein Teil der CMakeLists.txt gezeigt, welche Zentral für das Framework genutzt wird
+
+~~~cmake
+add_library(hal_lib INTERFACE)
+target_include_directories(hal_lib INTERFACE .)
+
+// ...
+
+target_compile_features(hal_lib INTERFACE cxx_std_20 c_std_11)
+~~~
+
+Das Programm selbst, welches später die Benchmarks ausführen wird kann auf folgende Weise die Bibliothek verwenden.
+
+~~~cmake
+// ...
+target_link_libraries(${PROJECT_NAME}.elf hal_lib)
+// ...
+~~~
+
+Vorteil dieser Struktur ist, es dass ein Compiler festgelegt werden kann, welcher für die Kompilierung verwendet werden soll.
+Zum Testen des Verhaltens einiger Klassen des Frameworks, konnten daher einige Tests geschrieben werden, welche auf dem Rechner ausgeführt werden können.
+So konnte sichergestellt werden, dass das Verhalten der Klassen den Erwartungen entspricht.
+Für die Verwendung eines Compilers wird eine Toolchain Datei definiert, diese beinhaltet Pfade zu den Compilern.
+
+~~~cmake
+set(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_SYSTEM_PROCESSOR arm)
+set(CMAKE_CROSSCOMPILING TRUE)
+
+# specify cross compilers and tools
+set(CMAKE_C_COMPILER arm-none-eabi-gcc)
+set(CMAKE_CXX_COMPILER arm-none-eabi-g++)
+set(CMAKE_ASM_COMPILER  arm-none-eabi-gcc)
+set(CMAKE_AR arm-none-eabi-ar)
+set(CMAKE_OBJCOPY arm-none-eabi-objcopy)
+set(CMAKE_OBJDUMP arm-none-eabi-objdump)
+set(CMAKE_LINKER arm-none-eabi-ld)
+set(SIZE arm-none-eabi-size)
+
+set(CMAKE_TRY_COMPILE_TARGET_TYPE_STATIC STATIC_LIBRARY)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --specs=nosys.specs --specs=nano.specs -Os")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --specs=nosys.specs --specs=nano.specs -Os")
+~~~
+
+So wird es auch möglich mithilfe einer anderen Toolchain Datei, andere Mikrocontroller zu verwenden.
+
 # Die Ansteuerung der Peripherie
 
 Oftmals wird die Peripherie von Mikrocontrollern, sowie bei dem vorliegenden STM32G4 über das Setzen von Bits in Registern, gesteuert.
 Die Register befinden sich an bestimmten Stellen im Speicher des Mikrocontrollers.
 Für das Setzen von Bits würde es genügen, einen Pointer mit dem richtigen Typ auf diesen Bereich zeigen zu lassen und dann die jeweils benötigten Bits zu setzen.
 Eines der Ziele ist es jedoch neben der Typsicherheit eine Resistenz gegen Fehlverwendung herzustellen.
-Mit dem Zeiger eines primitiven Datentypes auf das Register, können unsinnige Werte gesetzt werden. 
+Mit dem Zeiger eines primitiven Datentypes auf das Register, können unsinnige Werte gesetzt werden.
 Weiterhin gibt es oftmals in Registern Werte und Teile, die nicht manipuliert werden dürfen.
 Um diese beiden Ziele zu erreichen, wurden eigene Datentypen implementiert. Diese werden im nachfolgenden Abschnitt näher erläutert.
 
@@ -124,9 +177,9 @@ Der *reserved_type* ist ein Datentyp, welcher nicht angelegt werden kann. Er die
 
 ## Platzierung eines Registers
 
-Wie eingangs erwähnt, befinden sich die Register an bestimmten Stellen im Speicher. 
+Wie eingangs erwähnt, befinden sich die Register an bestimmten Stellen im Speicher.
 Damit muss die vorherige gezeigte Beschreibung eines Register korrekt platziert werden.
-Oftmals gibt es auch mehrere Register der selben Art, welche nur an anderen Positionen stehen. 
+Oftmals gibt es auch mehrere Register der selben Art, welche nur an anderen Positionen stehen.
 Die Typen können daher mehrmals verwendet werden, um die verschiedenen Instanzen der Register zu bilden.
 Dazu braucht man nur noch eine Lösung, die Register an die richtigen Stellen im Speicher zu platzieren.
 Wie Eingangs erwähnt, sind Register bestimmte Stellen im Speicher. Damit muss die vorherige gezeigte Beschreibung eines Register korrekt platziert werden.
@@ -179,14 +232,17 @@ Diese Concepts werden im Zusammenhang mit dem HAL (Hardware-abstraction-layer) v
 
 ## Hardware Abstraction Layer
 
-<!-- TODO: Konzept des HALS hier kurz erklären --->
+Die Komponenten eines Mikrocontrollers können meistens nicht gesondert verwendet werden, das bedeutet man braucht eine Komponente, um die andere zu verwenden.
+Beispielsweise benötigt man Zugriff auf die GPIOs, um über UART kommunizieren zu können.
+Diese Aufgabe, die einzelnen Komponenten zu abstrahieren, soll das Hardware Abstraction Layer (kurz HAL) erfüllen.
+Nachfolgend werden die einzelnen Komponenten vorgestellt, die durch ein HAL beschrieben werden.
 
 ### GPIO
 
 In diesem Abschnitt wird beschrieben, wie GPIOs in einem HALs implementiert wurden und wie deren Verwendung möglich ist.
 
-Da ein Cortex M basierter Mikrocontroller im Gegensatz zu beispielsweise der relativ einfach aufgebauten Mircochip AVR Architektur relativ viele Möglichkeiten zur Ansteuerung und Konfiguration einzelner I/O-Pins sowie deren Register besitzt, wurde versucht, diese Komplexität möglichst einfach zu implementieren, indem so viel wie möglich Komplexität vor dem Nutzer versteckt wird. 
-Hierzu wurden zuerst, wie zuvor beschrieben, die einzelnen GPIO Register in einer STM32G4 spezifischen Klasse mittels `repeated_control_register` abgebildet. Dies ermöglicht ein fehlerfreies Einsetzen von Registerwerte mittels Enum-Werten. Zum Auslesen von Werten an GPIO Pins, wurde `data_register` verwendet, welches einen reinen Lesezugriff auf ein Register ermöglicht. Somit ist es auch einem Anwender möglich, mehrere Werte auf einmal auszulesen und auf diesen Bitoperationen auszuführen. 
+Da ein Cortex M basierter Mikrocontroller im Gegensatz zu beispielsweise der relativ einfach aufgebauten Mircochip AVR Architektur relativ viele Möglichkeiten zur Ansteuerung und Konfiguration einzelner I/O-Pins sowie deren Register besitzt, wurde versucht, diese Komplexität möglichst einfach zu implementieren, indem so viel wie möglich Komplexität vor dem Nutzer versteckt wird.
+Hierzu wurden zuerst, wie zuvor beschrieben, die einzelnen GPIO Register in einer STM32G4 spezifischen Klasse mittels `repeated_control_register` abgebildet. Dies ermöglicht ein fehlerfreies Einsetzen von Registerwerte mittels Enum-Werten. Zum Auslesen von Werten an GPIO Pins, wurde `data_register` verwendet, welches einen reinen Lesezugriff auf ein Register ermöglicht. Somit ist es auch einem Anwender möglich, mehrere Werte auf einmal auszulesen und auf diesen Bitoperationen auszuführen.
 
 ~~~cpp
  repeated_control_register<GPIO, MODER, uint32_t, 2> moder;
@@ -269,7 +325,7 @@ mcu_features<MCU>::template enable_clock<features::hal_features::UART, UartNr>()
 ~~~
 
 Ein weiterer Schritt zum Aktivieren von UART ist die Konfiguration der jeweiligen Pins. Zur konkreten Implementierung wurden hierbei die HAL Funktionen des vorherigen Kapitels verwendet.
-Zum Erstellen des HALs wurden die zuvor beschriebenen GPIO Pin Abstrahierungen verwendet, um sich möglichst einfach auf Veränderungen an der zugrundeliegende Hardware anzupassen. So wurden unter anderem die alternativen Funktionen auf UART gesetzt und die Pins in Push/Pull Konfiguration versetzt. 
+Zum Erstellen des HALs wurden die zuvor beschriebenen GPIO Pin Abstrahierungen verwendet, um sich möglichst einfach auf Veränderungen an der zugrundeliegende Hardware anzupassen. So wurden unter anderem die alternativen Funktionen auf UART gesetzt und die Pins in Push/Pull Konfiguration versetzt.
 
 Anschließend können die jeweiligen UART Register konfiguriert werden. Diese existieren bereits in der Registerbeschreibung der jeweiligen Mikrocontroller und werden in dieser Funktion für den Benutzer konfiguriert. Die möglichen Optionen für den Benutzer sind hierbei die Auswahl der Baudrate sowie die Anzahl an Daten und Stoppbits. UART der STM32G4-Reihe umfasst noch deutlich mehr Optionen zur Konfiguration, jedoch wurden weitere Optionen aufgrund der steigenden Benutzungskomplexität ausgelassen.
 
@@ -280,7 +336,7 @@ uart_two::init<txpin, rxpin, 115200_baud>();
 ~~~
 
 Die Ausgabe mittels UART kann mit einer an printf angelehnten Funktion durchgeführt werden.
-Weiterhin wird diese Methode mit der Größe des Ausgabepuffers parameterisiert, um zum einen dynamisch allokierten Speicher zu verhindern, 
+Weiterhin wird diese Methode mit der Größe des Ausgabepuffers parameterisiert, um zum einen dynamisch allokierten Speicher zu verhindern,
 als auch dem Nutzer die Möglichkeit zu geben, den Puffer je nach Bedarf vergrößern zu können.
 Diese benutzt intern `snprintf` und schreibt die einzelnen Zeichen nacheinander in das UART Ausgabe Register.
 Abschließend ein kurzes Beispiel, wie die Ausgabe erfolgen kann.
@@ -333,6 +389,28 @@ template<typename Config, functions Function>
 
 Das struct *create_op_helper ist für die Erstellung der einzelnen Funktionen zuständig. Dieser wird für die einzelnen Funktionen spezialisiert.
 Damit bildet die Funktion *create_cordic_operation* eine Fabrikmethode, womit die spezielle Operation einheitlich erstellt werden kann.
+Warum eine Typisierung wichtig ist, bei der Vermeidung von Fehlern kann beispielhaft an der atan2 Methode gezeigt werden.
+Atan2 benötigt einen 2-Dimensionalen Vektor als Eingabe, dies wird in der entsprechenden CORDIC operation auch so modelliert:
+
+~~~cpp
+//...
+cordic_benchmark_values[i].arg1(typename CordicOpType::args_type::first_arg_type(
+                x_coord{0.5f}, y_coord{0.5f}));
+// Alternativ auch:
+cordic_benchmark_values[i].arg1(typename CordicOpType::args_type::first_arg_type(
+                0.5_x, 0.5_y));
+//...
+~~~
+
+Durch die Verwendung von den beiden Datentypen *x_coord* und *y_coord*, kann eine Verwechslung durch den Nutzer vermieden werden.
+Dieses Problem existiert in der Implementierung der atan2 Funktion:
+
+~~~cpp
+float atan2(float y, float x);
+~~~
+
+Hierbei muss der Nutzer die Reihenfolge der Argumente beachten und erhält keine Hilfestellung durch den Compiler, weswegen eine Verwechslung oftmals unbemerkt bleibt.
+
 
 # CORDIC
 
@@ -376,7 +454,7 @@ uint32_t result = 0;
 // result has now the value of the timer in it
 ~~~
 
-Der Vergleich zwischen Cordic und den eingebauten trigonometrischen Funktionen soll zunächst davon ausgehen, dass man mit Fließkommazahlen rechnen möchte.
+Der Vergleich zwischen CORDIC und den eingebauten trigonometrischen Funktionen soll zunächst davon ausgehen, dass man mit Fließkommazahlen rechnen möchte.
 Zum besseren Überblick werden die Zeiten, welche für die Berechnungen mit dem CORDIC benötigt werden, in drei Teile unterteilt:
 
 - Dem Berechnen der Eingaben, also der Umrechnung von den Fließkommazahlen in den jeweiligen Typ
@@ -391,34 +469,60 @@ Die Performance des CORDIC ist unabhängig von der Eingabe, lediglich die geford
 
 Basierend auf den Daten aus dem Datenblatt des Mikrocontrollers kann davon ausgegangen werden, dass die einzelnen Funktionen sich kaum in ihrer Ausführungszeit
 unterscheiden. Lediglich die verschiedene Implementation der Funktionen in der Software, also das Beschreiben der Argumentregister und das Auslesen der
-Resultatregister kann Unterschiede in der Performance nach sich ziehen.
+Ergebnisregister kann Unterschiede in der Performance nach sich ziehen.
+Diese Vermutung wird später gesondert überprüft.
 
 ![Genaure Auswertung der Performance](images/speed_comparison_stacked.png)
 
-Summiert man alle Zeitmessungen der verschiedenen Funktionen zusammen, sieht man, dass der CORDIC insgesamt deutlich schneller war als die eingebauten
+Summiert man alle Zeitmessungen der verschiedenen Funktionen zusammen, sieht man, dass der CORDIC insgesamt deutlich schneller war, als die eingebauten
 trigonometrischen Funktionen von gcc.
 
 ![Genaure Auswertung der Performance auf Basis einzelner Funktionen](images/speed_comparison_single.png)
 
-Bei den eingebauten trigonometrischen Funktionen des Compilers hat die Größe der Eingabe jedoch einen Einfluss. Erkennbar ist dies an der größeren Varianz der
+Bei den eingebauten trigonometrischen Funktionen des Compilers hat die Größe der Eingabe einen Einfluss. Erkennbar ist dies an der größeren Varianz der
 Laufzeit des GCC. Hier lässt sich erahnen, welche Methoden wenig selbst berechnen müssen.
-Die kleinen Unterschiede bei den verschiedenen Funktionen des Cordics können durch die verschiedene Anzahl von Argumenten erklärt werden.
-Des Weiteren müssen manche Werte zusätzlich skaliert werden und dies benötigt ebenfalls ein wenig Zeit.
-Sichtbar wird dies bei den beiden Funktionen *logn* und *sqrt*, welche beide eine relativ hohe Varianz haben, wenn man sie mit den restlichen Funktionen vergleicht.
+Die kleinen Unterschiede bei den verschiedenen Funktionen des Cordics könnten durch die verschiedenen Anzahlen von Argumenten erklärt werden, die die einzelnen Funktionen benötigen.
+In der nachfolgenden Abbildung ist, die Zeitmessung des CORDICs aufgeteilt auf die einzelnen Aspekte der Berechnung.
+Dabei setzt sich die Berechnung wie folgt zusammen:
+
+* SETUP: Das Erstellen und Setzen der Argumente, beispielsweise das Umrechnen einer Gleitkommaeingabe in den verwendeten Argumenttyp
+* CALC: Stellt die eigentliche Berechnung des CORDICs dar, hierbei werden auch die Argumente in das Argumentregister geschrieben
+* CONV: Bildet das Auslesen der Resultate und das Umwandeln in einen Gleitkommatyp
+
+![Genaure Auswertung der CORDIC Performance](images/runtime_comparison.png)
+
+Die Abbildung bestätigt die vorangegangen Vermutungen.
+Die Berechnungen des CORDICs selbst, sind nahezu identisch, da die Berechnungszeit über die Präzision bestimmt wird.
+Auch die benötigte Zeit für die Umwandlung des Ergebnisses ist identisch, da bei allen genannten Funktionen nur ein zu berechnendes Ergebnis verwendet und ausgelesen wird.
+Lediglich die Anzahl der Argumente hat eine wesentliche Auswirkung auf die benötigte Zeit.
+Manche Werte müssen skaliert werden und dies benötigt ebenfalls ein wenig Zeit, da überprüft werden muss, in welchem Bereich die jeweilige Zahl liegt.
+Sichtbar wird dies vor allem bei den beiden Funktionen *logn* und *sqrt*, welche beide eine relativ hohe Varianz haben, wenn man sie mit den restlichen Funktionen vergleicht.
+Diese haben einen größeren Eingabebereich, weswegen mehr Skalierungen notwendig sind, um diesen Bereich auf den verwendeten Datentyp abzubilden.
+Auch die Funktion atan2 benötigt mehr Zeit für die Beschreibung seiner Argumente, dies liegt darin begründet, dass atan2 als einzige Funktion 2 Argumente in Form eines Vektors benötigt.
+
+### Bewertung der Ergebnisse
+
+Wenn mit Ergebnissen der Funktionen des CORDICs weitergerechnet werden kann, verbessert sich die Performance noch mehr.
+Denn die in Relation gesehene, teure Umwandlung von Gleitkommazahlen kann dadurch gespart werden.
+Weiterhin sollte bedacht werden, dass die einzelnen Funktionen oftmals mehrere Ergebnisse liefern, kann also bei einer
+das zweite Ergebnis genutzt werden, verdoppelt sich der Nutzen der CORDIC Funktionen praktisch.
 
 # Fazit
 
-Es konnte gezeigt werden, dass C++ gut verwendet werden kann, um typsichere und effiziente Abstraktionen zu erstellen, die die Komplexität bei der Verwendung von Mikrocontrollern
-mindern kann. Dabei können nicht nur die  Abstraktionslayer selbständig genutzt werden, sondern diese können ebenfalls zur Erstellung weiterer Abstraktionen verwendet werden.
+Es konnte gezeigt werden, dass C++ gut verwendet werden kann, um typsichere und effiziente Abstraktionen zu erstellen, die die Komplexität bei der Verwendung von Mikrocontrollern mindern kann.
+Dabei können nicht nur die  Abstraktionslayer selbständig genutzt werden, sondern diese können ebenfalls zur Erstellung weiterer Abstraktionen verwendet werden.
+Dadurch vermindert sich die weitere Entwicklungszeit, immer wieder auf bereits implementierte Abstraktionen zurückgegriffen werden kann.
 
 ## Ausblick
 
-Durch den weiteren Ausbau des Frameworks können die anderen Peripherien des Mikrocontrollers typsicher und einfach verwendet werden.
-Zudem kann diese Bibliothek auf andere Mikrocontroller portiert werden, sodass man eine gemeinsame Schnittstelle verwenden kann.
+Durch den weiteren Ausbau des Frameworks können weitere Peripherien des Mikrocontrollers typsicher und einfach verwendet werden.
+Zudem könnte dieses Framework auf andere Mikrocontroller portiert werden, sodass man eine gemeinsame Schnittstelle verwenden kann.
+Dadurch entfällt ein großer Teil der Komplexität bei der Entwicklung von Mikrocontrollern, da der Nutzer nicht mehr die Eigenheiten kennen muss.
 Es können weitere Operationen für die q_number Klasse hinzugefügt werden, sodass die etwas teure Umwandlung von Fließkommazahlen in Fixed-Kommazahlen
-erspart bleibt und man stattdessen mit den diesem Typen weiter rechnen kann.
-Weiterhin könnte die CORDIC-Einheit im Pipeline Modus gut mit dem ranges feature von C++20 verbunden werden.
-Dadurch kann eine gewohnte API, auch für die CORDIC Einheit verwendet werden kann.
+erspart bleibt und man stattdessen mit diesem Typen weiter rechnen kann.
+Weiterhin könnte die CORDIC-Einheit im Pipeline Modus gut mit dem ranges feature von C++20 verbunden werden, denn dann kann eine gewohnte API auch für die CORDIC Einheit verwendet werden.
 Abschließend kann gesagt werden, dass die Verwendung von C++ auf Mikrocontrollern sinnvoll ist, da die Entwicklung vereinfacht wird und häufige Fehler durch
-C++ Features bereits zur Kompilezeit aufgedeckt werden können.
-Somit können viele Tests bereits zur Kompilezeit stattfinden, die sonst umständlich auf dem Mikrocontroller durchgeführt werden müssten.
+C++ Features, wie beispielsweise Konzepts bereits zur Kompilezeit aufgedeckt werden können.
+Somit kann ein gewisser Grad von Korrektheit für das Programm sichergestellt werden, wenn es kompiliert werden kann.
+
+\newpage

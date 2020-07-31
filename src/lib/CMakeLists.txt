@@ -1,4 +1,4 @@
-option(USE_HAL_DRIVER "Enable the use of the hal driver" off)
+option(USE_HAL_DRIVER "Enable the use of the hal driver" on)
 
 add_library(hal_lib INTERFACE)
 target_include_directories(hal_lib INTERFACE .)
