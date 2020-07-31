@@ -51,6 +51,7 @@ bestimmte Konzepte zu abstrahieren und somit die Entwicklung für Mikrocontrolle
 Beispielhaft wurde ein Framework für die Verwendung von mehreren Komponenten für einen Mikrocontroller der STM32-Reihe entwickelt.
 Dabei sollen zwei Komponenten des Mikrocontrollers mit den Mitteln von C++ modelliert werden.
 Dafür werden zunächst die dem Framework zugrunde liegenden Konzepte gezeigt, um dann die Komponenten als solche zu implementieren.
+Als erste Komponente wurde eine Abstrahierung für die UART Einheit des Mikrocontrollers entwickelt.
 Die zweite Komponente, eine sogenannte CORDIC-Einheit, ist eine spezielle Einheit innerhalb des hier verwendeten Modells des STM32.
 Diese kann einige trigonometrische Funktionen berechnen. Die Performance wird dann mit den bereits eingebauten trigonometrischen Funktionen verglichen.
 
@@ -59,7 +60,7 @@ Diese kann einige trigonometrische Funktionen berechnen. Die Performance wird da
 Da es sich bei dem Projekt um ein Framework handelt, war es dass Ziel ein System zu nutzen, welches die Verwendung als solches ermöglicht.
 Es ist ein Header-Only Framerwork, weswegen das System dieses Konzept unterstützen sollte.
 Wichtige benötigte Features und Voraussetzungen sollten klar definierbar sein.
-Daher wurde Cmake verwendet, da es alle Anforderungen erfüllt und es die Verwendung des Frameworks vereinfacht.
+Daher wurde CMake verwendet, da es alle Anforderungen erfüllt und es die Verwendung des Frameworks vereinfacht.
 Nachfolgend ist ein Teil der CMakeLists.txt gezeigt, welche Zentral für das Framework genutzt wird
 
 ~~~cmake
@@ -113,7 +114,7 @@ Oftmals wird die Peripherie von Mikrocontrollern, sowie bei dem vorliegenden STM
 Die Register befinden sich an bestimmten Stellen im Speicher des Mikrocontrollers.
 Für das Setzen von Bits würde es genügen, einen Pointer mit dem richtigen Typ auf diesen Bereich zeigen zu lassen, um dann die benötigten Bits zu setzen.
 Eines der genannten Ziele ist es jedoch neben der Typsicherheit eine Resistenz gegen Fehlverwendung herzustellen.
-Mit dem Zeiger eines primitiven Datentypes auf das Register, können unsinnige Werte gesetzt werden.
+Mit dem Zeiger eines primitiven Datentyps auf das Register, können unsinnige Werte gesetzt werden.
 Weiterhin gibt es oftmals in Registern Werte und Teile, die nicht manipuliert werden dürfen.
 Um diese beiden Ziele zu erreichen, wurden eigene Datentypen implementiert. Diese werden im nachfolgenden Abschnitt näher erläutert.
 
@@ -134,7 +135,7 @@ register_entry_desc<CR::DEDT, uint8_t, bit_range<16u, 20u>, access_mode::read_wr
 Dieser Datentyp kann somit als Manifestation der in dem Datenblatt beschrieben Regeln für das Register verstanden werden.
 Dieser Typ beschreibt die Bitpositionen von 16 bis einschließlich 20. Auf den Bereich kann lesend und schreibend zugegriffen werden.
 Die Funktion des Bereichs wird mit einem enum Eintrag beschrieben.
-So muss jedes einzelne Bit beschrieben werden. Ein Konzept stellt dies zur Zeit der Kompilierung sicher.
+So muss jedes einzelne Bit beschrieben werden. Ein Concept stellt dies zur Zeit der Kompilierung sicher.
 Dieses überprüft weiterhin, dass sich die einzelnen Bereiche nicht überdecken, sodass Fehler beim Zugriff auf die einzelnen Bits ausgeschlossen werden können.
 Für das UART Register CR ergibt sich damit folgender Typ. Dieser spiegelt die Beschreibung in Abbildung \ref{cr1} wieder.
 
@@ -199,7 +200,7 @@ template<typename Component, typename N>
 
 Die beiden Methoden werden anschließend mit der gewünschten Peripherie, oder hier Component genannt, mit dem entsprechenden Index parametrisiert.
 Die Funktion greift dafür auf einen zuvor festgelegten Bereich zu und wandelt diesen in den gewünschten Datentyp um.
-Die Beschreibung dieser Zusammenhänge werden in structs gespeichert, welche den speziellen Mikrocontroller beschreiben. 
+Die Beschreibung dieser Zusammenhänge werden in structs gespeichert, welche den speziellen Mikrocontroller beschreiben.
 Wie genau diese aufgebaut werden, wird in den nachfolgenden Abschnitten erläutert.
 
 ## Beschreibung des Mikrocontroller Aufbaus
@@ -238,8 +239,8 @@ Das Attribut `__attribute__((packed))` wird benötigt, damit der Compiler den Ty
 zusätzlichen Speicher belegt, wodurch die Register an die falschen Stellen im Speicher geschrieben werden könnten.
 
 Weiterhin besteht die Beschreibung eines Mikrocontrollers somit aus der Anzahl und der Art seiner Komponenten.
-Dies kann man mit einem Konzept implementieren, welches so die Peripherien eines Mikrocontrollers erfordern kann.
-Dieses Konzept kann dann in den einzelnen HAL-Schnittstellen verwendet werden.
+Dies kann mit einem Concept implementiert werden, welches so die Peripherien eines Mikrocontrollers erfordern kann.
+Dieses Concept kann dann in den einzelnen HAL-Schnittstellen verwendet werden.
 So erfordert die GPIO Klasse, dass der Mikrocontroller einen bestimmten Aufbau aufweist.
 
 ~~~{.cpp }
@@ -263,13 +264,13 @@ So erfordert die GPIO Klasse, dass der Mikrocontroller einen bestimmten Aufbau a
 ~~~
 
 Obiges Beispiel modelliert einen Mikrocontroller mit GPIOs. Damit kann sichergestellt werden, dass eine konkrete Implementierung für GPIOs vorliegt.
-Diese Concepts werden im Zusammenhang mit dem HAL (Hardware-abstraction-layer) verwendet und verallgemeinert eine Implementierung für mehrere Mikrocontroller.
+Diese Concepts werden im Zusammenhang mit dem HAL (Hardware Abstraction Layer) verwendet und verallgemeinert eine Implementierung für mehrere Mikrocontroller.
 
 ## Hardware Abstraction Layer
 
 Die Komponenten eines Mikrocontrollers können meistens nicht gesondert verwendet werden, das bedeutet man braucht eine Komponente, um die andere zu verwenden.
 Beispielsweise benötigt man Zugriff auf die GPIOs, um über UART kommunizieren zu können.
-Die Aufgabe die einzelnen Komponenten zu abstrahieren, soll das Hardware Abstraction Layer (nachfolgend HAL genannt) erfüllen.
+Die Aufgabe die einzelnen Komponenten zu abstrahieren, soll der HAL erfüllen.
 Die nächsten Abschnitte werden sich den einzelnen Komponenten widmen.
 
 ### GPIO
@@ -277,7 +278,7 @@ Die nächsten Abschnitte werden sich den einzelnen Komponenten widmen.
 In diesem Abschnitt wird die Implementation der GPIOs innerhalb des HALs beschrieben und wie diese Schnittstelle zu verwenden ist.
 
 Da ein Cortex M basierter Mikrocontroller im Gegensatz zu der relativ einfachen AVR Architektur sehr komplex ist, wurde versucht, diese Komplexität vor dem Nutzer zu verstecken.
-Hierzu wurden zunächst die einzelnen GPIO Register in einer STM32G4 spezifischen Klasse mithilfe des Datentypes `repeated_control_register` abgebildet. 
+Hierzu wurden zunächst die einzelnen GPIO Register in einer STM32G4 spezifischen Klasse mithilfe des Datentypes `repeated_control_register`, sowie des zuvor genannten `register_desc`  abgebildet. 
 Dieser ermöglicht ein fehlerfreies Einsetzen von Registerwerten mithilfe von Enum-Werten. 
 Zum Auslesen von Werten, welche an den GPIO Pins anliegen, wurde der Datentyp `data_register` verwendet.
 Jener ermöglicht einen rein lesenden Zugriff auf das Register.
