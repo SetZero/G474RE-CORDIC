@@ -81,3 +81,32 @@ ggplot(performance_reading, aes(x = SUBJ, y = RUN_TIME, fill=ALGO)) +
   theme(legend.position="top") +
   geom_bar(stat="identity", width=.5, position="stack")
 ```
+
+```{r perf2}
+train_loss <- "./"
+
+location <- paste(train_loss, "cordic_performance.csv", sep="")
+cordic_performance <- read.csv(location, header = TRUE)
+cordic_performance
+
+cordic_performance <- gather(cordic_performance, TYPE, VALUE, SETUP:CONV, factor_key=TRUE)
+
+cordic_performance
+cordic_performance <- aggregate(cordic_performance$VALUE,by=list(ALGO=cordic_performance$ALGO,
+                                           NUM_RUNS=cordic_performance$NUM_RUNS,
+                                           TYPE=cordic_performance$TYPE),data=cordic_performance,FUN=mean)
+cordic_performance
+```
+
+```{r}
+ggplot(cordic_performance, aes(x = ALGO, y = x, fill=TYPE)) +
+  scale_fill_brewer(palette='Pastel1') +
+  xlab("Function") +
+  ylab("Run Time [µS]") +
+  labs(subtitle=paste0(""),
+       title= "") + 
+#  facet_wrap(~achievementname, scales = "free_x") +
+  theme(legend.position="top") +
+  geom_bar(stat="identity", width=.5, position="stack")
+```
+
