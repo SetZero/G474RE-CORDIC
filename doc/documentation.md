@@ -53,13 +53,66 @@ Dafür werden zunächst die dem Framework zugrunde liegenden Konzepte gezeigt, u
 Die zweite Komponente, eine sogenannte CORDIC-Einheit, ist eine spezielle Einheit innerhalb des hier verwendeten Modells des STM32.
 Dieser kann einige trigonometrische Funktionen berechnen. Die Performance soll dann mit den bereits eingebauten trigonometrischen Funktionen verglichen werden.
 
+# Beschreibung der Projektstruktur
+
+Da es sich bei dem Projekt um ein Framework handelt, war es dass Ziel ein System zu nutzen, welche die Verwendung als solches ermöglicht.
+Es ist ein Header-Only Framerwork, weswegen das System ein solches Unterstützen sollte.
+Wichtige benötigte Features und Voraussetzungen sollten klar definierbar sein.
+Daher wurde cmake verwendet, da es alle Anforderungen erfüllt und es die Verwendung des Frameworks vereinfacht.
+Nachfolgend ist ein Teil der CMakeLists.txt gezeigt, welche Zentral für das Framework genutzt wird
+
+~~~cmake
+add_library(hal_lib INTERFACE)
+target_include_directories(hal_lib INTERFACE .)
+
+// ...
+
+target_compile_features(hal_lib INTERFACE cxx_std_20 c_std_11)
+~~~
+
+Das Programm selbst, welches später die Benchmarks ausführen wird kann auf folgende Weise die Bibliothek verwenden.
+
+~~~cmake
+// ...
+target_link_libraries(${PROJECT_NAME}.elf hal_lib)
+// ...
+~~~
+
+Vorteil dieser Struktur ist, es dass ein Compiler festgelegt werden kann, welcher für die Kompilierung verwendet werden soll.
+Zum Testen des Verhaltens einiger Klassen des Frameworks, konnten daher einige Tests geschrieben werden, welche auf dem Rechner ausgeführt werden können.
+So konnte sichergestellt werden, dass das Verhalten der Klassen den Erwartungen entspricht.
+Für die Verwendung eines Compilers wird eine Toolchain Datei definiert, diese beinhaltet Pfade zu den Compilern.
+
+~~~cmake
+set(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_SYSTEM_PROCESSOR arm)
+set(CMAKE_CROSSCOMPILING TRUE)
+
+# specify cross compilers and tools
+set(CMAKE_C_COMPILER arm-none-eabi-gcc)
+set(CMAKE_CXX_COMPILER arm-none-eabi-g++)
+set(CMAKE_ASM_COMPILER  arm-none-eabi-gcc)
+set(CMAKE_AR arm-none-eabi-ar)
+set(CMAKE_OBJCOPY arm-none-eabi-objcopy)
+set(CMAKE_OBJDUMP arm-none-eabi-objdump)
+set(CMAKE_LINKER arm-none-eabi-ld)
+set(SIZE arm-none-eabi-size)
+
+set(CMAKE_TRY_COMPILE_TARGET_TYPE_STATIC STATIC_LIBRARY)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --specs=nosys.specs --specs=nano.specs -Os")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --specs=nosys.specs --specs=nano.specs -Os")
+~~~
+
+So wird es auch möglich mithilfe einer anderen Toolchain Datei, andere Mikrocontroller zu verwenden.
+
 # Die Ansteuerung der Peripherie
 
 Oftmals wird die Peripherie von Mikrocontrollern, sowie bei dem vorliegenden STM32G4 über das Setzen von Bits in Registern, gesteuert.
 Die Register befinden sich an bestimmten Stellen im Speicher des Mikrocontrollers.
 Für das Setzen von Bits würde es genügen, einen Pointer mit dem richtigen Typ auf diesen Bereich zeigen zu lassen und dann die jeweils benötigten Bits zu setzen.
 Eines der Ziele ist es jedoch neben der Typsicherheit eine Resistenz gegen Fehlverwendung herzustellen.
-Mit dem Zeiger eines primitiven Datentypes auf das Register, können unsinnige Werte gesetzt werden. 
+Mit dem Zeiger eines primitiven Datentypes auf das Register, können unsinnige Werte gesetzt werden.
 Weiterhin gibt es oftmals in Registern Werte und Teile, die nicht manipuliert werden dürfen.
 Um diese beiden Ziele zu erreichen, wurden eigene Datentypen implementiert. Diese werden im nachfolgenden Abschnitt näher erläutert.
 
@@ -124,9 +177,9 @@ Der *reserved_type* ist ein Datentyp, welcher nicht angelegt werden kann. Er die
 
 ## Platzierung eines Registers
 
-Wie eingangs erwähnt, befinden sich die Register an bestimmten Stellen im Speicher. 
+Wie eingangs erwähnt, befinden sich die Register an bestimmten Stellen im Speicher.
 Damit muss die vorherige gezeigte Beschreibung eines Register korrekt platziert werden.
-Oftmals gibt es auch mehrere Register der selben Art, welche nur an anderen Positionen stehen. 
+Oftmals gibt es auch mehrere Register der selben Art, welche nur an anderen Positionen stehen.
 Die Typen können daher mehrmals verwendet werden, um die verschiedenen Instanzen der Register zu bilden.
 Dazu braucht man nur noch eine Lösung, die Register an die richtigen Stellen im Speicher zu platzieren.
 Wie Eingangs erwähnt, sind Register bestimmte Stellen im Speicher. Damit muss die vorherige gezeigte Beschreibung eines Register korrekt platziert werden.
@@ -185,8 +238,8 @@ Diese Concepts werden im Zusammenhang mit dem HAL (Hardware-abstraction-layer) v
 
 In diesem Abschnitt wird beschrieben, wie GPIOs in einem HALs implementiert wurden und wie deren Verwendung möglich ist.
 
-Da ein Cortex M basierter Mikrocontroller im Gegensatz zu beispielsweise der relativ einfach aufgebauten Mircochip AVR Architektur relativ viele Möglichkeiten zur Ansteuerung und Konfiguration einzelner I/O-Pins sowie deren Register besitzt, wurde versucht, diese Komplexität möglichst einfach zu implementieren, indem so viel wie möglich Komplexität vor dem Nutzer versteckt wird. 
-Hierzu wurden zuerst, wie zuvor beschrieben, die einzelnen GPIO Register in einer STM32G4 spezifischen Klasse mittels `repeated_control_register` abgebildet. Dies ermöglicht ein fehlerfreies Einsetzen von Registerwerte mittels Enum-Werten. Zum Auslesen von Werten an GPIO Pins, wurde `data_register` verwendet, welches einen reinen Lesezugriff auf ein Register ermöglicht. Somit ist es auch einem Anwender möglich, mehrere Werte auf einmal auszulesen und auf diesen Bitoperationen auszuführen. 
+Da ein Cortex M basierter Mikrocontroller im Gegensatz zu beispielsweise der relativ einfach aufgebauten Mircochip AVR Architektur relativ viele Möglichkeiten zur Ansteuerung und Konfiguration einzelner I/O-Pins sowie deren Register besitzt, wurde versucht, diese Komplexität möglichst einfach zu implementieren, indem so viel wie möglich Komplexität vor dem Nutzer versteckt wird.
+Hierzu wurden zuerst, wie zuvor beschrieben, die einzelnen GPIO Register in einer STM32G4 spezifischen Klasse mittels `repeated_control_register` abgebildet. Dies ermöglicht ein fehlerfreies Einsetzen von Registerwerte mittels Enum-Werten. Zum Auslesen von Werten an GPIO Pins, wurde `data_register` verwendet, welches einen reinen Lesezugriff auf ein Register ermöglicht. Somit ist es auch einem Anwender möglich, mehrere Werte auf einmal auszulesen und auf diesen Bitoperationen auszuführen.
 
 ~~~cpp
  repeated_control_register<GPIO, MODER, uint32_t, 2> moder;
@@ -269,7 +322,7 @@ mcu_features<MCU>::template enable_clock<features::hal_features::UART, UartNr>()
 ~~~
 
 Ein weiterer Schritt zum Aktivieren von UART ist die Konfiguration der jeweiligen Pins. Zur konkreten Implementierung wurden hierbei die HAL Funktionen des vorherigen Kapitels verwendet.
-Zum Erstellen des HALs wurden die zuvor beschriebenen GPIO Pin Abstrahierungen verwendet, um sich möglichst einfach auf Veränderungen an der zugrundeliegende Hardware anzupassen. So wurden unter anderem die alternativen Funktionen auf UART gesetzt und die Pins in Push/Pull Konfiguration versetzt. 
+Zum Erstellen des HALs wurden die zuvor beschriebenen GPIO Pin Abstrahierungen verwendet, um sich möglichst einfach auf Veränderungen an der zugrundeliegende Hardware anzupassen. So wurden unter anderem die alternativen Funktionen auf UART gesetzt und die Pins in Push/Pull Konfiguration versetzt.
 
 Anschließend können die jeweiligen UART Register konfiguriert werden. Diese existieren bereits in der Registerbeschreibung der jeweiligen Mikrocontroller und werden in dieser Funktion für den Benutzer konfiguriert. Die möglichen Optionen für den Benutzer sind hierbei die Auswahl der Baudrate sowie die Anzahl an Daten und Stoppbits. UART der STM32G4-Reihe umfasst noch deutlich mehr Optionen zur Konfiguration, jedoch wurden weitere Optionen aufgrund der steigenden Benutzungskomplexität ausgelassen.
 
@@ -280,7 +333,7 @@ uart_two::init<txpin, rxpin, 115200_baud>();
 ~~~
 
 Die Ausgabe mittels UART kann mit einer an printf angelehnten Funktion durchgeführt werden.
-Weiterhin wird diese Methode mit der Größe des Ausgabepuffers parameterisiert, um zum einen dynamisch allokierten Speicher zu verhindern, 
+Weiterhin wird diese Methode mit der Größe des Ausgabepuffers parameterisiert, um zum einen dynamisch allokierten Speicher zu verhindern,
 als auch dem Nutzer die Möglichkeit zu geben, den Puffer je nach Bedarf vergrößern zu können.
 Diese benutzt intern `snprintf` und schreibt die einzelnen Zeichen nacheinander in das UART Ausgabe Register.
 Abschließend ein kurzes Beispiel, wie die Ausgabe erfolgen kann.
