@@ -442,7 +442,7 @@ Zuerst wurde hierbei ein Taktsignal auf den Timerbus angelegt um diesen später 
 Anschließend musste der Timer zurückgesetzt werden um Mögliche vorherige Konfigurationen zu entfernen und diesen zu stoppen.
 Als Taktrate des Timers wurde 1Mhz verwendet, was bedeutet das ein Zyklus des Timers mit einer Mikrosekunde gleichzusetzen ist.
 Zudem musste der Maximalwert des Timer Counters im ARR Register auf den höchstmöglichen Wert gesetzt werden, welcher bei der vorliegenden STM32G4 Reihe 0xFFFFF, oder in Dezimal 1.048.575, entspricht.
-Dies hat zur Folge das maximal eine Zeitmessung von 1 Sekunde, 48 Milisekunden und 575 Mikrosekunden durchgeführt werden kann.
+Dies hat zur Folge, dass die maximal erfassbare Dauer einer Zeitmessung 1 Sekunde, 48 Millisekunden und 575 Mikrosekunden beträgt.
 Diese Optionen waren nötig um den Timer zu Konfigurieren und anschließend ist das starten des Timers möglich.
 
 Zum zurücksetzen des Timers wurde der Timerwert in dem Register auf 0 gesetzt, der Timer läuft zu diesem Zeitpunkt jedoch weiter und wird nicht angehalten.
