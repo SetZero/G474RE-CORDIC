@@ -490,7 +490,7 @@ welcher dann je nach Anzahl von Argumenten diese nacheinander in die Argumentreg
 Nachdem der Algorithmus durchlaufen ist, werden die Ergebnisse je nach Anzahl wieder ausgelesen.
 Die Werte, welche in das Argumentregister geschrieben werden und die Ergebnisse, welche man aus dem Ergebnisregister erhält sind keine Werte, welche man direkt verwenden kann.
 Sie sind in einem Festkomma Format, dabei gibt es zwei Varianten *q1_31* und *q1_15*.
-Die Formate und deren Funktionsweise können in \ref{stmdoc} nachgelesen werden.
+Die Formate und deren Funktionsweise können in \cite{stmdoc} nachgelesen werden.
 Die Zahlen bewegen sich in diesem Format damit in einem Interval zwischen -1.0 und 1.0.
 Größere Werte müssen durch die Software skaliert werden.
 Auch haben einige Funktionen unterschiedliche Definitionsbereiche, so müssen diese ebenfalls in den Datentyp miteinbezogen werden.
