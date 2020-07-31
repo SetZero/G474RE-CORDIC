@@ -228,7 +228,7 @@ So erfordert die GPIO Klasse, dass der Mikrocontroller einen bestimmten Aufbau a
 };
 ~~~
 
-Obiges Beispiel modelliert einen Mikrocontroller mit gpios. Damit kann sichergestellt werden, dass eine konkrete Implementierung für GPIOs vorliegt.
+Obiges Beispiel modelliert einen Mikrocontroller mit GPIOs. Damit kann sichergestellt werden, dass eine konkrete Implementierung für GPIOs vorliegt.
 Diese Concepts werden im Zusammenhang mit dem HAL (Hardware-abstraction-layer) verwendet und verallgemeinert eine Implementierung für mehrere Mikrocontroller.
 
 ## Hardware Abstraction Layer
