@@ -232,7 +232,10 @@ Diese Concepts werden im Zusammenhang mit dem HAL (Hardware-abstraction-layer) v
 
 ## Hardware Abstraction Layer
 
-<!-- TODO: Konzept des HALS hier kurz erklären --->
+Die Komponenten eines Mikrocontrollers können meistens nicht gesondert verwendet werden, das bedeutet man braucht eine Komponente, um die andere zu verwenden.
+Beispielsweise benötigt man Zugriff auf die GPIOs, um über UART kommunizieren zu können.
+Diese Aufgabe, die einzelnen Komponenten zu abstrahieren, soll das Hardware Abstraction Layer (kurz HAL) erfüllen.
+Nachfolgend werden die einzelnen Komponenten vorgestellt, die durch ein HAL beschrieben werden.
 
 ### GPIO
 
