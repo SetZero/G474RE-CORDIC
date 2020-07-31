@@ -434,6 +434,21 @@ Auch haben einige Funktionen unterschiedliche Definitionsbereiche, so müssen di
 Im Folgenden wir die Performance des CORDIC verglichen mit der der eingebauten trigonometrischen Funktionen.
 Zunächst wird das Setup zum Messen beschrieben um dann im nachfolgenden Teil die Ergebnisse auszuwerten.
 
+### Konfiguration der Hardware
+
+Die Messung der Timings benötigen auf der Hardwareebene nur wenig Konfigurationsoptionen, da nur ein Durchgäniger Zähler benötigt wird um eine Zeitdifferenz zu ermitteln.
+Aus diesem Grund wurde im Setup des Timers mit direktzugriffen auf die Hardware gearbeitet.
+Zuerst wurde hierbei ein Taktsignal auf den Timerbus angelegt um diesen später aktivieren zu können.
+Anschließend musste der Timer zurückgesetzt werden um Mögliche vorherige Konfigurationen zu entfernen und diesen zu stoppen.
+Als Taktrate des Timers wurde 1Mhz verwendet, was bedeutet das ein Zyklus des Timers mit einer Mikrosekunde gleichzusetzen ist.
+Zudem musste der Maximalwert des Timer Counters im ARR Register auf den höchstmöglichen Wert gesetzt werden, welcher bei der vorliegenden STM32G4 Reihe 0xFFFFF, oder in Dezimal 1.048.575, entspricht.
+Dies hat zur Folge das maximal eine Zeitmessung von 1 Sekunde, 48 Milisekunden und 575 Mikrosekunden durchgeführt werden kann.
+Diese Optionen waren nötig um den Timer zu Konfigurieren und anschließend ist das starten des Timers möglich.
+
+Zum zurücksetzen des Timers wurde der Timerwert in dem Register auf 0 gesetzt, der Timer läuft zu diesem Zeitpunkt jedoch weiter und wird nicht angehalten.
+Das Auslesen des Wertes erfolgt über den Zugriff auf das counter register welches als Kopier erfolgt um versehentliches überschreiben zu vermeiden. Der Maximalwert dieses Registers entspricht dem Wert von ARR
+
+
 ### Setup
 
 Die benötigte Zeit für Berechnungen wird mithilfe eines Timers gemessen. Zum Start der Berechnungen wird dieser zurückgesetzt und am Ende wird er ausgelesen.
