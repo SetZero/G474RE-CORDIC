@@ -436,24 +436,32 @@ Zunächst wird das Setup zum Messen beschrieben um dann im nachfolgenden Teil di
 
 ### Konfiguration der Hardware
 
-Die Messung der Timings benötigen auf der Hardwareebene nur wenig Konfigurationsoptionen, da nur ein Durchgäniger Zähler benötigt wird um eine Zeitdifferenz zu ermitteln.
-Aus diesem Grund wurde im Setup des Timers mit direktzugriffen auf die Hardware gearbeitet.
-Zuerst wurde hierbei ein Taktsignal auf den Timerbus angelegt um diesen später aktivieren zu können.
-Anschließend musste der Timer zurückgesetzt werden um Mögliche vorherige Konfigurationen zu entfernen und diesen zu stoppen.
-Als Taktrate des Timers wurde 1Mhz verwendet, was bedeutet das ein Zyklus des Timers mit einer Mikrosekunde gleichzusetzen ist.
-Zudem musste der Maximalwert des Timer Counters im ARR Register auf den höchstmöglichen Wert gesetzt werden, welcher bei der vorliegenden STM32G4 Reihe 0xFFFFF, oder in Dezimal 1.048.575, entspricht.
+Die Messung der Timings benötigen auf der Hardwareebene nur wenig Konfigurationsoptionen, da nur ein durchgängiger Zähler nötig ist.
+Dieser soll eine Zeitdifferenz ermitteln.
+Aus diesem Grund wurde der Timer zunächst direkt verwendet, ohne zusätzliche Abstraktion.
+Zuerst wurde hierbei ein Taktsignal auf den Bus des Timers angelegt, um diesen später aktivieren zu können.
+Anschließend musste der Timer zurückgesetzt werden, um mögliche vorherige Konfigurationen zu entfernen und diesen zu stoppen.
+Als Taktrate des Timers wurde 1Mhz verwendet. Dies bedeutet, dass ein Zyklus des Timers mit einer Mikrosekunde gleichzusetzen ist.
+Zudem musste der Maximalwert des Timer Counters im ARR Register auf den höchstmöglichen Wert gesetzt werden.
+Bei der vorliegenden STM32G4 Reihe ist dies der Wert 0xFFFFF, welcher einem Dezimalwert von 1.048.575, entspricht.
 Dies hat zur Folge, dass die maximal erfassbare Dauer einer Zeitmessung 1 Sekunde, 48 Millisekunden und 575 Mikrosekunden beträgt.
-Diese Optionen waren nötig um den Timer zu Konfigurieren und anschließend ist das starten des Timers möglich.
+Diese Optionen waren nötig, um den Timer zu Konfigurieren, danach kann der Timer dann gestartet und verwendet werden.
 
-Zum zurücksetzen des Timers wurde der Timerwert in dem Register auf 0 gesetzt, der Timer läuft zu diesem Zeitpunkt jedoch weiter und wird nicht angehalten.
-Das Auslesen des Wertes erfolgt über den Zugriff auf das counter register welches als Kopier erfolgt um versehentliches überschreiben zu vermeiden. Der Maximalwert dieses Registers entspricht dem Wert von ARR
-
+Zum Zurücksetzen des Timers wurde der Wert desselben auf 0 zurückgesetzt.
+Der Timer läuft zu diesem Zeitpunkt jedoch weiter und wird nicht angehalten.
+Das Auslesen des Wertes erfolgt über den Zugriff auf das Zählerregister, welches lediglich als Wert kopiert wird.
+Dadurch soll ein versehentliches Überschreiben vermieden werden.
+Der Maximalwert dieses Registers entspricht damit dem Wert von ARR.
 
 ### Setup
 
-Die benötigte Zeit für Berechnungen wird mithilfe eines Timers gemessen. Zum Start der Berechnungen wird dieser zurückgesetzt und am Ende wird er ausgelesen.
-Für solche Zwecke eignet sich sehr gut eine Klasse, welche nach dem RAII Konzept arbeitet. Dazu wird die Methode für das Zurücksetzen der Zeit im Konstruktur der Klasse ausgerufen.
-Der Destruktor wiederum speichert den zurückgelieferten Wert des Timers in einem übergebenen Pointer.
+Die benötigte Zeit für Berechnungen wird mithilfe des zuvor beschrieben Timers gemessen.
+Zum Start der Berechnungen wird dieser zurückgesetzt und am Ende wird er wiederrum ausgelesen.
+Für solche Zwecke eignet sich sehr gut eine Klasse, welche nach dem RAII Konzept arbeitet.
+Dazu wird die Methode für das Zurücksetzen der Zeit im Konstruktur der Klasse aufgerufen, damit wird der Wert des Timers auf 0 gesetzt.
+Der Destruktor wiederum speichert den zurückgelieferten Wert des Timers in einen übergebenen Pointer.
+Somit wird die Zeitdifferenz zwischen der Erstellung der Instanz und der Zerstörung dieser gemessen.
+Wird sie in einem gesonderten Block gespeichert, kann so die Ausführungszeit dieses Blocks erfasst werden.
 
 ~~~.cpp
 using setup_benchmark_type = benchmark<decltype(&reset_counter), decltype(&get_counter_value)>;
@@ -469,8 +477,8 @@ uint32_t result = 0;
 // result has now the value of the timer in it
 ~~~
 
-Der Vergleich zwischen CORDIC und den eingebauten trigonometrischen Funktionen soll zunächst davon ausgehen, dass man mit Fließkommazahlen rechnen möchte.
-Zum besseren Überblick werden die Zeiten, welche für die Berechnungen mit dem CORDIC benötigt werden, in drei Teile unterteilt:
+Im Vergleich zwischen CORDIC und den eingebauten trigonometrischen Funktionen wird davon ausgegangen, dass man mit Fließkommazahlen rechnen möchte.
+Zum besseren Überblick werden die Zeiten, welche für die Berechnungen mit dem CORDIC benötigt werden, später in folgende drei Teile unterteilt:
 
 - Dem Berechnen der Eingaben, also der Umrechnung von den Fließkommazahlen in den jeweiligen Typ
 - Der eigentlichen Berechnung mit der CORDIC Einheit
@@ -521,6 +529,8 @@ Wenn mit Ergebnissen der Funktionen des CORDICs weitergerechnet werden kann, ver
 Denn die in Relation gesehene, teure Umwandlung von Gleitkommazahlen kann dadurch gespart werden.
 Weiterhin sollte bedacht werden, dass die einzelnen Funktionen oftmals mehrere Ergebnisse liefern, kann also bei einer
 das zweite Ergebnis genutzt werden, verdoppelt sich der Nutzen der CORDIC Funktionen praktisch.
+
+\newpage
 
 # Fazit
 
