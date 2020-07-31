@@ -1,6 +1,6 @@
 ---
 title: 'Entwicklung eines C++ Frameworks zur effizienten Ansteuerung der Peripherie eines STM32 Microcontrollers'
-date : 27.7.2020
+date : 31.7.2020
 lang: de-De
 author:
     - Christian Roth
