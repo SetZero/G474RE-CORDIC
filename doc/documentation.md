@@ -300,7 +300,7 @@ struct mcu_info::GPIO::address<A> {
 ~~~
 
 Die GPIOs können durch die API des HALs auf zwei verschiedene Arten genutzt werden.
-In folgendem Auschnitt werden diese Möglichkeiten aufgezeigt.
+In folgendem Ausschnitt werden diese Möglichkeiten aufgezeigt.
 
 ~~~cpp
 // (1) Port A, Pin 1-3 an
@@ -317,7 +317,7 @@ Diese Methode wird vor allem benutzt, um in speziellen Funktionen, wie beispiels
 Weitere Funktionen des GPIOs umfassen bereits von AVR bekannte Fähigkeiten.
 Dazu gehört es beispielsweise den Modus der Pins auf Ein- oder Ausgabe mittels `set_port_mode()` zu setzen.
 Weiterhin kann der Zustand eines Pins mittels der Methode `get()` ausgelesen werden.
-Zusätzlich hat man mit der Methode `set_type()` die Möglichkeit bei dem hier verwendeten Mikrocontroller einen Pin explizit auf eine Push/Pull oder Open Drain Konfiguration zu setzen. 
+Zusätzlich hat man mit der Methode `set_type()` die Möglichkeit bei dem hier verwendeten Mikrocontroller einen Pin explizit auf eine Push/Pull oder Open Drain Konfiguration zu setzen.
 Des Weiteren ist es auch möglich, die Flankensteilheit mittels `set_speed()` zu setzen.
 
 Weiterhin muss bei den STM32 Mikrocontrollern beachtet werden, dass es zum Setzen und Leeren der Pin Outputs zwei verschiedene Möglichkeiten gibt.
@@ -387,7 +387,7 @@ Zur konkreten Implementierung wurden hierbei die HAL Funktionen des vorherigen K
 Zum Erstellen des HALs wurden die zuvor beschriebenen Abstraktionen der GPIO Pins verwendet, um möglichst einfach auf Veränderungen der zugrundeliegende Hardware zu reagieren.
 So wurden unter anderem die alternativen Funktionen auf UART gesetzt und die Pins in Push/Pull Konfiguration versetzt.
 
-Anschließend können die jeweiligen UART Register konfiguriert werden. 
+Anschließend können die jeweiligen UART Register konfiguriert werden.
 Diese existieren bereits in der Registerbeschreibung der jeweiligen Mikrocontroller und werden in dieser Funktion für den Benutzer konfiguriert.
 Die möglichen Optionen für den Benutzer sind hierbei die Auswahl der Baudrate, sowie die Anzahl an Daten und Stoppbits.
 UART der STM32G4-Reihe umfasst noch deutlich mehr Optionen zur Konfiguration, jedoch wurden weitere Optionen aufgrund der steigenden Komplexität zunächst ausgelassen.
@@ -398,8 +398,8 @@ Ein Aufruf zur UART Initialisierung ist nachfolgend beispielhaft gezeigt.
 uart_two::init<txpin, rxpin, 115200_baud>();
 ~~~
 
-Die Ausgabe mittels UART kann mit einer an printf angelehnten Funktion durchgeführt werden.
-Weiterhin wird diese Methode mit der Größe des Ausgabepuffers parameterisiert, um zum einen dynamisch allokierten Speicher zu verhindern,
+Die Ausgabe mittels UART kann mit einer an `printf` angelehnten Funktion durchgeführt werden.
+Weiterhin wird diese Methode mit der Größe des Ausgabepuffers parametrisiert, um zum einen dynamisch allokierten Speicher zu verhindern,
 als auch dem Nutzer die Möglichkeit zu geben, den Puffer je nach Bedarf vergrößern zu können.
 Diese benutzt intern `snprintf` und schreibt die einzelnen Zeichen nacheinander in das UART Ausgabe-Register.
 Abschließend ein kurzes Beispiel, wie die Ausgabe erfolgen kann.
@@ -410,10 +410,10 @@ uart_two::printf<256>("quadrant : %d \r\n", i);
 
 ### CORDIC
 
-Die Cordic Abstraktion ist als template implementiert. Dieses wird mit der Nummer der CORDIC Einheit und dem Typ des Mikrocontrollers parameterisiert.
+Die Cordic Abstraktion ist als Template implementiert. Dieses wird mit der Nummer der CORDIC Einheit und dem Typ des Mikrocontrollers parametrisiert.
 Der Mikrocontroller, welcher Gegenstand dieser Arbeit ist, besitzt lediglich eine solche Einheit.
 Die Implementierung der CORDIC Abstraktion nimmt jeweils einen Datentyp entgegen, der einer Operation entspricht.
-Dieser Operationstyp hat jeweils einen Typ, welcher das Ergebnis enthält. Anhand von der übergebenen Operation und den template Parametern, werden die Register
+Dieser Operationstyp hat jeweils einen Typ, welcher das Ergebnis enthält. Anhand von der übergebenen Operation und den Template Parametern, werden die Register
 des CORDICs gesetzt.
 Aus dem Operationstyp werden hierbei die Funktion, sowie die Anzahl der Argumente übernommen.
 Weitere Einstellungen werden aus dem weiteren Kontext her abgeleitet.
@@ -451,7 +451,7 @@ template<typename Config, functions Function>
 }
 ~~~
 
-Das struct *create_op_helper ist für die Erstellung der einzelnen Funktionen zuständig. Dieser wird für die einzelnen Funktionen spezialisiert.
+Das struct *create_op_helper* ist für die Erstellung der einzelnen Funktionen zuständig. Dieser wird für die einzelnen Funktionen spezialisiert.
 Damit bildet die Funktion *create_cordic_operation* eine Fabrikmethode, womit die spezielle Operation einheitlich erstellt werden kann.
 Warum eine Typisierung wichtig ist, bei der Vermeidung von Fehlern kann beispielhaft an der atan2 Methode gezeigt werden.
 Atan2 benötigt einen 2-Dimensionalen Vektor als Eingabe, dies wird in der entsprechenden CORDIC operation auch so modelliert:
@@ -522,9 +522,9 @@ Der Maximalwert dieses Registers entspricht damit dem Wert von ARR.
 ### Setup
 
 Die benötigte Zeit für Berechnungen wird mithilfe des zuvor beschrieben Timers gemessen.
-Zum Start der Berechnungen wird dieser zurückgesetzt und am Ende wird er wiederrum ausgelesen.
+Zum Start der Berechnungen wird dieser zurückgesetzt und am Ende wird er wiederum ausgelesen.
 Für solche Zwecke eignet sich sehr gut eine Klasse, welche nach dem RAII Konzept arbeitet.
-Dazu wird die Methode für das Zurücksetzen der Zeit im Konstruktur der Klasse aufgerufen, damit wird der Wert des Timers auf 0 gesetzt.
+Dazu wird die Methode für das Zurücksetzen der Zeit im Konstruktor der Klasse aufgerufen, damit wird der Wert des Timers auf 0 gesetzt.
 Der Destruktor wiederum speichert den zurückgelieferten Wert des Timers in einen übergebenen Pointer.
 Somit wird die Zeitdifferenz zwischen der Erstellung der Instanz und der Zerstörung dieser gemessen.
 Wird sie in einem gesonderten Block gespeichert, kann so die Ausführungszeit dieses Blocks erfasst werden.
@@ -612,6 +612,7 @@ Dadurch entfällt ein großer Teil der Komplexität bei der Entwicklung von Mikr
 Es können weitere Operationen für die q_number Klasse hinzugefügt werden, sodass die etwas teure Umwandlung von Fließkommazahlen in Fixed-Kommazahlen
 erspart bleibt und man stattdessen mit diesem Typen weiter rechnen kann.
 Weiterhin könnte die CORDIC-Einheit im Pipeline Modus gut mit dem ranges feature von C++20 verbunden werden, denn dann kann eine gewohnte API auch für die CORDIC Einheit verwendet werden.
+Des Weiteren kann die UART Komponente um zusätzliche Optionen, wie unter anderem Autobaud, erweitert werden um mehr Funktionalität des Mikrocontrollers abzubilden.
 Abschließend kann gesagt werden, dass die Verwendung von C++ auf Mikrocontrollern sinnvoll ist, da die Entwicklung vereinfacht wird und häufige Fehler durch
 C++ Features, wie beispielsweise Konzepts bereits zur Kompilezeit aufgedeckt werden können.
 Somit kann ein gewisser Grad von Korrektheit für das Programm sichergestellt werden, wenn es kompiliert werden kann.
