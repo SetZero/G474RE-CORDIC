@@ -1,5 +1,5 @@
 ---
-title: 'Entwicklung eines C++ Frameworks zur effizienten Ansteuerung der Peripherie eines STM32 Microcontrollers'
+title: 'Entwicklung eines C++ Frameworks zur effizienten Ansteuerung der Peripherie eines STM32 Mikrocontrollers'
 date : 31.7.2020
 lang: de-De
 author:
@@ -264,7 +264,7 @@ So erfordert die GPIO Klasse, dass der Mikrocontroller einen bestimmten Aufbau a
 ~~~
 
 Obiges Beispiel modelliert einen Mikrocontroller mit GPIOs. Damit kann sichergestellt werden, dass eine konkrete Implementierung für GPIOs vorliegt.
-Diese Concepts werden im Zusammenhang mit dem HAL (Hardware Abstraction Layer) verwendet und verallgemeinert eine Implementierung für mehrere Mikrocontroller.
+Diese Concepts werden im Zusammenhang mit dem HAL (Hardware Abstraction Layer) verwendet und verallgemeinern eine Implementierung für mehrere Mikrocontroller.
 
 ## Hardware Abstraction Layer
 
