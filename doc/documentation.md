@@ -36,7 +36,8 @@ abstract: |
     welche trigonometrische Funktionen berechnen kann. Im Zuge dieser Arbeit wird daher auch die Performance dieser Einheit mit
     den trigonometrischen Funktionen verglichen, welche durch reine Softwarelösungen berechnet werden. Dabei werden die verschiedenen Funktionen getestet und
     evaluiert. Weiterhin werden einzelne Aspekte bei der Programmierung des CORDICs und deren Einfluss auf die gesamte Performance genauer betrachtet.
-include-before: \newpage
+include-before:
+    - \newpage
 include-after:
     - \nocite{*}
 ---
@@ -51,14 +52,14 @@ Beispielhaft wurde ein Framework für die Verwendung von mehreren Komponenten f�
 Dabei sollen zwei Komponenten des Mikrocontrollers mit den Mitteln von C++ modelliert werden.
 Dafür werden zunächst die dem Framework zugrunde liegenden Konzepte gezeigt, um dann die Komponenten als solche zu implementieren.
 Die zweite Komponente, eine sogenannte CORDIC-Einheit, ist eine spezielle Einheit innerhalb des hier verwendeten Modells des STM32.
-Dieser kann einige trigonometrische Funktionen berechnen. Die Performance soll dann mit den bereits eingebauten trigonometrischen Funktionen verglichen werden.
+Diese kann einige trigonometrische Funktionen berechnen. Die Performance wird dann mit den bereits eingebauten trigonometrischen Funktionen verglichen.
 
 # Beschreibung der Projektstruktur
 
-Da es sich bei dem Projekt um ein Framework handelt, war es dass Ziel ein System zu nutzen, welche die Verwendung als solches ermöglicht.
-Es ist ein Header-Only Framerwork, weswegen das System ein solches Unterstützen sollte.
+Da es sich bei dem Projekt um ein Framework handelt, war es dass Ziel ein System zu nutzen, welches die Verwendung als solches ermöglicht.
+Es ist ein Header-Only Framerwork, weswegen das System dieses Konzept unterstützen sollte.
 Wichtige benötigte Features und Voraussetzungen sollten klar definierbar sein.
-Daher wurde cmake verwendet, da es alle Anforderungen erfüllt und es die Verwendung des Frameworks vereinfacht.
+Daher wurde Cmake verwendet, da es alle Anforderungen erfüllt und es die Verwendung des Frameworks vereinfacht.
 Nachfolgend ist ein Teil der CMakeLists.txt gezeigt, welche Zentral für das Framework genutzt wird
 
 ~~~cmake
@@ -70,7 +71,7 @@ target_include_directories(hal_lib INTERFACE .)
 target_compile_features(hal_lib INTERFACE cxx_std_20 c_std_11)
 ~~~
 
-Das Programm selbst, welches später die Benchmarks ausführen wird kann auf folgende Weise die Bibliothek verwenden.
+Das Programm selbst, welches später die Benchmarks ausführen wird, kann auf folgende Weise die Bibliothek verwenden.
 
 ~~~cmake
 // ...
@@ -81,7 +82,7 @@ target_link_libraries(${PROJECT_NAME}.elf hal_lib)
 Vorteil dieser Struktur ist, es dass ein Compiler festgelegt werden kann, welcher für die Kompilierung verwendet werden soll.
 Zum Testen des Verhaltens einiger Klassen des Frameworks, konnten daher einige Tests geschrieben werden, welche auf dem Rechner ausgeführt werden können.
 So konnte sichergestellt werden, dass das Verhalten der Klassen den Erwartungen entspricht.
-Für die Verwendung eines Compilers wird eine Toolchain Datei definiert, diese beinhaltet Pfade zu den Compilern.
+Für die Verwendung eines Compilers wird eine sogenannte Toolchain Datei definiert, diese beinhaltet die zu verwendenden Compiler.
 
 ~~~cmake
 set(CMAKE_SYSTEM_NAME Generic)
@@ -104,7 +105,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --specs=nosys.specs --specs=nano.specs -Os")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --specs=nosys.specs --specs=nano.specs -Os")
 ~~~
 
-So wird es auch möglich mithilfe einer anderen Toolchain Datei, andere Mikrocontroller zu verwenden.
+So wird es auch möglich mithilfe einer anderen Toolchain Datei, andere Mikrocontroller zu unterstützen.
 
 # Die Ansteuerung der Peripherie
 
@@ -122,7 +123,7 @@ In der folgenden Abbildung ist die Beschreibung eines Registers des Mikrocontrol
 Die Beschreibung einzelner Bits besteht aus einer Funktion, einem Bereich und gültigen Werten.
 Weiterhin wird bestimmt, ob es reservierte Bereiche gibt, welche nicht verändert werden dürfen.
 Diese Zusammenhänge wurden in einem Datentyp modelliert.
-Dieser Datentyp kann somit als Manifestation des Datenblattes verstanden werden.
+Dieser Datentyp kann somit als Manifestation der in dem Datenblatt beschrieben Regeln für das Register verstanden werden.
 
 ![Beschreibung des Registers in der Dokumentation des Mikrocontrollers \label{cr1}](images/cr1desc.png)
 
@@ -133,7 +134,7 @@ register_entry_desc<CR::DEDT, uint8_t, bit_range<16u, 20u>, access_mode::read_wr
 Dieser Typ beschreibt die Bitpositionen von 16 bis einschließlich 20. Auf den Bereich kann lesend und schreibend zugegriffen werden.
 Die Funktion des Bereichs wird mit einem enum Eintrag beschrieben.
 So muss jedes einzelne Bit beschrieben werden. Ein Konzept stellt dies zur Kompilezeit sicher.
-Diese überprüft weiterhin, dass sich die einzelnen Bereiche nicht überdecken, sodass Fehler beim Zugriff auf die einzelnen Bits ausgeschlossen werden können.
+Dieses überprüft weiterhin, dass sich die einzelnen Bereiche nicht überdecken, sodass Fehler beim Zugriff auf die einzelnen Bits ausgeschlossen werden können.
 Für das UART Register CR ergibt sich damit folgender Typ. Dieser spiegelt die Beschreibung in Abbildung \ref{cr1} wieder.
 
 ~~~cpp
@@ -163,7 +164,7 @@ register_entry_desc<CR::FIFOEN, bool, bit_pos<29u>>,
 register_entry_desc<CR::RESERVED, reserved_type, bit_range<30u, 31u>>>
 ~~~
 
-Auf diese Weise können auch Register modelliert werden, welche Werte akzeptieren, also keine Steuerungsregister sind.
+Auf diese Weise können auch Register modelliert werden, welche Werte akzeptieren, also keine reinen Steuerungsregister sind.
 Hier muss ebenfalls jedes einzelne Bit beschrieben werden.
 
 ~~~{.cpp}
