@@ -105,35 +105,36 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --specs=nosys.specs --specs=nano.specs -Os")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --specs=nosys.specs --specs=nano.specs -Os")
 ~~~
 
-So wird es auch möglich mithilfe einer anderen Toolchain Datei, andere Mikrocontroller zu unterstützen.
+So ist es mit der entsprechenden Toolchain Datei auch möglich andere Mikrocontroller zu verwenden.
 
 # Die Ansteuerung der Peripherie
 
-Oftmals wird die Peripherie von Mikrocontrollern, sowie bei dem vorliegenden STM32G4 über das Setzen von Bits in Registern, gesteuert.
+Oftmals wird die Peripherie von Mikrocontrollern, sowie bei dem vorliegenden STM32G4, durch das Setzen von Bits in Registern gesteuert.
 Die Register befinden sich an bestimmten Stellen im Speicher des Mikrocontrollers.
-Für das Setzen von Bits würde es genügen, einen Pointer mit dem richtigen Typ auf diesen Bereich zeigen zu lassen und dann die jeweils benötigten Bits zu setzen.
-Eines der Ziele ist es jedoch neben der Typsicherheit eine Resistenz gegen Fehlverwendung herzustellen.
+Für das Setzen von Bits würde es genügen, einen Pointer mit dem richtigen Typ auf diesen Bereich zeigen zu lassen, um dann die benötigten Bits zu setzen.
+Eines der genannten Ziele ist es jedoch neben der Typsicherheit eine Resistenz gegen Fehlverwendung herzustellen.
 Mit dem Zeiger eines primitiven Datentypes auf das Register, können unsinnige Werte gesetzt werden.
 Weiterhin gibt es oftmals in Registern Werte und Teile, die nicht manipuliert werden dürfen.
 Um diese beiden Ziele zu erreichen, wurden eigene Datentypen implementiert. Diese werden im nachfolgenden Abschnitt näher erläutert.
 
 ## Beschreibung eines Registers
 
-In der folgenden Abbildung ist die Beschreibung eines Registers des Mikrocontrollers abgebildet, wie sie in der Dokumentation des STM32G4 Mikrocontrollers vorkommt.
-Die Beschreibung einzelner Bits besteht aus einer Funktion, einem Bereich und gültigen Werten.
-Weiterhin wird bestimmt, ob es reservierte Bereiche gibt, welche nicht verändert werden dürfen.
-Diese Zusammenhänge wurden in einem Datentyp modelliert.
-Dieser Datentyp kann somit als Manifestation der in dem Datenblatt beschrieben Regeln für das Register verstanden werden.
+Die folgende Abbildung ist der Dokumentation des STM32G4 entnommen, sie zeigt eine übliche Beschreibung eines Registers.
 
 ![Beschreibung des Registers in der Dokumentation des Mikrocontrollers \label{cr1}](images/cr1desc.png)
+
+Sie besteht aus einer Funktion, einem Bereich und gültigen Werten, welche an die jeweiligen Positionen geschrieben werden dürfen.
+Weiterhin wird bestimmt, ob es reservierte Bereiche gibt, welche nicht verändert werden dürfen.
+Diese Zusammenhänge werden, wie nachfolgend gezeigt, in einem Datentyp modelliert.
 
 ~~~cpp
 register_entry_desc<CR::DEDT, uint8_t, bit_range<16u, 20u>, access_mode::read_write>
 ~~~
 
+Dieser Datentyp kann somit als Manifestation der in dem Datenblatt beschrieben Regeln für das Register verstanden werden.
 Dieser Typ beschreibt die Bitpositionen von 16 bis einschließlich 20. Auf den Bereich kann lesend und schreibend zugegriffen werden.
 Die Funktion des Bereichs wird mit einem enum Eintrag beschrieben.
-So muss jedes einzelne Bit beschrieben werden. Ein Konzept stellt dies zur Kompilezeit sicher.
+So muss jedes einzelne Bit beschrieben werden. Ein Konzept stellt dies zur Zeit der Kompilierung sicher.
 Dieses überprüft weiterhin, dass sich die einzelnen Bereiche nicht überdecken, sodass Fehler beim Zugriff auf die einzelnen Bits ausgeschlossen werden können.
 Für das UART Register CR ergibt sich damit folgender Typ. Dieser spiegelt die Beschreibung in Abbildung \ref{cr1} wieder.
 
@@ -183,9 +184,6 @@ Damit muss die vorherige gezeigte Beschreibung eines Register korrekt platziert 
 Oftmals gibt es auch mehrere Register der selben Art, welche nur an anderen Positionen stehen.
 Die Typen können daher mehrmals verwendet werden, um die verschiedenen Instanzen der Register zu bilden.
 Dazu braucht man nur noch eine Lösung, die Register an die richtigen Stellen im Speicher zu platzieren.
-Wie Eingangs erwähnt, sind Register bestimmte Stellen im Speicher. Damit muss die vorherige gezeigte Beschreibung eines Register korrekt platziert werden.
-Oftmals gibt es auch mehrere Register der selben Art, welche nur an anderen Positionen stehen. Daher braucht man eine Lösung, die Register an die richtigen Stellen
-im Code zu platzieren.
 
 ~~~{.cpp}
 template<typename Component, auto N>
@@ -200,16 +198,48 @@ template<typename Component, typename N>
 ~~~
 
 Die beiden Methoden werden anschließend mit der gewünschten Peripherie, oder hier Component genannt, mit dem entsprechenden Index parametrisiert.
-Die Funktion greift dafür auf einen zuvor festgelegten Bereich zu und wandelt, diesen in den gewünschten Datentyp um.
-Die Beschreibung dieser Zusammenhänge werden in structs gespeichert, welche den speziellen Mikrocontroller beschreiben. Diese werden in den nachfolgenden Abschnitten erläutert.
+Die Funktion greift dafür auf einen zuvor festgelegten Bereich zu und wandelt diesen in den gewünschten Datentyp um.
+Die Beschreibung dieser Zusammenhänge werden in structs gespeichert, welche den speziellen Mikrocontroller beschreiben. 
+Wie genau diese aufgebaut werden, wird in den nachfolgenden Abschnitten erläutert.
 
 ## Beschreibung des Mikrocontroller Aufbaus
 
-<!-- TODO: Add Mikrocontroller Beschreibung hier -->
+Nachfolgend wird ein Teil der Definition des Mikrocontrollers gezeigt, darin werden structs für die einzelnen Komponenten angelegt.
 
-Die Beschreibung eines Mikrocontrollers ist die Anzahl und die Art seiner Komponenten.
+~~~cpp
+struct mcu_info {
+        struct base_address {
+            static constexpr inline uintptr_t value = 0x40021000;
+        };
+
+        struct GPIO final {
+            // Register types and registers in the correct order
+        };
+
+        struct UART final {
+            // Register types and registers in the correct order
+        } __attribute__((packed));
+
+        struct CORDIC {
+            // Register Types
+            csr_register_type csr;
+            wdata_register_type wdata;
+            rdata_register_type rdata;
+
+            template<typename N>
+            struct address;
+        } __attribute__((packed));
+~~~
+
+Diese beinhalten die einzelnen Register in der Reihenfolge, in der sie im Datenblatt beschrieben werden.
+Mit der zuvor genannten `address` Methode werden diese structs an den Beginn der Register gesetzt, womit die beinhalteten Register an die
+richtige Stelle gesetzt werden.
+Das Attribut `__attribute__((packed))` wird benötigt, damit der Compiler den Typ genauso abbildet, wie er beschrieben wird und keinen
+zusätzlichen Speicher belegt, wodurch die Register an die falschen Stellen im Speicher geschrieben werden könnten.
+
+Weiterhin besteht die Beschreibung eines Mikrocontrollers somit aus der Anzahl und der Art seiner Komponenten.
 Dies kann man mit einem Konzept implementieren, welches so die Peripherien eines Mikrocontrollers erfordern kann.
-Diese Konzepts können dann in den einzelnen HAL-Schnittstellen verwendet werden.
+Dieses Konzept kann dann in den einzelnen HAL-Schnittstellen verwendet werden.
 So erfordert die GPIO Klasse, dass der Mikrocontroller einen bestimmten Aufbau aufweist.
 
 ~~~{.cpp }
@@ -225,22 +255,26 @@ So erfordert die GPIO Klasse, dass der Mikrocontroller einen bestimmten Aufbau a
     requires input_register_type<decltype(a.bssr_clear_io)>;
     requires input_register_type<decltype(a.afr)>;
     requires input_register_type<decltype(a.moder)>;
-};
+
+    // ...
+
+    template<typename gpio_port, specialized_mcu<gpio_port> used_mcu>
+    /* ...*/ class gpio { /**/ };
 ~~~
 
 Obiges Beispiel modelliert einen Mikrocontroller mit gpios. Damit kann sichergestellt werden, dass eine konkrete Implementierung für GPIOs vorliegt.
-Diese Concepts werden im Zusammenhang mit dem HAL (Hardware-abstraction-layer) verwendet und verallgemeinert eine Implementierung für mehrere Mikrocontroller.
+Diese Konzepte werden im Zusammenhang mit dem HAL (Hardware-abstraction-layer) verwendet und verallgemeinern eine Implementierung für mehrere Mikrocontroller.
 
 ## Hardware Abstraction Layer
 
 Die Komponenten eines Mikrocontrollers können meistens nicht gesondert verwendet werden, das bedeutet man braucht eine Komponente, um die andere zu verwenden.
 Beispielsweise benötigt man Zugriff auf die GPIOs, um über UART kommunizieren zu können.
-Diese Aufgabe, die einzelnen Komponenten zu abstrahieren, soll das Hardware Abstraction Layer (kurz HAL) erfüllen.
-Nachfolgend werden die einzelnen Komponenten vorgestellt, die durch ein HAL beschrieben werden.
+Die Aufgabe die einzelnen Komponenten zu abstrahieren, soll das Hardware Abstraction Layer (nachfolgend HAL genannt) erfüllen.
+Die nächsten Abschnitte werden sich den einzelnen Komponenten widmen.
 
 ### GPIO
 
-In diesem Abschnitt wird beschrieben, wie GPIOs in einem HALs implementiert wurden und wie deren Verwendung möglich ist.
+In diesem Abschnitt wird die Implementation der GPIOs innerhalb des HALs beschrieben und wie diese Schnittstelle zu verwenden ist.
 
 Da ein Cortex M basierter Mikrocontroller im Gegensatz zu beispielsweise der relativ einfach aufgebauten Mircochip AVR Architektur relativ viele Möglichkeiten zur Ansteuerung und Konfiguration einzelner I/O-Pins sowie deren Register besitzt, wurde versucht, diese Komplexität möglichst einfach zu implementieren, indem so viel wie möglich Komplexität vor dem Nutzer versteckt wird.
 Hierzu wurden zuerst, wie zuvor beschrieben, die einzelnen GPIO Register in einer STM32G4 spezifischen Klasse mittels `repeated_control_register` abgebildet. Dies ermöglicht ein fehlerfreies Einsetzen von Registerwerte mittels Enum-Werten. Zum Auslesen von Werten an GPIO Pins, wurde `data_register` verwendet, welches einen reinen Lesezugriff auf ein Register ermöglicht. Somit ist es auch einem Anwender möglich, mehrere Werte auf einmal auszulesen und auf diesen Bitoperationen auszuführen.
