@@ -389,6 +389,28 @@ template<typename Config, functions Function>
 
 Das struct *create_op_helper ist für die Erstellung der einzelnen Funktionen zuständig. Dieser wird für die einzelnen Funktionen spezialisiert.
 Damit bildet die Funktion *create_cordic_operation* eine Fabrikmethode, womit die spezielle Operation einheitlich erstellt werden kann.
+Warum eine Typisierung wichtig ist, bei der Vermeidung von Fehlern kann beispielhaft an der atan2 Methode gezeigt werden.
+Atan2 benötigt einen 2-Dimensionalen Vektor als Eingabe, dies wird in der entsprechenden CORDIC operation auch so modelliert:
+
+~~~cpp
+//...
+cordic_benchmark_values[i].arg1(typename CordicOpType::args_type::first_arg_type(
+                x_coord{0.5f}, y_coord{0.5f}));
+// Alternativ auch:
+cordic_benchmark_values[i].arg1(typename CordicOpType::args_type::first_arg_type(
+                0.5_x, 0.5_y));
+//...
+~~~
+
+Durch die Verwendung von den beiden Datentypen *x_coord* und *y_coord*, kann eine Verwechslung durch den Nutzer vermieden werden.
+Dieses Problem existiert in der Implementierung der atan2 Funktion:
+
+~~~cpp
+float atan2(float y, float x);
+~~~
+
+Hierbei muss der Nutzer die Reihenfolge der Argumente beachten und erhält keine Hilfestellung durch den Compiler, weswegen eine Verwechslung oftmals unbemerkt bleibt.
+
 
 # CORDIC
 
@@ -432,7 +454,7 @@ uint32_t result = 0;
 // result has now the value of the timer in it
 ~~~
 
-Der Vergleich zwischen Cordic und den eingebauten trigonometrischen Funktionen soll zunächst davon ausgehen, dass man mit Fließkommazahlen rechnen möchte.
+Der Vergleich zwischen CORDIC und den eingebauten trigonometrischen Funktionen soll zunächst davon ausgehen, dass man mit Fließkommazahlen rechnen möchte.
 Zum besseren Überblick werden die Zeiten, welche für die Berechnungen mit dem CORDIC benötigt werden, in drei Teile unterteilt:
 
 - Dem Berechnen der Eingaben, also der Umrechnung von den Fließkommazahlen in den jeweiligen Typ
@@ -452,18 +474,31 @@ Diese Vermutung wird später gesondert überprüft.
 
 ![Genaure Auswertung der Performance](images/speed_comparison_stacked.png)
 
-Summiert man alle Zeitmessungen der verschiedenen Funktionen zusammen, sieht man, dass der CORDIC insgesamt deutlich schneller war als die eingebauten
+Summiert man alle Zeitmessungen der verschiedenen Funktionen zusammen, sieht man, dass der CORDIC insgesamt deutlich schneller war, als die eingebauten
 trigonometrischen Funktionen von gcc.
 
 ![Genaure Auswertung der Performance auf Basis einzelner Funktionen](images/speed_comparison_single.png)
 
-Bei den eingebauten trigonometrischen Funktionen des Compilers hat die Größe der Eingabe jedoch einen Einfluss. Erkennbar ist dies an der größeren Varianz der
+Bei den eingebauten trigonometrischen Funktionen des Compilers hat die Größe der Eingabe einen Einfluss. Erkennbar ist dies an der größeren Varianz der
 Laufzeit des GCC. Hier lässt sich erahnen, welche Methoden wenig selbst berechnen müssen.
-Die kleinen Unterschiede bei den verschiedenen Funktionen des Cordics können durch die verschiedene Anzahl von Argumenten erklärt werden.
-Des Weiteren müssen manche Werte zusätzlich skaliert werden und dies benötigt ebenfalls ein wenig Zeit.
-Sichtbar wird dies bei den beiden Funktionen *logn* und *sqrt*, welche beide eine relativ hohe Varianz haben, wenn man sie mit den restlichen Funktionen vergleicht.
+Die kleinen Unterschiede bei den verschiedenen Funktionen des Cordics könnten durch die verschiedenen Anzahlen von Argumenten erklärt werden, die die einzelnen Funktionen benötigen.
+In der nachfolgenden Abbildung ist, die Zeitmessung des CORDICs aufgeteilt auf die einzelnen Aspekte der Berechnung.
+Dabei setzt sich die Berechnung wie folgt zusammen: 
+
+* SETUP: Das Erstellen und Setzen der Argumente, beispielsweise das Umrechnen einer Gleitkommaeingabe in den verwendeten Argumenttyp
+* CALC: Stellt die eigentliche Berechnung des CORDICs dar, hierbei werden auch die Argumente in das Argumentregister geschrieben
+* CONV: Bildet das Auslesen der Resultate und das Umwandeln in einen Gleitkommatyp
 
 ![Genaure Auswertung der CORDIC Performance](images/runtime_comparison.png)
+
+Die Abbildung bestätigt die vorangegangen Vermutungen.
+Die Berechnungen des CORDICs selbst, sind nahezu identisch, da die Berechnungszeit über die Präzision bestimmt wird.
+Auch die benötigte Zeit für die Umwandlung des Ergebnisses ist identisch, da bei allen genannten Funktionen nur ein zu berechnendes Ergebnis verwendet und ausgelesen wird.
+Lediglich die Anzahl der Argumente hat eine wesentliche Auswirkung auf die benötigte Zeit.
+Manche Werte müssen skaliert werden und dies benötigt ebenfalls ein wenig Zeit, da überprüft werden muss, in welchem Bereich die jeweilige Zahl liegt.
+Sichtbar wird dies vor allem bei den beiden Funktionen *logn* und *sqrt*, welche beide eine relativ hohe Varianz haben, wenn man sie mit den restlichen Funktionen vergleicht.
+Diese haben einen größeren Eingabebereich, weswegen mehr Skalierungen notwendig sind, um diesen Bereich auf den verwendeten Datentyp abzubilden.
+Auch die Funktion atan2 benötigt mehr Zeit für die Beschreibung seiner Argumente, dies liegt darin begründet, dass atan2 als einzige Funktion 2 Argumente in Form eines Vektors benötigt.
 
 # Fazit
 
